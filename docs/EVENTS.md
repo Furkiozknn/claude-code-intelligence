@@ -75,7 +75,10 @@ reddedilir.
 - **Kota poller**: `/api/oauth/usage` → `quota.snapshot{source=usage_api}`.
 
 ## 4. Sıralama, idempotentlik, gecikme
-- Aynı `payload_hash` ikinci kez gelirse yazılmaz (at-least-once kaynaklar).
+- İdempotentlik anahtarı (Stage 4): `sha256(type | ts | source.instance_id |
+  payload_hash)` — yalnız `payload_hash` yetmez (aynı payload'lı iki gerçek
+  olay, ör. iki `session.started`, farklı zamanlarda meşru). Aynı anahtar
+  ikinci kez gelirse yazılmaz (at-least-once kaynaklar).
 - `received_at − ts` = kaynak gecikmesi; `collector.health.lag_s` buradan.
 - Olaylar `ts`'ye göre değil `received_at`'e göre append edilir; türetim
   sorguları `ts`'ye göre; geç gelen olay etkilenen gün/oturum özetini

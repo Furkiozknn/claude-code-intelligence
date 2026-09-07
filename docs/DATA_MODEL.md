@@ -96,13 +96,23 @@ UsageRecord {
   collector: { name, version, schema_version }
 }
 ```
-Dedup ve kazanan kuralları (`ccusage`, tycho ADR 0002):
-- Aynı `dedup_key` → **daha büyük `tokens.input_total + output`** kalır; eşitlikte
-  yeni şema (`speed` alanı olan) kalır.
-- `request_id` yoksa anahtar `message_id + session_id`; farklı oturumda aynı
-  `message_id` ayrı sayılır (gateway).
-- `is_sidechain=true` kopya ile ebeveyn çakışırsa ebeveyn kalır
-  (`flags.sidechain_replay_dropped` sayacı artar).
+Dedup ve kazanan kuralları (`ccusage`, tycho ADR 0002; **Stage 5'te kesinleşti**):
+- **`dedup_key`** (kaynaklar arası mutabakat anahtarı): `request_id` varsa
+  `<provider>:req:<request_id>` — OTel `api_request.request_id` ile transcript
+  `requestId` aynı API istek kimliğidir, iki kaynak tek kayıtta **birleşir**;
+  yoksa `<provider>:msg:<message_id>:<session_id>` (gateway aynı `message_id`'yi
+  farklı oturumda yeniden kullanabilir); o da yoksa `<provider>:uuid:<uuid>:<session_id>`.
+- **`message_key`** (ikincil): `<provider>:msg:<message_id>:<session_id>` —
+  sidechain replay tespiti için (aynı mesaj, farklı `requestId`).
+- Aynı `dedup_key` → kazanan: sidechain olmayan > **daha büyük toplam token**
+  > yeni şema (`speed` alanı olan). Kaybedenin tamamlayıcı bilgisi kazanana
+  **birleştirilir** (satıcı maliyeti, 5m/1h kırılımı, eksik kimlik/atıf
+  alanları); token sayıları asla ezilmez, fark varsa `token_mismatch`
+  kanaryası artar (R-11).
+- `is_sidechain=true` kopya ile ebeveyn çakışırsa (aynı `message_key`, farklı
+  `dedup_key`) ebeveyn kalır, `sidechain_replay_dropped` sayacı artar.
+- Advisor iterasyonları ayrı kayıt: `message_id="<id>:advisor:<i>"`,
+  `request_id=None` (ana kayıtla çakışmaz).
 - `usage.iterations[type=advisor_message]` → ayrı `UsageRecord`, `flags.advisor=true`,
   `message_id = "<id>:advisor:<i>"`, model = advisor modeli, `vendor_usd=null`.
 - Üst seviye usage sıfır ve iterasyon doluysa iterasyon toplamı; sentetik

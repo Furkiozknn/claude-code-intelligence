@@ -149,8 +149,8 @@ class UsageRecord(CciModel):
 
     @model_validator(mode="after")
     def _ids(self) -> "UsageRecord":
-        if self.message_id is None and self.uuid is None:
-            raise ValueError("message_id veya uuid gerekli (dedup anahtari icin)")
+        if self.request_id is None and self.message_id is None and self.uuid is None:
+            raise ValueError("request_id, message_id veya uuid gerekli (dedup anahtari icin)")
         if self.flags.synthetic and self.tokens.billable_total != 0:
             raise ValueError("sentetik kayit token tasiyamaz")
         return self
@@ -158,12 +158,27 @@ class UsageRecord(CciModel):
     @computed_field(json_schema_extra={"privacy": "internal"})
     @property
     def dedup_key(self) -> str:
-        """`<provider>:<message_id>:<request_id|->:<session_id>`; message_id yoksa
-        `<provider>:uuid:<uuid>:<session_id>` (tycho ADR 0002 + ccusage)."""
+        """Kaynaklar arasi mutabakat anahtari.
+        - `request_id` varsa `<provider>:req:<request_id>` (OTel `api_request` ve
+          transcript `requestId` ayni API istek kimligidir -> iki kaynak birlesir);
+        - yoksa `<provider>:msg:<message_id>:<session_id>` (ccusage: gateway ayni
+          message id'yi farkli oturumda yeniden kullanabilir);
+        - o da yoksa `<provider>:uuid:<uuid>:<session_id>` (tycho ADR 0002).
+        Sidechain replay (ayni message_id, farkli requestId) bu anahtarla YAKALANMAZ;
+        normalizer `message_key` ikincil indeksiyle eler."""
         sid = self.session.session_id
+        if self.request_id:
+            return f"{self.provider}:req:{self.request_id}"
         if self.message_id is not None:
-            return f"{self.provider}:{self.message_id}:{self.request_id or '-'}:{sid}"
+            return f"{self.provider}:msg:{self.message_id}:{sid}"
         return f"{self.provider}:uuid:{self.uuid}:{sid}"
+
+    @property
+    def message_key(self) -> str | None:
+        """Sidechain replay tespiti icin ikincil anahtar (message_id + oturum)."""
+        if self.message_id is None:
+            return None
+        return f"{self.provider}:msg:{self.message_id}:{self.session.session_id}"
 
     @computed_field(json_schema_extra={"privacy": "internal"})
     @property

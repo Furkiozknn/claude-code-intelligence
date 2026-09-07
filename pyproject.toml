@@ -5,6 +5,7 @@ description = "Claude Code Intelligence Platform - cekirdek (Stage 1: veri model
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.7,<3",
+    "tzdata>=2026.3",
 ]
 
 [dependency-groups]

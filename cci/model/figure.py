@@ -6,7 +6,7 @@ basilmaz; toplam en zayif parcayi miras alir.
 
 from __future__ import annotations
 
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Literal, Sequence
 
 from pydantic import model_validator
@@ -117,7 +117,7 @@ class Figure(CciModel):
         assert self.value is not None
         v = self.value
         if self.unit == "nanoUSD":
-            text = f"${(v / NANO).quantize(Decimal('0.01'))}"
+            text = f"${(v / NANO).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)}"
         elif self.unit == "tokens":
             text = f"{int(v):,}"
         elif self.unit == "percent":

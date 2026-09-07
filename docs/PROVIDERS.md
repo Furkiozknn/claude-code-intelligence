@@ -49,7 +49,7 @@ health()          → { status: ok|degraded|down, last_success_at, lag_s, error_
 ## 4. Claude Code adaptörü (referans uygulama)
 | Kanal | Ne verir | Notlar |
 |---|---|---|
-| OTLP logs/metrics/traces | `usage.request` (+cost vendor), `tool.call`, `session.*`, `prompt.submitted`, `permission.*`, `mcp.connection` | `settings.json` `env` bloğuna yazılır (`cci setup`), kabuk rc değil; alıcı loopback |
+| OTLP logs/metrics/traces | `usage.request` (+cost vendor), `tool.call`, `session.*`, `prompt.submitted`, `permission.*`, `mcp.connection` | `settings.json` `env` bloğuna yazılır (`cci setup`), kabuk rc değil; alıcı loopback. **Stage 3 durumu:** OTLP/JSON tam; protobuf çözücü yokken alıcı dürüstçe **415** döner (`OTEL_EXPORTER_OTLP_PROTOCOL=http/json` önerilir); traces 200 + `dropped_traces` sayacı (R-2) |
 | Transcript JSONL | `usage.request` tam geçmiş (30 gün), `attribution*`, `ephemeral_5m/1h` | özyinelemeli glob; dedup §DATA_MODEL; sidechain/advisor kuralları; `cleanupPeriodDays` farkındalığı |
 | Statusline | `statusline.tick`, kota (canlı) | iptal edilebilir betik, ≤50 ms, temp dosya yok |
 | Hooks | `session.*`, `session.compacted`, `tool.call` (yedek) | `async:true`, her zaman exit 0 |

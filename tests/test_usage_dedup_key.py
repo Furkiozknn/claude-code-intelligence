@@ -26,12 +26,15 @@ def rec(**over):
     return UsageRecord(**base)
 
 
-def test_dedup_key_with_request_id():
-    assert rec().dedup_key == "anthropic:msg_1:req_1:sess-1"
+def test_dedup_key_with_request_id_is_source_independent():
+    # OTel api_request (message_id yok) ile transcript kaydi ayni anahtara duser
+    assert rec().dedup_key == "anthropic:req:req_1"
+    assert rec(message_id=None, uuid="u-otel").dedup_key == "anthropic:req:req_1"
+    assert rec().message_key == "anthropic:msg:msg_1:sess-1"
 
 
 def test_dedup_key_without_request_id():
-    assert rec(request_id=None).dedup_key == "anthropic:msg_1:-:sess-1"
+    assert rec(request_id=None).dedup_key == "anthropic:msg:msg_1:sess-1"
 
 
 def test_dedup_key_uuid_fallback():
@@ -40,7 +43,8 @@ def test_dedup_key_uuid_fallback():
 
 def test_missing_all_ids_raises():
     with pytest.raises(ValidationError):
-        rec(message_id=None, uuid=None)
+        rec(request_id=None, message_id=None, uuid=None)
+    assert rec(message_id=None, uuid=None).dedup_key == "anthropic:req:req_1"  # yalniz request_id yeter
 
 
 def test_record_id_is_stable_and_derived_from_key():
