@@ -32,7 +32,7 @@ yazma — parse patlıyor; böyle dosyalar için Write. Python konsolunda her
 | 7 | **Mimari** | 10–36, 39–40 | ✅ 8 belge (`docs/`) + README + CONTRIBUTING; Faz 9 eleştirisiyle revize edilecek |
 | 8 | **Ürün spesifikasyonu** | 22–23 | ✅ `docs/PRODUCT.md` (ürün, UX, dashboard, CLI, TUI, uyarı, tray/statusline) |
 | 9 | **Öz-eleştiri** (18 soru) | 41 | ✅ `docs/SELF_CRITIQUE.md`; 12 revizyon (R-1…R-12) belgelere işlendi |
-| 10 | **İmplementasyon** Stage 1–16 | 42 | 🔄 Stage 1 ✅ model · 2 ✅ adaptör sözleşmesi · 3 ✅ toplayıcılar (zarf+ingest kapısı, transcript, kota poller, OTLP JSON alıcı+metrik) · 4 ✅ SQLite olay deposu · 5 ✅ normalizasyon+dedup/birleştirme · 6 🔄 fiyat tablosu + günlük/oturum özetleri (koruma yasası) · 7 🔄 pace v1 |
+| 10 | **İmplementasyon** Stage 1–16 | 42 | 🔄 Stage 1 ✅ model · 2 ✅ adaptör sözleşmesi · 3 ✅ toplayıcılar (zarf+ingest kapısı, transcript, kota poller, OTLP JSON alıcı+metrik) · 4 ✅ SQLite olay deposu · 5 ✅ normalizasyon+dedup/birleştirme · 6 ✅ fiyat tablosu + günlük/oturum özetleri (koruma yasası) · 7 ✅ pace v1 + boru hattı + snapshot dosyası + `cci` CLI (scan/today/daily/sessions/quota/doctor/snapshot/statusline/setup otlp/run) · 8 🔄 oturum teşhisi |
 | 11 | **Benchmark → eleştiri → iyileştirme** | 43 | ⬜ |
 
 ---
@@ -49,24 +49,24 @@ yazma — parse patlıyor; böyle dosyalar için Write. Python konsolunda her
 
 ## Sıradaki işler (öncelik sırası)
 
-1. **Faz 6 sentez** — `research/reports/sentez.md`: (a) kalıp kataloğu
-   (20 nottaki "Platforma aktarılacaklar" birleştirilmiş, kaynağıyla),
-   (b) anti-kalıplar, (c) çözülmemiş problemler (kota birimi, alıcı kapalı
-   davranışı, hesap kimliği, sidechain/advisor çift sayımı, TTL karışımı),
-   (d) MP §38 rekabet tablosu (özellik × bizim / en iyi mevcut / neden daha
-   iyi / nerede onlar daha iyi / ne alınacak), (e) Top-20 karşılaştırma
-   matrisi (§8 boyutları × repo).
-2. **Faz 7 mimari** — `docs/ARCHITECTURE.md` + `DATA_MODEL.md` + `EVENTS.md`
-   + `COLLECTORS.md` + `PRIVACY.md` + `PLUGINS.md`; MP §10–36. Girdi:
-   `notes/03` eşleme tablosu, tycho zarf ilkesi, cacheeconomics Figure tipi,
-   codeburn sağlayıcı arayüzü, VibeBill koruma yasası, vibe-bar forecast.
-3. **Faz 8 ürün/UX** — yüzeyler (CLI/TUI/Web/tray/statusline), "Şu anda ne
-   yapmalıyım?" motoru spesifikasyonu, uyarı motoru.
-4. **Faz 9 öz-eleştiri** (18 soru) → mimariyi düzelt.
-5. **Doğrulama deneyleri (Aşama 1'de, kendi alıcımızla):** OTLP alıcı
-   kapalıyken davranış (`[3P telemetry]` debug satırları); `/api/oauth/usage`
-   429 başlığı (nazik); `modelPricing` şeması (statusline sayfası).
-6. Stage 1 implementasyon (Faz 10).
+1. **Stage 8 oturum teşhisi** — `cci/analytics/diagnostics.py`: OTLP `tool.call`/
+   `usage.error`/`session.compacted` olaylarından retry oranı, araç p95/timeout,
+   döngü parmak izi (araç adı + girdi boyutu + hata türü tekrarı), compaction
+   sayısı, sağlık skoru, **dikkat merdiveni**; `cci sessions` ve snapshot
+   `attention` alanı. Test: sentetik olay dizileri.
+2. **Stage 9 yüzeyler** — loopback HTTP API (`/api/v1/snapshot`, `/health`) +
+   WS; tray (prototipten `widget.py` mirası); statusline betiği kurulumu
+   (`cci setup statusline`); web sayfası (statik, CSP).
+3. **Stage 10 harman tahmin v2 + backtest** — `quota_snapshots` serisi
+   üzerinde MAE; `learning` kapısı (R-7).
+4. **Stage 11–12 anomali + uyarı** (kişisel taban, cooldown, kanallar).
+5. **Stage 13 Research Mode** (proxy başlık temizleme, kota birimi estimator'ı).
+6. **Stage 14 öneri motoru + act günlüğü**; **15** diğer adaptörler (Codex,
+   Gemini, Copilot) + JSON-RPC; **16** TUI/paketleme.
+7. **Canlı doğrulama (kullanıcı makinesinde, onayla):** `cci setup otlp --write`
+   → Claude Code yeniden başlat → `cci run` ile gerçek OTLP akışı; alıcı kapalı
+   deneyi (U2); protobuf çözücü (`opentelemetry-proto`) ekleme; `cci quota --poll`
+   gerçek uçla (nazik).
 
 ---
 

@@ -24,8 +24,18 @@ Research → Discover → Score → Deep Analyze → Extract → Synthesize
 **Kod durumu:** `cci/` paketi — model (Stage 1), adaptör sözleşmesi (2),
 toplayıcılar: zarf + ingest kapısı, transcript izleyici, kota poller, OTLP/JSON
 alıcı (3), SQLite olay deposu (4), normalizasyon + dedup/birleştirme (5), fiyat
-tablosu + özetler (6), pace v1 (7). `uv sync && uv run pytest`;
-`uv run python -m cci.model.schema` JSON şemalarını `docs/schema/` altına yazar.
+tablosu + özetler (6), pace v1 + boru hattı + snapshot + CLI (7).
+
+```
+uv sync && uv run pytest              # testler
+uv run cci scan                       # transcript'leri artımlı tara (~/.claude/projects)
+uv run cci today | daily | sessions   # özetler (--json, --strict: koruma yasası ihlali → çıkış 3)
+uv run cci doctor                     # "bu sayılara güvenebilir miyim"
+uv run cci setup otlp [--write]       # settings.json env bloğu (yedekli); sonra Claude Code'u yeniden başlat
+uv run cci run [--once]               # daemon: OTLP alıcı (127.0.0.1:4318) + tarama + kota + snapshot
+uv run cci statusline                 # snapshot'tan tek satır (statusLine komutu olarak)
+uv run python -m cci.model.schema     # JSON şemaları → docs/schema/
+```
 
 | Çıktı | Nerede |
 |---|---|

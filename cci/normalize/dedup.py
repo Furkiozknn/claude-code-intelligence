@@ -59,30 +59,42 @@ class Deduper:
         self.counters: Counter[str] = Counter()
 
     def add(self, rec: UsageRecord) -> Outcome:
+        """Sonuc geliş sırasından BAĞIMSIZ olmali (ayni ms'de ULID sirasi rastgele)."""
         mk = rec.message_key
         if mk is not None and mk in self._by_message and self._by_message[mk] != rec.dedup_key:
-            existing = self._by_key.get(self._by_message[mk])
+            existing_key = self._by_message[mk]
+            existing = self._by_key.get(existing_key)
             if existing is not None and existing.session.is_sidechain != rec.session.is_sidechain:
                 if rec.session.is_sidechain:
                     self.counters["sidechain_replay_dropped"] += 1
                     return "sidechain_dropped"
-                # gelen ebeveyn, mevcut replay: ebeveyn kalir
-                del self._by_key[existing.dedup_key]
+                # mevcut replay, gelen ebeveyn: replay silinir; ebeveyn NORMAL yoldan girer
+                # (ayni dedup_key altinda OTel kaydi olabilir -> birlestirilmeli, ezilmemeli)
+                del self._by_key[existing_key]
+                del self._by_message[mk]
                 self.counters["sidechain_replay_dropped"] += 1
-                self._insert(rec)
-                return "replaced"
+                outcome = self._upsert(rec)
+                return "replaced" if outcome == "inserted" else outcome
+        return self._upsert(rec)
+
+    def _upsert(self, rec: UsageRecord) -> Outcome:
         existing = self._by_key.get(rec.dedup_key)
         if existing is None:
             self._insert(rec)
             self.counters["inserted"] += 1
             return "inserted"
         if rec.prefer_over(existing):
-            self._by_key[rec.dedup_key] = merge_records(rec, existing, self.counters)
+            merged = merge_records(rec, existing, self.counters)
             self.counters["replaced"] += 1
-            return "replaced"
-        self._by_key[rec.dedup_key] = merge_records(existing, rec, self.counters)
-        self.counters["merged"] += 1
-        return "merged"
+            outcome: Outcome = "replaced"
+        else:
+            merged = merge_records(existing, rec, self.counters)
+            self.counters["merged"] += 1
+            outcome = "merged"
+        self._by_key[rec.dedup_key] = merged
+        if merged.message_key is not None:
+            self._by_message[merged.message_key] = rec.dedup_key
+        return outcome
 
     def add_many(self, records: Iterable[UsageRecord]) -> Counter[str]:
         out: Counter[str] = Counter()

@@ -157,6 +157,32 @@ def test_otel_and_transcript_merge_into_one_record():
     assert d.counters["token_mismatch"] == 0 and d.counters["vendor_cost_merged"] + d.counters["ttl_split_merged"] >= 1
 
 
+def test_dedup_result_is_independent_of_arrival_order():
+    import itertools
+    otel_doc = {"resourceLogs": [{"resource": {"attributes": [{"key": "session.id", "value": {"stringValue": "sess-1"}}]},
+        "scopeLogs": [{"logRecords": [{"timeUnixNano": "1788782400000000000", "attributes": [
+            {"key": "event.name", "value": {"stringValue": "api_request"}},
+            {"key": "model", "value": {"stringValue": "claude-opus-5"}},
+            {"key": "request_id", "value": {"stringValue": "req_1"}},
+            {"key": "input_tokens", "value": {"intValue": "12"}}, {"key": "output_tokens", "value": {"intValue": "300"}},
+            {"key": "cache_read_tokens", "value": {"intValue": "5000"}}, {"key": "cache_creation_tokens", "value": {"intValue": "100"}},
+            {"key": "cost_usd_micros", "value": {"intValue": "45000"}}]}]}]}]}
+    otel = UsageRecord.from_payload(OtlpLogMapper().map_request(otel_doc)[0].payload)
+    items = {"otel": otel, "copy10": rec(out=10, uuid="a"), "copy300": rec(out=300, uuid="b"),
+             "replay": rec(req="req_replay", sidechain=True, out=999, uuid="c")}
+    for order in itertools.permutations(items):
+        d = Deduper()
+        for name in order:
+            d.add(items[name])
+        recs = d.records()
+        assert len(recs) == 1, order
+        r = recs[0]
+        assert r.dedup_key == "anthropic:req:req_1" and r.tokens.output == 300, order
+        assert r.cost.vendor_usd is not None and r.cost.vendor_usd.render() == "$0.05", order
+        assert r.tokens.cache_write_5m == 60 and r.session.is_sidechain is False, order
+        assert d.counters["sidechain_replay_dropped"] == 1, order
+
+
 def test_merge_records_never_overwrites_tokens_but_counts_mismatch():
     a, b = rec(out=100, uuid="a"), rec(out=101, uuid="b")
     c = Counter()

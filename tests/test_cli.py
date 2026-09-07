@@ -1,0 +1,103 @@
+import json
+from datetime import UTC, datetime
+
+import pytest
+
+from cci.cli import EXIT_NO_CREDENTIALS, EXIT_NO_DATA, EXIT_OK, main, statusline_text
+from tests.test_pipeline import assistant, layout
+
+
+def run(args, tmp_path, env=None, capsys=None):
+    code = main(["--data-dir", str(tmp_path / "data"), *args], env=env or {}, home=tmp_path)
+    out = capsys.readouterr() if capsys else None
+    return code, out
+
+
+@pytest.fixture
+def workspace(tmp_path):
+    root = tmp_path / ".claude"
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    layout(root, [assistant("msg_1", "req_1", 40, ts=now), assistant("msg_2", "req_2", 20, ts=now)])
+    return tmp_path, {"CLAUDE_CONFIG_DIR": str(root)}
+
+
+def test_scan_then_today_and_sessions(workspace, capsys):
+    tmp, env = workspace
+    code, out = run(["scan"], tmp, env, capsys)
+    assert code == EXIT_OK and "2 yeni olay" in out.out
+    code, out = run(["--json", "today", "--strict"], tmp, env, capsys)
+    assert code == EXIT_OK
+    doc = json.loads(out.out)
+    assert doc["days"][0]["totals"]["requests"] == 2 and doc["days"][0]["conservation"]["ok"] is True
+    code, out = run(["sessions"], tmp, env, capsys)
+    assert code == EXIT_OK and "istek    2" in out.out
+    code, out = run(["daily"], tmp, env, capsys)
+    assert code == EXIT_OK and "≈" in out.out and "gizli" not in out.out
+
+
+def test_today_without_data_exits_4(tmp_path, capsys):
+    code, out = run(["today"], tmp_path, {"CLAUDE_CONFIG_DIR": str(tmp_path / "none")}, capsys)
+    assert code == EXIT_NO_DATA and "veri yok" in out.out
+
+
+def test_doctor_reports_paths_store_and_pricing(workspace, capsys):
+    tmp, env = workspace
+    run(["scan"], tmp, env, capsys)
+    code, out = run(["--json", "doctor"], tmp, env, capsys)
+    assert code == EXIT_OK
+    doc = json.loads(out.out)
+    assert doc["adapter"]["health"]["status"] == "ok" and doc["store"]["events"] == 2
+    assert doc["pricing"]["models"] >= 20 and doc["account_key_known"] is False and doc["quota"] is None
+    assert any(p["label"].startswith("credentials") and p["exists"] is False for p in doc["adapter"]["probe_roots"])
+    code, out = run(["doctor"], tmp, env, capsys)
+    assert "YOK -> kota snapshot saklanmaz" in out.out
+
+
+def test_quota_without_snapshot_and_without_credentials(workspace, capsys):
+    tmp, env = workspace
+    code, out = run(["quota"], tmp, env, capsys)
+    assert code == EXIT_NO_DATA and "--" in out.out
+    code, out = run(["quota", "--poll"], tmp, env, capsys)
+    assert code == EXIT_NO_CREDENTIALS and "kimlik" in out.err
+
+
+def test_snapshot_and_statusline(workspace, capsys):
+    tmp, env = workspace
+    run(["scan"], tmp, env, capsys)
+    code, out = run(["snapshot"], tmp, env, capsys)
+    assert code == EXIT_OK and (tmp / "data" / "state" / "latest.json").exists()
+    code, out = run(["statusline"], tmp, env, capsys)
+    line = out.out.strip()
+    assert code == EXIT_OK and line.startswith("5h --") and "$" in line and line.endswith("ok")
+    assert len(line) <= 60
+
+
+def test_statusline_text_formats_quota_and_pace():
+    snap = {"quota": {"windows": [{"kind": "session_5h", "utilization_pct": 72.0, "badge": "●", "stale": False,
+                                   "pace": {"delta_pct": 4.2}},
+                                  {"kind": "weekly_all", "utilization_pct": 84.0, "badge": "●", "stale": True}]},
+            "today": {"cost": {"text": "$18.42", "released": True}}, "attention": "ok"}
+    assert statusline_text(snap) == "5h 72%● ⇡4% · 7d 84%●(eski) · $18.42≈ · ok"
+    assert statusline_text(None) == "cci --"
+
+
+def test_setup_otlp_dry_run_and_write_with_backup(tmp_path, capsys):
+    settings = tmp_path / "settings.json"
+    settings.write_text(json.dumps({"permissions": {"allow": ["Read"]}, "env": {"FOO": "1"}}), encoding="utf-8")
+    code, out = run(["setup", "otlp", "--settings", str(settings), "--port", "4318"], tmp_path, {}, capsys)
+    assert code == EXIT_OK and "--write" in out.out and "http://127.0.0.1:4318" in out.out
+    assert json.loads(settings.read_text(encoding="utf-8"))["env"] == {"FOO": "1"}  # dokunulmadi
+    code, out = run(["setup", "otlp", "--settings", str(settings), "--write"], tmp_path, {}, capsys)
+    assert code == EXIT_OK
+    doc = json.loads(settings.read_text(encoding="utf-8"))
+    assert doc["permissions"] == {"allow": ["Read"]} and doc["env"]["FOO"] == "1"
+    assert doc["env"]["OTEL_EXPORTER_OTLP_PROTOCOL"] == "http/json" and doc["env"]["CLAUDE_CODE_ENABLE_TELEMETRY"] == "1"
+    assert list(tmp_path.glob("settings.json.bak-*"))
+
+
+def test_run_once_starts_receiver_scans_and_writes_snapshot(workspace, capsys):
+    tmp, env = workspace
+    code, out = run(["run", "--once", "--otlp-port", "0", "--no-quota"], tmp, env, capsys)
+    assert code == EXIT_OK and "ccid: OTLP http://127.0.0.1:" in out.err
+    snap = json.loads((tmp / "data" / "state" / "latest.json").read_text(encoding="utf-8"))
+    assert snap["today"]["requests"] == 2 and snap["health"]["scan"]["written"] == 2 and snap["health"]["otlp"] == {}
