@@ -1,0 +1,135 @@
+{
+ "$defs": {
+  "WindowScope": {
+   "additionalProperties": false,
+   "properties": {
+    "model_display": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Model Display"
+    },
+    "group": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Group"
+    }
+   },
+   "title": "WindowScope",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "kind": {
+   "enum": [
+    "session_5h",
+    "weekly_all",
+    "weekly_scoped",
+    "monthly",
+    "unclassified"
+   ],
+   "privacy": "public",
+   "title": "Kind",
+   "type": "string"
+  },
+  "duration_s": {
+   "anyOf": [
+    {
+     "minimum": 1,
+     "type": "integer"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "public",
+   "title": "Duration S"
+  },
+  "utilization": {
+   "anyOf": [
+    {
+     "maximum": 1.0,
+     "minimum": 0.0,
+     "type": "number"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Utilization"
+  },
+  "resets_at": {
+   "anyOf": [
+    {
+     "format": "date-time",
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Resets At"
+  },
+  "scope": {
+   "$ref": "#/$defs/WindowScope",
+   "privacy": "internal"
+  },
+  "severity": {
+   "anyOf": [
+    {
+     "enum": [
+      "normal",
+      "warning",
+      "critical"
+     ],
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "public",
+   "title": "Severity"
+  },
+  "is_active": {
+   "anyOf": [
+    {
+     "type": "boolean"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "public",
+   "title": "Is Active"
+  }
+ },
+ "required": [
+  "kind"
+ ],
+ "title": "QuotaWindow",
+ "type": "object"
+}

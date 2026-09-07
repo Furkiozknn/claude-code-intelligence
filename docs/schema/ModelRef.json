@@ -1,0 +1,42 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "id": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Id",
+   "type": "string"
+  },
+  "display": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Display",
+   "type": "string"
+  },
+  "family": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Family"
+  },
+  "unknown": {
+   "default": false,
+   "privacy": "public",
+   "title": "Unknown",
+   "type": "boolean"
+  }
+ },
+ "required": [
+  "id",
+  "display"
+ ],
+ "title": "ModelRef",
+ "type": "object"
+}

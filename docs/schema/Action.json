@@ -1,0 +1,49 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "type": {
+   "enum": [
+    "none",
+    "settings_change",
+    "env_change",
+    "archive",
+    "session_hint",
+    "wait"
+   ],
+   "privacy": "public",
+   "title": "Type",
+   "type": "string"
+  },
+  "reversible": {
+   "privacy": "public",
+   "title": "Reversible",
+   "type": "boolean"
+  },
+  "plan_hash": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Plan Hash"
+  },
+  "summary": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Summary",
+   "type": "string"
+  }
+ },
+ "required": [
+  "type",
+  "reversible",
+  "summary"
+ ],
+ "title": "Action",
+ "type": "object"
+}

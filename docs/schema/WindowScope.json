@@ -1,0 +1,33 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "model_display": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Model Display"
+  },
+  "group": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Group"
+  }
+ },
+ "title": "WindowScope",
+ "type": "object"
+}

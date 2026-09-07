@@ -1,0 +1,133 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "query_source": {
+   "anyOf": [
+    {
+     "enum": [
+      "main",
+      "subagent",
+      "auxiliary"
+     ],
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Query Source"
+  },
+  "agent": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Agent"
+  },
+  "skill": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Skill"
+  },
+  "plugin": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Plugin"
+  },
+  "mcp_server": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Mcp Server"
+  },
+  "mcp_tool": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Mcp Tool"
+  },
+  "marketplace": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Marketplace"
+  },
+  "speed": {
+   "anyOf": [
+    {
+     "enum": [
+      "standard",
+      "fast"
+     ],
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Speed"
+  },
+  "effort": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Effort"
+  }
+ },
+ "title": "Attribution",
+ "type": "object"
+}

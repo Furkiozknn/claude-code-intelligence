@@ -1,0 +1,265 @@
+{
+ "$defs": {
+  "Band": {
+   "additionalProperties": false,
+   "properties": {
+    "lo": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      }
+     ],
+     "privacy": "internal",
+     "title": "Lo"
+    },
+    "hi": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      }
+     ],
+     "privacy": "internal",
+     "title": "Hi"
+    }
+   },
+   "required": [
+    "lo",
+    "hi"
+   ],
+   "title": "Band",
+   "type": "object"
+  },
+  "EstimatorRef": {
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Id",
+     "type": "string"
+    },
+    "version": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Version",
+     "type": "string"
+    }
+   },
+   "required": [
+    "id",
+    "version"
+   ],
+   "title": "EstimatorRef",
+   "type": "object"
+  },
+  "EvidenceClass": {
+   "enum": [
+    "observed",
+    "derived",
+    "vendor_estimated",
+    "estimated",
+    "predicted",
+    "inferred"
+   ],
+   "title": "EvidenceClass",
+   "type": "string"
+  },
+  "Figure": {
+   "additionalProperties": false,
+   "properties": {
+    "value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Value"
+    },
+    "unit": {
+     "enum": [
+      "nanoUSD",
+      "tokens",
+      "percent",
+      "seconds"
+     ],
+     "privacy": "public",
+     "title": "Unit",
+     "type": "string"
+    },
+    "evidence_class": {
+     "$ref": "#/$defs/EvidenceClass",
+     "privacy": "public"
+    },
+    "released": {
+     "default": true,
+     "privacy": "public",
+     "title": "Released",
+     "type": "boolean"
+    },
+    "withheld_because": {
+     "default": "",
+     "privacy": "public",
+     "title": "Withheld Because",
+     "type": "string"
+    },
+    "released_as": {
+     "default": "",
+     "enum": [
+      "draft",
+      "reconciled",
+      ""
+     ],
+     "privacy": "public",
+     "title": "Released As",
+     "type": "string"
+    },
+    "projected": {
+     "default": false,
+     "privacy": "public",
+     "title": "Projected",
+     "type": "boolean"
+    },
+    "estimator": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/EstimatorRef"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal"
+    },
+    "band": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Band"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "maximum": 1.0,
+       "minimum": 0.0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Confidence"
+    }
+   },
+   "required": [
+    "unit",
+    "evidence_class"
+   ],
+   "title": "Figure",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "estimate_id": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Estimate Id",
+   "type": "string"
+  },
+  "estimator": {
+   "$ref": "#/$defs/EstimatorRef",
+   "privacy": "internal"
+  },
+  "target": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Target",
+   "type": "string"
+  },
+  "produced_at": {
+   "format": "date-time",
+   "privacy": "internal",
+   "title": "Produced At",
+   "type": "string"
+  },
+  "inputs_hash": {
+   "minLength": 16,
+   "privacy": "internal",
+   "title": "Inputs Hash",
+   "type": "string"
+  },
+  "value": {
+   "$ref": "#/$defs/Figure",
+   "privacy": "internal"
+  },
+  "diagnostics": {
+   "additionalProperties": {
+    "anyOf": [
+     {
+      "type": "number"
+     },
+     {
+      "type": "integer"
+     },
+     {
+      "type": "string"
+     },
+     {
+      "type": "null"
+     }
+    ]
+   },
+   "privacy": "internal",
+   "title": "Diagnostics",
+   "type": "object"
+  },
+  "realized": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/Figure"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal"
+  }
+ },
+ "required": [
+  "estimate_id",
+  "estimator",
+  "target",
+  "produced_at",
+  "inputs_hash",
+  "value"
+ ],
+ "title": "Estimate",
+ "type": "object"
+}

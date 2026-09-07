@@ -1,0 +1,30 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "kind": {
+   "enum": [
+    "session",
+    "project",
+    "quota_window",
+    "provider",
+    "collector",
+    "model"
+   ],
+   "privacy": "public",
+   "title": "Kind",
+   "type": "string"
+  },
+  "id": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Id",
+   "type": "string"
+  }
+ },
+ "required": [
+  "kind",
+  "id"
+ ],
+ "title": "Subject",
+ "type": "object"
+}

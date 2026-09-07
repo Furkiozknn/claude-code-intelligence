@@ -1,0 +1,24 @@
+{
+ "additionalProperties": false,
+ "description": "Hesap referansi. `account_key` YALNIZ OTel `user.account_uuid`'dir (R-9);\ngizli degerden turetilmis kimlik kullanilmaz. Kimlik yoksa AccountRef\nuretilmez ve hesap seviyesi veri saklanmaz (claude-pace kurali).",
+ "properties": {
+  "provider": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Provider",
+   "type": "string"
+  },
+  "account_key": {
+   "minLength": 1,
+   "privacy": "sensitive",
+   "title": "Account Key",
+   "type": "string"
+  }
+ },
+ "required": [
+  "provider",
+  "account_key"
+ ],
+ "title": "AccountRef",
+ "type": "object"
+}

@@ -1,0 +1,468 @@
+{
+ "$defs": {
+  "AccountRef": {
+   "additionalProperties": false,
+   "description": "Hesap referansi. `account_key` YALNIZ OTel `user.account_uuid`'dir (R-9);\ngizli degerden turetilmis kimlik kullanilmaz. Kimlik yoksa AccountRef\nuretilmez ve hesap seviyesi veri saklanmaz (claude-pace kurali).",
+   "properties": {
+    "provider": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Provider",
+     "type": "string"
+    },
+    "account_key": {
+     "minLength": 1,
+     "privacy": "sensitive",
+     "title": "Account Key",
+     "type": "string"
+    }
+   },
+   "required": [
+    "provider",
+    "account_key"
+   ],
+   "title": "AccountRef",
+   "type": "object"
+  },
+  "Band": {
+   "additionalProperties": false,
+   "properties": {
+    "lo": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      }
+     ],
+     "privacy": "internal",
+     "title": "Lo"
+    },
+    "hi": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      }
+     ],
+     "privacy": "internal",
+     "title": "Hi"
+    }
+   },
+   "required": [
+    "lo",
+    "hi"
+   ],
+   "title": "Band",
+   "type": "object"
+  },
+  "EstimatorRef": {
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Id",
+     "type": "string"
+    },
+    "version": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Version",
+     "type": "string"
+    }
+   },
+   "required": [
+    "id",
+    "version"
+   ],
+   "title": "EstimatorRef",
+   "type": "object"
+  },
+  "EvidenceClass": {
+   "enum": [
+    "observed",
+    "derived",
+    "vendor_estimated",
+    "estimated",
+    "predicted",
+    "inferred"
+   ],
+   "title": "EvidenceClass",
+   "type": "string"
+  },
+  "Figure": {
+   "additionalProperties": false,
+   "properties": {
+    "value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Value"
+    },
+    "unit": {
+     "enum": [
+      "nanoUSD",
+      "tokens",
+      "percent",
+      "seconds"
+     ],
+     "privacy": "public",
+     "title": "Unit",
+     "type": "string"
+    },
+    "evidence_class": {
+     "$ref": "#/$defs/EvidenceClass",
+     "privacy": "public"
+    },
+    "released": {
+     "default": true,
+     "privacy": "public",
+     "title": "Released",
+     "type": "boolean"
+    },
+    "withheld_because": {
+     "default": "",
+     "privacy": "public",
+     "title": "Withheld Because",
+     "type": "string"
+    },
+    "released_as": {
+     "default": "",
+     "enum": [
+      "draft",
+      "reconciled",
+      ""
+     ],
+     "privacy": "public",
+     "title": "Released As",
+     "type": "string"
+    },
+    "projected": {
+     "default": false,
+     "privacy": "public",
+     "title": "Projected",
+     "type": "boolean"
+    },
+    "estimator": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/EstimatorRef"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal"
+    },
+    "band": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Band"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "maximum": 1.0,
+       "minimum": 0.0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Confidence"
+    }
+   },
+   "required": [
+    "unit",
+    "evidence_class"
+   ],
+   "title": "Figure",
+   "type": "object"
+  },
+  "QuotaWindow": {
+   "additionalProperties": false,
+   "properties": {
+    "kind": {
+     "enum": [
+      "session_5h",
+      "weekly_all",
+      "weekly_scoped",
+      "monthly",
+      "unclassified"
+     ],
+     "privacy": "public",
+     "title": "Kind",
+     "type": "string"
+    },
+    "duration_s": {
+     "anyOf": [
+      {
+       "minimum": 1,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "public",
+     "title": "Duration S"
+    },
+    "utilization": {
+     "anyOf": [
+      {
+       "maximum": 1.0,
+       "minimum": 0.0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Utilization"
+    },
+    "resets_at": {
+     "anyOf": [
+      {
+       "format": "date-time",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Resets At"
+    },
+    "scope": {
+     "$ref": "#/$defs/WindowScope",
+     "privacy": "internal"
+    },
+    "severity": {
+     "anyOf": [
+      {
+       "enum": [
+        "normal",
+        "warning",
+        "critical"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "public",
+     "title": "Severity"
+    },
+    "is_active": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "public",
+     "title": "Is Active"
+    }
+   },
+   "required": [
+    "kind"
+   ],
+   "title": "QuotaWindow",
+   "type": "object"
+  },
+  "Spend": {
+   "additionalProperties": false,
+   "properties": {
+    "used": {
+     "$ref": "#/$defs/Figure",
+     "privacy": "internal"
+    },
+    "limit": {
+     "$ref": "#/$defs/Figure",
+     "privacy": "internal"
+    }
+   },
+   "required": [
+    "used",
+    "limit"
+   ],
+   "title": "Spend",
+   "type": "object"
+  },
+  "WindowScope": {
+   "additionalProperties": false,
+   "properties": {
+    "model_display": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Model Display"
+    },
+    "group": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Group"
+    }
+   },
+   "title": "WindowScope",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "snapshot_id": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Snapshot Id",
+   "type": "string"
+  },
+  "provider": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Provider",
+   "type": "string"
+  },
+  "account": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/AccountRef"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "sensitive"
+  },
+  "fetched_at": {
+   "format": "date-time",
+   "privacy": "internal",
+   "title": "Fetched At",
+   "type": "string"
+  },
+  "source": {
+   "enum": [
+    "usage_api",
+    "statusline",
+    "rate_limit_headers",
+    "provider_ipc"
+   ],
+   "privacy": "public",
+   "title": "Source",
+   "type": "string"
+  },
+  "authoritative": {
+   "privacy": "public",
+   "title": "Authoritative",
+   "type": "boolean"
+  },
+  "windows": {
+   "items": {
+    "$ref": "#/$defs/QuotaWindow"
+   },
+   "privacy": "internal",
+   "title": "Windows",
+   "type": "array"
+  },
+  "spend": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/Spend"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal"
+  },
+  "retry_after_s": {
+   "anyOf": [
+    {
+     "minimum": 0,
+     "type": "integer"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "public",
+   "title": "Retry After S"
+  },
+  "raw_hash": {
+   "minLength": 16,
+   "privacy": "internal",
+   "title": "Raw Hash",
+   "type": "string"
+  },
+  "evidence_class": {
+   "$ref": "#/$defs/EvidenceClass",
+   "default": "observed",
+   "privacy": "public"
+  }
+ },
+ "required": [
+  "snapshot_id",
+  "provider",
+  "fetched_at",
+  "source",
+  "authoritative",
+  "windows",
+  "raw_hash"
+ ],
+ "title": "QuotaSnapshot",
+ "type": "object"
+}

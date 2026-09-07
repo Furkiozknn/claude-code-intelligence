@@ -1,0 +1,940 @@
+{
+ "$defs": {
+  "AccountRef": {
+   "additionalProperties": false,
+   "description": "Hesap referansi. `account_key` YALNIZ OTel `user.account_uuid`'dir (R-9);\ngizli degerden turetilmis kimlik kullanilmaz. Kimlik yoksa AccountRef\nuretilmez ve hesap seviyesi veri saklanmaz (claude-pace kurali).",
+   "properties": {
+    "provider": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Provider",
+     "type": "string"
+    },
+    "account_key": {
+     "minLength": 1,
+     "privacy": "sensitive",
+     "title": "Account Key",
+     "type": "string"
+    }
+   },
+   "required": [
+    "provider",
+    "account_key"
+   ],
+   "title": "AccountRef",
+   "type": "object"
+  },
+  "Attribution": {
+   "additionalProperties": false,
+   "properties": {
+    "query_source": {
+     "anyOf": [
+      {
+       "enum": [
+        "main",
+        "subagent",
+        "auxiliary"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Query Source"
+    },
+    "agent": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Agent"
+    },
+    "skill": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Skill"
+    },
+    "plugin": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Plugin"
+    },
+    "mcp_server": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Mcp Server"
+    },
+    "mcp_tool": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Mcp Tool"
+    },
+    "marketplace": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Marketplace"
+    },
+    "speed": {
+     "anyOf": [
+      {
+       "enum": [
+        "standard",
+        "fast"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Speed"
+    },
+    "effort": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Effort"
+    }
+   },
+   "title": "Attribution",
+   "type": "object"
+  },
+  "Band": {
+   "additionalProperties": false,
+   "properties": {
+    "lo": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      }
+     ],
+     "privacy": "internal",
+     "title": "Lo"
+    },
+    "hi": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      }
+     ],
+     "privacy": "internal",
+     "title": "Hi"
+    }
+   },
+   "required": [
+    "lo",
+    "hi"
+   ],
+   "title": "Band",
+   "type": "object"
+  },
+  "CollectorRef": {
+   "additionalProperties": false,
+   "properties": {
+    "name": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Name",
+     "type": "string"
+    },
+    "version": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Version",
+     "type": "string"
+    },
+    "schema_version": {
+     "minimum": 1,
+     "privacy": "public",
+     "title": "Schema Version",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "name",
+    "version",
+    "schema_version"
+   ],
+   "title": "CollectorRef",
+   "type": "object"
+  },
+  "Cost": {
+   "additionalProperties": false,
+   "properties": {
+    "usd": {
+     "$ref": "#/$defs/Figure",
+     "privacy": "internal"
+    },
+    "vendor_usd": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Figure"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal"
+    },
+    "pricing_effective_at": {
+     "anyOf": [
+      {
+       "format": "date",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "public",
+     "title": "Pricing Effective At"
+    }
+   },
+   "required": [
+    "usd"
+   ],
+   "title": "Cost",
+   "type": "object"
+  },
+  "EstimatorRef": {
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Id",
+     "type": "string"
+    },
+    "version": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Version",
+     "type": "string"
+    }
+   },
+   "required": [
+    "id",
+    "version"
+   ],
+   "title": "EstimatorRef",
+   "type": "object"
+  },
+  "EvidenceClass": {
+   "enum": [
+    "observed",
+    "derived",
+    "vendor_estimated",
+    "estimated",
+    "predicted",
+    "inferred"
+   ],
+   "title": "EvidenceClass",
+   "type": "string"
+  },
+  "Figure": {
+   "additionalProperties": false,
+   "properties": {
+    "value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Value"
+    },
+    "unit": {
+     "enum": [
+      "nanoUSD",
+      "tokens",
+      "percent",
+      "seconds"
+     ],
+     "privacy": "public",
+     "title": "Unit",
+     "type": "string"
+    },
+    "evidence_class": {
+     "$ref": "#/$defs/EvidenceClass",
+     "privacy": "public"
+    },
+    "released": {
+     "default": true,
+     "privacy": "public",
+     "title": "Released",
+     "type": "boolean"
+    },
+    "withheld_because": {
+     "default": "",
+     "privacy": "public",
+     "title": "Withheld Because",
+     "type": "string"
+    },
+    "released_as": {
+     "default": "",
+     "enum": [
+      "draft",
+      "reconciled",
+      ""
+     ],
+     "privacy": "public",
+     "title": "Released As",
+     "type": "string"
+    },
+    "projected": {
+     "default": false,
+     "privacy": "public",
+     "title": "Projected",
+     "type": "boolean"
+    },
+    "estimator": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/EstimatorRef"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal"
+    },
+    "band": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Band"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "maximum": 1.0,
+       "minimum": 0.0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Confidence"
+    }
+   },
+   "required": [
+    "unit",
+    "evidence_class"
+   ],
+   "title": "Figure",
+   "type": "object"
+  },
+  "Flags": {
+   "additionalProperties": false,
+   "properties": {
+    "synthetic": {
+     "default": false,
+     "privacy": "public",
+     "title": "Synthetic",
+     "type": "boolean"
+    },
+    "api_error": {
+     "default": false,
+     "privacy": "public",
+     "title": "Api Error",
+     "type": "boolean"
+    },
+    "advisor": {
+     "default": false,
+     "privacy": "public",
+     "title": "Advisor",
+     "type": "boolean"
+    },
+    "iteration_index": {
+     "anyOf": [
+      {
+       "minimum": 0,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "public",
+     "title": "Iteration Index"
+    },
+    "sidechain_replay_dropped": {
+     "default": 0,
+     "minimum": 0,
+     "privacy": "public",
+     "title": "Sidechain Replay Dropped",
+     "type": "integer"
+    },
+    "stream_partial_suspected": {
+     "default": false,
+     "privacy": "public",
+     "title": "Stream Partial Suspected",
+     "type": "boolean"
+    }
+   },
+   "title": "Flags",
+   "type": "object"
+  },
+  "ModelRef": {
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Id",
+     "type": "string"
+    },
+    "display": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Display",
+     "type": "string"
+    },
+    "family": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Family"
+    },
+    "unknown": {
+     "default": false,
+     "privacy": "public",
+     "title": "Unknown",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "id",
+    "display"
+   ],
+   "title": "ModelRef",
+   "type": "object"
+  },
+  "SessionRef": {
+   "additionalProperties": false,
+   "properties": {
+    "session_id": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Session Id",
+     "type": "string"
+    },
+    "parent_session_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Parent Session Id"
+    },
+    "agent_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Agent Id"
+    },
+    "is_sidechain": {
+     "default": false,
+     "privacy": "internal",
+     "title": "Is Sidechain",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "session_id"
+   ],
+   "title": "SessionRef",
+   "type": "object"
+  },
+  "SourceInstance": {
+   "additionalProperties": false,
+   "description": "Ayni saglayicinin farkli koku (CLAUDE_CONFIG_DIR, Desktop, uzak makine).",
+   "properties": {
+    "provider": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Provider",
+     "type": "string"
+    },
+    "instance_id": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Instance Id",
+     "type": "string"
+    },
+    "label": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Label",
+     "type": "string"
+    },
+    "kind": {
+     "enum": [
+      "cli",
+      "desktop",
+      "ide",
+      "remote",
+      "network"
+     ],
+     "privacy": "internal",
+     "title": "Kind",
+     "type": "string"
+    },
+    "root_path": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "sensitive",
+     "title": "Root Path"
+    },
+    "network": {
+     "default": false,
+     "privacy": "public",
+     "title": "Network",
+     "type": "boolean"
+    },
+    "schema_verified": {
+     "default": false,
+     "privacy": "public",
+     "title": "Schema Verified",
+     "type": "boolean"
+    },
+    "verified_at": {
+     "anyOf": [
+      {
+       "format": "date",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "public",
+     "title": "Verified At"
+    }
+   },
+   "required": [
+    "provider",
+    "instance_id",
+    "label",
+    "kind"
+   ],
+   "title": "SourceInstance",
+   "type": "object"
+  },
+  "Timing": {
+   "additionalProperties": false,
+   "properties": {
+    "duration_ms": {
+     "anyOf": [
+      {
+       "minimum": 0,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Duration Ms"
+    },
+    "ttft_ms": {
+     "anyOf": [
+      {
+       "minimum": 0,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Ttft Ms"
+    }
+   },
+   "title": "Timing",
+   "type": "object"
+  },
+  "Tokens": {
+   "additionalProperties": false,
+   "description": "`input` cache HARIC girdi (Anthropic anlami); `input_total` cache dahil\n(OTel GenAI semconv anlami) - notes/03.",
+   "properties": {
+    "input": {
+     "minimum": 0,
+     "privacy": "internal",
+     "title": "Input",
+     "type": "integer"
+    },
+    "output": {
+     "minimum": 0,
+     "privacy": "internal",
+     "title": "Output",
+     "type": "integer"
+    },
+    "cache_read": {
+     "default": 0,
+     "minimum": 0,
+     "privacy": "internal",
+     "title": "Cache Read",
+     "type": "integer"
+    },
+    "cache_write_5m": {
+     "anyOf": [
+      {
+       "minimum": 0,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Cache Write 5M"
+    },
+    "cache_write_1h": {
+     "anyOf": [
+      {
+       "minimum": 0,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Cache Write 1H"
+    },
+    "cache_write_total": {
+     "default": 0,
+     "minimum": 0,
+     "privacy": "internal",
+     "title": "Cache Write Total",
+     "type": "integer"
+    },
+    "reasoning": {
+     "anyOf": [
+      {
+       "minimum": 0,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Reasoning"
+    }
+   },
+   "required": [
+    "input",
+    "output"
+   ],
+   "title": "Tokens",
+   "type": "object"
+  },
+  "Workspace": {
+   "additionalProperties": false,
+   "properties": {
+    "project_key": {
+     "minLength": 1,
+     "privacy": "sensitive",
+     "title": "Project Key",
+     "type": "string"
+    },
+    "cwd_hash": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "sensitive",
+     "title": "Cwd Hash"
+    },
+    "git_branch": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "sensitive",
+     "title": "Git Branch"
+    }
+   },
+   "required": [
+    "project_key"
+   ],
+   "title": "Workspace",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "provider": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Provider",
+   "type": "string"
+  },
+  "source": {
+   "$ref": "#/$defs/SourceInstance",
+   "privacy": "internal"
+  },
+  "account": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/AccountRef"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "sensitive"
+  },
+  "session": {
+   "$ref": "#/$defs/SessionRef",
+   "privacy": "internal"
+  },
+  "prompt_id": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Prompt Id"
+  },
+  "message_id": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Message Id"
+  },
+  "request_id": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Request Id"
+  },
+  "uuid": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Uuid"
+  },
+  "ts": {
+   "format": "date-time",
+   "privacy": "internal",
+   "title": "Ts",
+   "type": "string"
+  },
+  "model": {
+   "$ref": "#/$defs/ModelRef",
+   "privacy": "internal"
+  },
+  "tokens": {
+   "$ref": "#/$defs/Tokens",
+   "privacy": "internal"
+  },
+  "cost": {
+   "$ref": "#/$defs/Cost",
+   "privacy": "internal"
+  },
+  "timing": {
+   "$ref": "#/$defs/Timing",
+   "privacy": "internal"
+  },
+  "attribution": {
+   "$ref": "#/$defs/Attribution",
+   "privacy": "internal"
+  },
+  "flags": {
+   "$ref": "#/$defs/Flags",
+   "privacy": "public"
+  },
+  "workspace": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/Workspace"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "sensitive"
+  },
+  "evidence_class": {
+   "$ref": "#/$defs/EvidenceClass",
+   "default": "observed",
+   "privacy": "public"
+  },
+  "collector": {
+   "$ref": "#/$defs/CollectorRef",
+   "privacy": "internal"
+  }
+ },
+ "required": [
+  "provider",
+  "source",
+  "session",
+  "ts",
+  "model",
+  "tokens",
+  "cost",
+  "collector"
+ ],
+ "title": "UsageRecord",
+ "type": "object"
+}

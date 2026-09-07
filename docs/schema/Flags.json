@@ -1,0 +1,52 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "synthetic": {
+   "default": false,
+   "privacy": "public",
+   "title": "Synthetic",
+   "type": "boolean"
+  },
+  "api_error": {
+   "default": false,
+   "privacy": "public",
+   "title": "Api Error",
+   "type": "boolean"
+  },
+  "advisor": {
+   "default": false,
+   "privacy": "public",
+   "title": "Advisor",
+   "type": "boolean"
+  },
+  "iteration_index": {
+   "anyOf": [
+    {
+     "minimum": 0,
+     "type": "integer"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "public",
+   "title": "Iteration Index"
+  },
+  "sidechain_replay_dropped": {
+   "default": 0,
+   "minimum": 0,
+   "privacy": "public",
+   "title": "Sidechain Replay Dropped",
+   "type": "integer"
+  },
+  "stream_partial_suspected": {
+   "default": false,
+   "privacy": "public",
+   "title": "Stream Partial Suspected",
+   "type": "boolean"
+  }
+ },
+ "title": "Flags",
+ "type": "object"
+}

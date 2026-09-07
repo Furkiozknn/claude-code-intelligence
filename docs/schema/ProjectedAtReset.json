@@ -1,0 +1,68 @@
+{
+ "$defs": {
+  "Band": {
+   "additionalProperties": false,
+   "properties": {
+    "lo": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      }
+     ],
+     "privacy": "internal",
+     "title": "Lo"
+    },
+    "hi": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      }
+     ],
+     "privacy": "internal",
+     "title": "Hi"
+    }
+   },
+   "required": [
+    "lo",
+    "hi"
+   ],
+   "title": "Band",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "median": {
+   "anyOf": [
+    {
+     "minimum": 0.0,
+     "type": "number"
+    },
+    {
+     "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+     "type": "string"
+    }
+   ],
+   "privacy": "internal",
+   "title": "Median"
+  },
+  "band": {
+   "$ref": "#/$defs/Band",
+   "privacy": "internal"
+  }
+ },
+ "required": [
+  "median",
+  "band"
+ ],
+ "title": "ProjectedAtReset",
+ "type": "object"
+}

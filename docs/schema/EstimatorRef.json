@@ -1,0 +1,23 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "id": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Id",
+   "type": "string"
+  },
+  "version": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Version",
+   "type": "string"
+  }
+ },
+ "required": [
+  "id",
+  "version"
+ ],
+ "title": "EstimatorRef",
+ "type": "object"
+}

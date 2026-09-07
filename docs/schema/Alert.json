@@ -1,0 +1,210 @@
+{
+ "$defs": {
+  "Evidence": {
+   "additionalProperties": false,
+   "properties": {
+    "metric": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Metric",
+     "type": "string"
+    },
+    "value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      }
+     ],
+     "privacy": "internal",
+     "title": "Value"
+    },
+    "baseline": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Baseline"
+    },
+    "ratio": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Ratio"
+    },
+    "evidence_class": {
+     "minLength": 1,
+     "privacy": "public",
+     "title": "Evidence Class",
+     "type": "string"
+    }
+   },
+   "required": [
+    "metric",
+    "value",
+    "evidence_class"
+   ],
+   "title": "Evidence",
+   "type": "object"
+  },
+  "Subject": {
+   "additionalProperties": false,
+   "properties": {
+    "kind": {
+     "enum": [
+      "session",
+      "project",
+      "quota_window",
+      "provider",
+      "collector",
+      "model"
+     ],
+     "privacy": "public",
+     "title": "Kind",
+     "type": "string"
+    },
+    "id": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Id",
+     "type": "string"
+    }
+   },
+   "required": [
+    "kind",
+    "id"
+   ],
+   "title": "Subject",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "alert_id": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Alert Id",
+   "type": "string"
+  },
+  "rule_id": {
+   "minLength": 1,
+   "privacy": "public",
+   "title": "Rule Id",
+   "type": "string"
+  },
+  "severity": {
+   "enum": [
+    "info",
+    "warning",
+    "critical"
+   ],
+   "privacy": "public",
+   "title": "Severity",
+   "type": "string"
+  },
+  "basis": {
+   "enum": [
+    "certain",
+    "probable"
+   ],
+   "privacy": "public",
+   "title": "Basis",
+   "type": "string"
+  },
+  "raised_at": {
+   "format": "date-time",
+   "privacy": "internal",
+   "title": "Raised At",
+   "type": "string"
+  },
+  "resolved_at": {
+   "anyOf": [
+    {
+     "format": "date-time",
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Resolved At"
+  },
+  "subject": {
+   "$ref": "#/$defs/Subject",
+   "privacy": "internal"
+  },
+  "evidence": {
+   "default": [],
+   "items": {
+    "$ref": "#/$defs/Evidence"
+   },
+   "privacy": "internal",
+   "title": "Evidence",
+   "type": "array"
+  },
+  "dedupe_key": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Dedupe Key",
+   "type": "string"
+  },
+  "cooldown_until": {
+   "anyOf": [
+    {
+     "format": "date-time",
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Cooldown Until"
+  },
+  "message": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Message",
+   "type": "string"
+  }
+ },
+ "required": [
+  "alert_id",
+  "rule_id",
+  "severity",
+  "basis",
+  "raised_at",
+  "subject",
+  "dedupe_key",
+  "message"
+ ],
+ "title": "Alert",
+ "type": "object"
+}

@@ -1,0 +1,83 @@
+{
+ "additionalProperties": false,
+ "description": "Ayni saglayicinin farkli koku (CLAUDE_CONFIG_DIR, Desktop, uzak makine).",
+ "properties": {
+  "provider": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Provider",
+   "type": "string"
+  },
+  "instance_id": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Instance Id",
+   "type": "string"
+  },
+  "label": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Label",
+   "type": "string"
+  },
+  "kind": {
+   "enum": [
+    "cli",
+    "desktop",
+    "ide",
+    "remote",
+    "network"
+   ],
+   "privacy": "internal",
+   "title": "Kind",
+   "type": "string"
+  },
+  "root_path": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "sensitive",
+   "title": "Root Path"
+  },
+  "network": {
+   "default": false,
+   "privacy": "public",
+   "title": "Network",
+   "type": "boolean"
+  },
+  "schema_verified": {
+   "default": false,
+   "privacy": "public",
+   "title": "Schema Verified",
+   "type": "boolean"
+  },
+  "verified_at": {
+   "anyOf": [
+    {
+     "format": "date",
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "public",
+   "title": "Verified At"
+  }
+ },
+ "required": [
+  "provider",
+  "instance_id",
+  "label",
+  "kind"
+ ],
+ "title": "SourceInstance",
+ "type": "object"
+}

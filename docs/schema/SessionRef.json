@@ -1,0 +1,48 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "session_id": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Session Id",
+   "type": "string"
+  },
+  "parent_session_id": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Parent Session Id"
+  },
+  "agent_id": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Agent Id"
+  },
+  "is_sidechain": {
+   "default": false,
+   "privacy": "internal",
+   "title": "Is Sidechain",
+   "type": "boolean"
+  }
+ },
+ "required": [
+  "session_id"
+ ],
+ "title": "SessionRef",
+ "type": "object"
+}

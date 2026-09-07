@@ -1,0 +1,71 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "metric": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Metric",
+   "type": "string"
+  },
+  "value": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+     "type": "string"
+    }
+   ],
+   "privacy": "internal",
+   "title": "Value"
+  },
+  "baseline": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Baseline"
+  },
+  "ratio": {
+   "anyOf": [
+    {
+     "type": "number"
+    },
+    {
+     "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal",
+   "title": "Ratio"
+  },
+  "evidence_class": {
+   "minLength": 1,
+   "privacy": "public",
+   "title": "Evidence Class",
+   "type": "string"
+  }
+ },
+ "required": [
+  "metric",
+  "value",
+  "evidence_class"
+ ],
+ "title": "Evidence",
+ "type": "object"
+}

@@ -1,0 +1,42 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "project_key": {
+   "minLength": 1,
+   "privacy": "sensitive",
+   "title": "Project Key",
+   "type": "string"
+  },
+  "cwd_hash": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "sensitive",
+   "title": "Cwd Hash"
+  },
+  "git_branch": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "sensitive",
+   "title": "Git Branch"
+  }
+ },
+ "required": [
+  "project_key"
+ ],
+ "title": "Workspace",
+ "type": "object"
+}

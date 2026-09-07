@@ -1,0 +1,30 @@
+{
+ "additionalProperties": false,
+ "properties": {
+  "name": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Name",
+   "type": "string"
+  },
+  "version": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Version",
+   "type": "string"
+  },
+  "schema_version": {
+   "minimum": 1,
+   "privacy": "public",
+   "title": "Schema Version",
+   "type": "integer"
+  }
+ },
+ "required": [
+  "name",
+  "version",
+  "schema_version"
+ ],
+ "title": "CollectorRef",
+ "type": "object"
+}

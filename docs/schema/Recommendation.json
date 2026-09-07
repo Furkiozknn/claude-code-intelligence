@@ -1,0 +1,387 @@
+{
+ "$defs": {
+  "Action": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "enum": [
+      "none",
+      "settings_change",
+      "env_change",
+      "archive",
+      "session_hint",
+      "wait"
+     ],
+     "privacy": "public",
+     "title": "Type",
+     "type": "string"
+    },
+    "reversible": {
+     "privacy": "public",
+     "title": "Reversible",
+     "type": "boolean"
+    },
+    "plan_hash": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Plan Hash"
+    },
+    "summary": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Summary",
+     "type": "string"
+    }
+   },
+   "required": [
+    "type",
+    "reversible",
+    "summary"
+   ],
+   "title": "Action",
+   "type": "object"
+  },
+  "Band": {
+   "additionalProperties": false,
+   "properties": {
+    "lo": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      }
+     ],
+     "privacy": "internal",
+     "title": "Lo"
+    },
+    "hi": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      }
+     ],
+     "privacy": "internal",
+     "title": "Hi"
+    }
+   },
+   "required": [
+    "lo",
+    "hi"
+   ],
+   "title": "Band",
+   "type": "object"
+  },
+  "EstimatorRef": {
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Id",
+     "type": "string"
+    },
+    "version": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Version",
+     "type": "string"
+    }
+   },
+   "required": [
+    "id",
+    "version"
+   ],
+   "title": "EstimatorRef",
+   "type": "object"
+  },
+  "Evidence": {
+   "additionalProperties": false,
+   "properties": {
+    "metric": {
+     "minLength": 1,
+     "privacy": "internal",
+     "title": "Metric",
+     "type": "string"
+    },
+    "value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      }
+     ],
+     "privacy": "internal",
+     "title": "Value"
+    },
+    "baseline": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Baseline"
+    },
+    "ratio": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Ratio"
+    },
+    "evidence_class": {
+     "minLength": 1,
+     "privacy": "public",
+     "title": "Evidence Class",
+     "type": "string"
+    }
+   },
+   "required": [
+    "metric",
+    "value",
+    "evidence_class"
+   ],
+   "title": "Evidence",
+   "type": "object"
+  },
+  "EvidenceClass": {
+   "enum": [
+    "observed",
+    "derived",
+    "vendor_estimated",
+    "estimated",
+    "predicted",
+    "inferred"
+   ],
+   "title": "EvidenceClass",
+   "type": "string"
+  },
+  "Figure": {
+   "additionalProperties": false,
+   "properties": {
+    "value": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Value"
+    },
+    "unit": {
+     "enum": [
+      "nanoUSD",
+      "tokens",
+      "percent",
+      "seconds"
+     ],
+     "privacy": "public",
+     "title": "Unit",
+     "type": "string"
+    },
+    "evidence_class": {
+     "$ref": "#/$defs/EvidenceClass",
+     "privacy": "public"
+    },
+    "released": {
+     "default": true,
+     "privacy": "public",
+     "title": "Released",
+     "type": "boolean"
+    },
+    "withheld_because": {
+     "default": "",
+     "privacy": "public",
+     "title": "Withheld Because",
+     "type": "string"
+    },
+    "released_as": {
+     "default": "",
+     "enum": [
+      "draft",
+      "reconciled",
+      ""
+     ],
+     "privacy": "public",
+     "title": "Released As",
+     "type": "string"
+    },
+    "projected": {
+     "default": false,
+     "privacy": "public",
+     "title": "Projected",
+     "type": "boolean"
+    },
+    "estimator": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/EstimatorRef"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal"
+    },
+    "band": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Band"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal"
+    },
+    "confidence": {
+     "anyOf": [
+      {
+       "maximum": 1.0,
+       "minimum": 0.0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "privacy": "internal",
+     "title": "Confidence"
+    }
+   },
+   "required": [
+    "unit",
+    "evidence_class"
+   ],
+   "title": "Figure",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "rec_id": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Rec Id",
+   "type": "string"
+  },
+  "kind": {
+   "minLength": 1,
+   "privacy": "public",
+   "title": "Kind",
+   "type": "string"
+  },
+  "title": {
+   "minLength": 1,
+   "privacy": "internal",
+   "title": "Title",
+   "type": "string"
+  },
+  "why": {
+   "items": {
+    "$ref": "#/$defs/Evidence"
+   },
+   "minItems": 1,
+   "privacy": "internal",
+   "title": "Why",
+   "type": "array"
+  },
+  "action": {
+   "$ref": "#/$defs/Action",
+   "privacy": "internal"
+  },
+  "expected": {
+   "$ref": "#/$defs/Figure",
+   "privacy": "internal"
+  },
+  "realized": {
+   "anyOf": [
+    {
+     "$ref": "#/$defs/Figure"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "privacy": "internal"
+  },
+  "status": {
+   "default": "issued",
+   "enum": [
+    "issued",
+    "applied",
+    "reverted",
+    "evaluated",
+    "dismissed"
+   ],
+   "privacy": "public",
+   "title": "Status",
+   "type": "string"
+  },
+  "issued_at": {
+   "format": "date-time",
+   "privacy": "internal",
+   "title": "Issued At",
+   "type": "string"
+  }
+ },
+ "required": [
+  "rec_id",
+  "kind",
+  "title",
+  "why",
+  "action",
+  "expected",
+  "issued_at"
+ ],
+ "title": "Recommendation",
+ "type": "object"
+}
