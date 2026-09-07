@@ -18,8 +18,11 @@ hedefleniyor. Araştırma ve mimari bitmeden platform kodu yazılmadı.
 Research → Discover → Score → Deep Analyze → Extract → Synthesize
         → Design → Critique → Implement → Benchmark → Improve
    ✅        ✅        ✅         ✅           ✅          ✅
-                                                    → 🔄 Design (Faz 7)
+                                            → ✅ Design (Faz 7–9) → 🔄 Implement (Stage 1 ✅, Stage 2 🔄)
 ```
+
+**Kod durumu:** `cci/model` (Stage 1) — `uv sync && uv run pytest` (50 test);
+`uv run python -m cci.model.schema` JSON şemalarını `docs/schema/` altına yazar.
 
 | Çıktı | Nerede |
 |---|---|

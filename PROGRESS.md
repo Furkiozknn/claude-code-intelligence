@@ -32,7 +32,7 @@ yazma — parse patlıyor; böyle dosyalar için Write. Python konsolunda her
 | 7 | **Mimari** | 10–36, 39–40 | ✅ 8 belge (`docs/`) + README + CONTRIBUTING; Faz 9 eleştirisiyle revize edilecek |
 | 8 | **Ürün spesifikasyonu** | 22–23 | ✅ `docs/PRODUCT.md` (ürün, UX, dashboard, CLI, TUI, uyarı, tray/statusline) |
 | 9 | **Öz-eleştiri** (18 soru) | 41 | ✅ `docs/SELF_CRITIQUE.md`; 12 revizyon (R-1…R-12) belgelere işlendi |
-| 10 | **İmplementasyon** Stage 1–16 | 42 | 🔄 `docs/IMPLEMENTATION_PLAN.md`; Stage 1 başlıyor |
+| 10 | **İmplementasyon** Stage 1–16 | 42 | 🔄 Stage 1 ✅ (`cci/model`, 50 test, 27 şema) · Stage 2 🔄 adaptör soyutlaması |
 | 11 | **Benchmark → eleştiri → iyileştirme** | 43 | ⬜ |
 
 ---
