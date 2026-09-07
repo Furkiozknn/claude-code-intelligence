@@ -92,7 +92,7 @@ listede olmayan host'a çıkış girişimi test hatasıdır.
 ## 8. Aşamalar (MP §36 — overbuild yok)
 | Aşama | Kapsam | Kalıplar |
 |---|---|---|
-| **Core (1)** | OTLP alıcı + transcript + kota poller; UsageRecord/QuotaSnapshot; dedup; günlük/oturum özetleri; Figure; pace v1; snapshot dosyası; CLI + statusline; doctor; PRIVACY kuralları | P1–P6, P8–P9, P11–P18, P21–P24, P26–P27, P30, P33, P35, P38, P40–P43, P46–P47, P49, P55–P57 |
+| **Core (1)** | OTLP alıcı (metrik + log; **traces hariç**, R-2) + transcript + kota poller; UsageRecord/QuotaSnapshot; dedup; günlük/oturum özetleri; Figure; pace v1; snapshot dosyası (sensitive alanlar hash'li, R-10); **yalnız CLI + statusline** (R-6); doctor + anlamsal kanaryalar (R-11); PRIVACY kuralları | P1–P6, P8–P9, P11–P18, P21–P24, P26–P27, P30, P33, P35, P38, P40–P43, P46–P47, P49, P55–P57 |
 | **Advanced (2)** | Tray/TUI/Web; hook ve statusline tap; oturum teşhisi; cache ekonomisi; commit atıfı; account/local kapsam; heartbeat; explainability | P7, P10, P19–P20, P25, P28–P29, P31–P32, P39, P45, P48, P50–P51, P58 |
 | **Intelligence (3)** | Harman tahmin v2; estimator backtest; anomali + alert; Advisor; guard/act (geri alınabilir); realized-vs-estimated | P34, P36–P37, P52–P53 |
 | **Ecosystem (4)** | Eklenti SDK; diğer adaptörler; uzak kaynaklar; dışa aktarım (semconv); ActivityWatch; HITL | P44, P54, remote |
@@ -108,6 +108,16 @@ listede olmayan host'a çıkış girişimi test hatasıdır.
 | Çoklu hesap/sağlayıcı | hesap kimliği yoksa saklama yok, `--` |
 | Daemon çökmesi | yüzeyler son snapshot'ı yaş etiketiyle gösterir; watchdog yeniden başlatır |
 | Estimator hatası | tahmin `withheld` + sebep; UI sayıyı basmaz |
+| Eksik başlık / bozuk yanıt (kota ucu) | sınıflanamayan pencere → `authoritative=false`; JSON parse hatası → `transient`, ham hash loglanır (içerik değil); 3 ardışık bozukta `provider.schema_change` |
+| Ağ hatası | üstel geri çekilme (60 → 900 sn), `stale` carry-forward, yaş görünür |
+| Kimlik bilgisi yok / süresi dolmuş | `disconnected|expired` durumu, `--`; kullanıcıya "Claude Code'a giriş yap" — asla kendi yenileme |
+| SQLite kilitli | `busy_timeout=5000`, WAL, tek yazar (daemon), CLI salt okur; kilit sürerse kuyruğa al + sayaç |
+| Bozuk log satırı / dosya | satır atla + say; dosya izole; manifest o dosyayı "kısmi" işaretler, sonraki mtime'da yeniden |
+| Disk dolu | yazma hatası → toplama **duraklar** (Claude Code etkilenmez), `collector.health=down(disk_full)`, snapshot'a uyarı; saklama budaması önce çalıştırılır |
+| Dashboard çökmesi | yüzey ayrı süreç; toplama sürer (test: Stage 9) |
+| Toplayıcı çökmesi | görev izolasyonu, watchdog 5 ardışık hatada 15 dk duraklatır ve raporlar |
+| Saat dilimi | tüm zamanlar UTC; gün özetleri yerel gün ile ama TZ kaydı `daily_summary.tz`; TZ değişince ilgili günler yeniden |
+| Reset tespit hatası | `resets_at` geriye gittiyse veya süre sınıfı değiştiyse `quota.reset_observed` yerine `provider.schema_change`; pace 180 sn tolerans; pencere kapanmadan utilization düşerse `authoritative=false` |
 
 ## 10. Öz-gözlemlenebilirlik (MP §34)
 `cci doctor`: toplayıcı durumları ve gecikmeleri; sayaçlar (dropped, rejected,
@@ -115,7 +125,11 @@ unknown_field, parse_error, dedup_merged, sidechain_dropped, synthetic,
 unknown_model, withheld_figures); DB boyutu ve büyüme; kendi CPU/bellek;
 kota ucu son başarı/429 sayısı; Claude Code telemetri değişkenlerinin
 durumu (yalnız gösterir); fiyat tablosu yaşı; şema/summary/estimator
-sürümleri. Her sayı için "güvenebilir miyim" satırı.
+sürümleri. Her sayı için "güvenebilir miyim" satırı. MP §34 ölçütleri
+birebir: collector health, events/sec, processing latency (`received_at −
+ts` ve ingest → özet süresi), storage size, parser errors, provider errors,
+forecast errors (backtest MAE), dashboard latency (API p95), memory, CPU.
+Anlamsal kanaryalar (R-11, `PROVIDERS.md` §6) burada raporlanır.
 
 ## 11. Performans bütçeleri (MP §33)
 | Ölçüt | Hedef |

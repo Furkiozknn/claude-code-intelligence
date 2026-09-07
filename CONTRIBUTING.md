@@ -18,10 +18,19 @@ Durum: Faz 7 taslağı; Stage 1 ile birlikte kesinleşir.
 5. **Token yenileme/rotasyon yok, UA taklidi yok, kaynak dosyaya yazma yok.**
 6. Türetimler saf fonksiyon (events, config, now enjekte); replay bit-eşit.
 
-## Testler
-`uv run pytest`: şema/gizlilik (yasak anahtar, etiket), dedup, koruma yasası,
-golden özetler, estimator backtest (kaydedilmiş snapshot fixture'ları),
-dosya izinleri (POSIX), log redaksiyonu, ağ izin listesi.
+## Testler (MP §33 kategorileri)
+`uv run pytest` — dizinler `tests/<kategori>/`:
+| Kategori | Kapsam |
+|---|---|
+| collector | OTLP json/protobuf gövdeleri → olay; boyut/allow-list reddi; 429/401 davranışı; alıcı kapalı |
+| parser | transcript satır türleri, bozuk satır, sentetik, iterations, sidechain |
+| normalization | dedup (7 kopya → 1), `input`/`input_total`, model eşleme, pencere sınıflandırma |
+| estimator / forecast | pace kenar durumları, harman ağırlıkları, backtest MAE fixture'ları, `learning` kapısı |
+| storage | idempotent yazım, saklama/budama, WAL kilit, izinler (POSIX), replay bit-eşit |
+| privacy | şemada `secret` yok, etiket zorunlu, `FORBIDDEN_KEYS`, log redaksiyonu, ağ izin listesi |
+| provider compatibility | tarihli fixture'lar, `schema_verified`, şema hash değişimi tespiti, anlamsal kanaryalar |
+| UI | golden raporlar (rozetler dahil), statusline ≤ 50 ms, snapshot şeması geriye uyum, kontrast |
+| benchmarks | `benchmarks/` hedefleri (`docs/ARCHITECTURE.md` §11) |
 
 ## Fixture kuralları
 Gerçek üründen, tarihli, **redakte**: içerik → `<redacted>`, kimlikler sahte

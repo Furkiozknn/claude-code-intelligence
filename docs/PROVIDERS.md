@@ -55,7 +55,7 @@ health()          → { status: ok|degraded|down, last_success_at, lag_s, error_
 | Hooks | `session.*`, `session.compacted`, `tool.call` (yedek) | `async:true`, her zaman exit 0 |
 | `/api/oauth/usage` | `quota.snapshot` (`five_hour`, `seven_day`, `limits[]`, `spend`) | belgesiz; şema değişimi → `provider.schema_change` |
 | Rate-limit başlıkları | `quota.snapshot{source=headers}` | yalnız Research Mode proxy'de |
-| Claude Desktop token cache | kimlik (opt-in) | OSCrypt/DPAPI, salt okunur, asla diske; ayrı bayrak |
+| Claude Desktop token cache | kimlik (opt-in) | **Eco aşaması (R-3)**; OSCrypt/DPAPI, salt okunur, asla diske; ayrı bayrak; Core'da yok |
 
 `capabilities()`: tokens ✓, cost_vendor ✓ (vendor_estimated), quota ✓
 (usage_api), sessions ✓, tools ✓, attribution ✓, realtime ✓ (OTLP),
@@ -85,6 +85,13 @@ Her adaptör `schema_verified` + `verified_at` taşır; doğrulanmamış adaptö
 - LiteLLM `deprecation_date` → model emekliliği uyarısı.
 - Her adaptörün `fixtures/` altında gerçek (redakte) örnekleri; CI'da şema
   testi.
+- **Anlamsal kanaryalar (R-11)** — sözdizimi aynı kalıp anlam değişirse:
+  (a) aynı `request_id` için OTel `api_request` token sayıları ↔ transcript
+  `usage` eşit olmalı (tolerans 0); (b) bir pencere içinde `utilization`
+  monoton artmalı (reset dışında düşüş → `authoritative=false`); (c)
+  `resets_at − now` süre sınıfı pencere türüyle tutarlı; (d) `cost_usd`
+  ↔ bizim `estimated` maliyet farkı > %5 ise fiyat tablosu uyarısı. Hepsi
+  `doctor`'da sayaç ve son örnek zamanıyla.
 
 ## 7. Uzak kaynaklar (Eco)
 `SourceInstance.kind = "remote"`: başka makinenin **özet** snapshot'ı

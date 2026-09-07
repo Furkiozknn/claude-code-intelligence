@@ -33,7 +33,7 @@ hata. `secret` etiketi bir alanda görünürse test başarısız (yapısal engel
 | Katman | İçerik | Süre | Not |
 |---|---|---|---|
 | Ham | OTLP gövdeleri, proxy yakalamaları | **Yalnız Research Mode**, 7 gün, ayrı dizin, 0700 | çekirdekte ham yok |
-| Olaylar (`events`) | zarf + allow-list payload | 90 gün (varsayılan; ayarlanabilir) | replay kaynağı |
+| Olaylar (`events`) | zarf + allow-list payload | **30 gün** (R-12); özet kararlılaşınca payload budanır, zarf + hash kalır | replay kaynağı (30 gün); 10 M olay senaryosu için |
 | Normalize (`usage_records`, `quota_snapshots`) | `DATA_MODEL` tipleri | 365 gün | `sensitive` alanlar hash |
 | Özetler (`daily_summary`, `session_summary`) | toplamlar | süresiz | `public/internal`; transcript silinse de kalır |
 | Tahmin/uyarı geçmişi | `Estimate`, `Alert`, `Recommendation` | 365 gün | realized-vs-estimated için |
@@ -44,9 +44,10 @@ Silme: `cci purge --class sensitive --older-than 30d` ve `cci forget --project X
 komutuyla; otomatik silme yalnız süre dolunca ve log'a yazılarak.
 
 ## 4. Hesap kimliği ve çoklu hesap
-- `account_key` = OTel `user.account_uuid` ∨ kimlik dosyası içeriğinin
-  sha256'sının ilk 16 hex'i (token'ın kendisi değil; dosya değişince anahtar
-  değişir → yeni hesap gibi görünür, kabul edilen davranış).
+- `account_key` = **yalnız** OTel `user.account_uuid` (R-9). Kimlik dosyası
+  içeriğinden türetilen hash **kullanılmaz**: gizli değerden türetilmiş
+  kimlik, sızarsa hesabı işaret eder ve gizli değerin varlığını doğrular.
+  Core zaten OTLP gerektirdiğinden kimlik bu kanaldan gelir.
 - Kimlik yoksa hesap seviyesi kota **saklanmaz**, yalnız canlı gösterilir ve
   `--` ile işaretlenir (claude-pace).
 - E-posta/hesap id `sensitive`; UI'da varsayılan gizli.
@@ -57,6 +58,7 @@ komutuyla; otomatik silme yalnız süre dolunca ve log'a yazılarak.
 | Kimlik dosyaları | Okuma sırasında sızma | bellekte, redakte hata, asla diske/log'a, opt-in Desktop cache | süreç belleği dump'ı |
 | Yerel DB | Aynı makinedeki başka kullanıcı/süreç | `~/.cci` 0700, dosyalar 0600 (Windows: kullanıcı ACL), WAL | yedek yazılımı kopyaları |
 | Loopback API | Yerel zararlı süreç | yalnız 127.0.0.1, rastgele port + token dosyası 0600, CORS yok, WS origin kontrolü | aynı kullanıcı hakkındaki süreçler |
+| Snapshot dosyası (`state/latest.json`) | Aynı kullanıcı süreçlerinin okuması | 0600; `sensitive` alanlar snapshot'ta **hash'li/takma adlı** (R-10); hesap kimliği yalnız kısaltılmış | okuyan süreç toplamları görür |
 | OTLP alıcı | Sahte olay enjeksiyonu | loopback, boyut sınırı, şema doğrulama, kaynak sayaçları | yerel süreçler |
 | Statusline/hook betikleri | Claude Code'u yavaşlatma/bloklama | fail-open, exit 0, ≤50 ms, zaman aşımı | ölçüm kaybı |
 | Klonlanan araştırma repoları | `.claude/skills|hooks` enjeksiyonu (bu projede yaşandı) | klonlar scratchpad'de; `.claude/` çalıştırılmaz; README uyarısı | kullanıcı yanlış dizinde açarsa |

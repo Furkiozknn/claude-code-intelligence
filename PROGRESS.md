@@ -30,9 +30,9 @@ yazma — parse patlıyor; böyle dosyalar için Write. Python konsolunda her
 | 5 | **Derin analiz** — Top 20 kaynak kod + 2 referans repo | 8–9 | ✅ 20 not + `notes/03` semconv + batch-06 puan revizyonu |
 | 6 | **Sentez** — pattern / anti-pattern / çözülmemiş / rekabet | 38 | ✅ `research/reports/sentez.md` (58 kalıp, 14 anti-kalıp, 10 açık problem, matris, §38 tablosu, D1–D10) |
 | 7 | **Mimari** | 10–36, 39–40 | ✅ 8 belge (`docs/`) + README + CONTRIBUTING; Faz 9 eleştirisiyle revize edilecek |
-| 8 | **Ürün spesifikasyonu** | 22–23 | ⬜ |
-| 9 | **Öz-eleştiri** (18 soru) | 41 | ⬜ |
-| 10 | **İmplementasyon** Stage 1–16 | 42 | ⬜ |
+| 8 | **Ürün spesifikasyonu** | 22–23 | ✅ `docs/PRODUCT.md` (ürün, UX, dashboard, CLI, TUI, uyarı, tray/statusline) |
+| 9 | **Öz-eleştiri** (18 soru) | 41 | ✅ `docs/SELF_CRITIQUE.md`; 12 revizyon (R-1…R-12) belgelere işlendi |
+| 10 | **İmplementasyon** Stage 1–16 | 42 | 🔄 `docs/IMPLEMENTATION_PLAN.md`; Stage 1 başlıyor |
 | 11 | **Benchmark → eleştiri → iyileştirme** | 43 | ⬜ |
 
 ---

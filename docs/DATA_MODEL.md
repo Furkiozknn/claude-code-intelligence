@@ -50,9 +50,9 @@ Her alan şemada sınıf etiketi taşır; `secret` alanı **hiçbir tipte yoktur
 
 ### 1.4 Kimlikler
 ```
-AccountRef   { provider, account_key }   # account_key = OTel user.account_uuid
-                                          # ∨ kimlik dosyası parmak izi (sha256'nın ilk 16'sı)
-                                          # ∨ null → hesap seviyesi veri cache'lenmez (claude-pace kuralı)
+AccountRef   { provider, account_key }   # account_key = OTel user.account_uuid (tek kaynak; R-9)
+                                          # gizli değerden türetilmiş kimlik YOK (kimlik dosyası hash'i kaldırıldı)
+                                          # null → hesap seviyesi veri cache'lenmez, yalnız canlı gösterilir (claude-pace kuralı)
 SourceInstance { provider, instance_id, label, kind, root_path?, network: bool, schema_verified: bool }
 SessionRef   { session_id, parent_session_id?, agent_id?, is_sidechain: bool }
 ```
@@ -195,8 +195,11 @@ Recommendation { rec_id, kind, title, why: [evidence], action: {type, reversible
 | kota | — | — | `rate_limits.*` | — |
 | compaction | — | — | — | `PreCompact/PostCompact` |
 
-## 9. Açık noktalar (Faz 9'a)
-- `account_key` için kimlik dosyası parmak izi güvenli mi (token türetimi
-  değil, dosya hash'i) — PRIVACY incelemesi.
+## 9. Açık noktalar
+- ~~`account_key` için kimlik dosyası parmak izi~~ — Faz 9'da kaldırıldı
+  (R-9): yalnız OTel `user.account_uuid`.
 - `tokens.input_total`'ın OpenAI/Gemini'de `input` ile ilişkisi adaptör
   başına belgelenecek (`PROVIDERS.md` §5).
+- `evidence_class`: `input_total` alanı **derived**'dır; kayıt düzeyinde
+  `evidence_class=observed` olsa da alan düzeyi meta `derived` işaretler
+  (SELF_CRITIQUE Q10).

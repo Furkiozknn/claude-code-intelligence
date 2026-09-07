@@ -37,8 +37,9 @@ sınıfı üretemez (şema testi).
   ama ayrı görev ve zaman aşımı; istisna eklentiyi devre dışı bırakır, çekirdeği
   değil.
 - **JSON-RPC 2.0 / stdio (`exec:`):** herhangi bir dil (Rust adaptör için
-  yol). Yöntemler `PROVIDERS.md` §2; çekirdek çocuk süreci başlatır, 30 sn
-  yanıtsızlıkta öldürür, `health=down`. Ortam değişkenleri **iletilmez**
+  yol). **Stage 15'te** (R-5); Core ve Adv yalnız in-process. Yöntemler
+  `PROVIDERS.md` §2; çekirdek çocuk süreci başlatır, 30 sn yanıtsızlıkta
+  öldürür, `health=down`. Ortam değişkenleri **iletilmez**
   (kimlik sızması); yalnız `CCI_PLUGIN_CONFIG` yolu.
 - Sürüm uyumu: `api_version` eşleşmezse yüklenmez; şema `additionalProperties:
   false`.

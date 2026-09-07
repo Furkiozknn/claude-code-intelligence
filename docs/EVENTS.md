@@ -61,8 +61,9 @@ reddedilir.
   → delta hesaplanıp `usage.metric_delta` (çapraz doğrulama için; birincil
   değil), `lines_of_code.count` → `code.lines`, `session.count` → `session.started`,
   `active_time.total` → `session.active_time`.
-- **OTLP traces** (`/v1/traces`, beta): span'ler `tool.call` süresini
-  doğrulamak için; `OTEL_LOG_TOOL_CONTENT` **asla açılmaz**.
+- **OTLP traces** (`/v1/traces`, beta): **Core dışı** (R-2). Stage 3'te
+  opsiyonel bayrakla kabul edilip yalnız `tool.call` süresi doğrulaması için
+  kullanılır; `OTEL_LOG_TOOL_CONTENT` **asla açılmaz**.
 - **Transcript** (`~/.claude/projects/**/*.jsonl`): `assistant` kayıtları →
   `usage.request` (dedup `DATA_MODEL.md` §2); dosya ilk/son satırı →
   `session.*`; `isCompactSummary`/özet kayıtları → `session.compacted`.
@@ -84,8 +85,14 @@ reddedilir.
 `cci replay --from <ts>`: türetilmiş tablolar silinir, `events` baştan
 işlenir; `summary_version`/`estimator.version` değişimlerinde otomatik.
 Determinizm: türeticiler saf fonksiyon (events, config, now enjekte).
+**Sınır (R-12):** `events` 30 gün saklanır ve özet kararlılaştıktan sonra
+payload budanır (zarf + hash kalır); replay 30 günle sınırlıdır, daha eski
+dönem `usage_records`/`quota_snapshots` (365 gün) ve özetlerden (süresiz)
+yeniden üretilir. Transcript 30 gün mevcut olduğu için pencere örtüşür.
 
 ## 6. Bus API (in-process)
+Uygulama **basit** (R-4): SQLite `events` tablosu + süreç içi pub/sub
+(liste + async görevler); mesaj kuyruğu/çerçeve yok.
 ```
 bus.publish(Envelope)            # şema doğrulama → allow-list → yaz → abonelere
 bus.subscribe(type_glob, handler, ordered=True)

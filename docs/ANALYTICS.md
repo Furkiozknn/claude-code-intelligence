@@ -66,6 +66,9 @@ güven = kapsama·0.38 + geçmiş·0.30 + tazelik·0.20 + aktivite·0.12
 + min(12, 0.35·MAD·1.4826 + 0.5·spread), 4, 28); hedef = clamp(5 + (1−conf)·8,
 5, 13); hüküm: atRisk (proj≥100) → watch (upper≥100) → learning → surplus
 (medyan fazla ≥25 ∧ kötümser ≥10) → enough. Diagnostics saklanır.
+**Kapı (R-7):** tamamlanmış döngü sayısı < 5 veya `confidence=learning` iken
+**hüküm ve nokta projeksiyon yayınlanmaz**; yalnız pace v1 ve "öğreniyor
+(n/5 döngü)" gösterilir.
 ### 2.3 Yöntem karşılaştırma protokolü (backtest)
 Kaydedilmiş `quota_snapshots` üzerinde, her pencere döngüsü için t anında
 tahmin edilen "reset'teki kullanım" vs gerçek; ölçütler MAE, bant kapsama
