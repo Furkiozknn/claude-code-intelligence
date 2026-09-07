@@ -101,3 +101,12 @@ eşdeğeri tahminidir, abonelikte cebinden çıkan değil" diye vurgulamadı.
    yolu) neler veriyor — token, maliyet, araç? Resmî ve kararlı mı?
 6. Abonelik "yüzde"sinin arkasındaki birim ne? Token mı, ağırlıklı maliyet
    mi? (Üç aracın üç maliyeti bunu bilmediğimizi gösteriyor.)
+   **Güncelleme (Faz 5, claude-meter estimator planı):** birim
+   bilinmiyor ve bilinmediği kabul edilmeli. claude-meter bunu hipotez testi
+   olarak kuruyor: aday sayaçlar (`raw` = in+out+cache_create+cache_read;
+   `no_cache_read`; `io_only`; `weighted` cache_read×w) × hesap genelinde
+   (oturumdan bağımsız) **kümülatif aralıklar** (utilization görünür
+   değişene kadar kullanım biriktir; utilization 0.01 adımlarla kaba
+   yuvarlanıyor) → her aralık için "implied cap" → cohort başına
+   p10/medyan/p90; <3 nokta ise yalnız min/medyan/max. "Tek bir cap
+   uydurma." Platformun kota→token dönüşümü bu disiplinle yapılmalı.

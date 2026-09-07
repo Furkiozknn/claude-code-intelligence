@@ -18,130 +18,133 @@ döndüğümde her şeyi aktar" dedi. Döndüğünde `raporlar/`'a özet rapor y
 
 | Faz | İçerik | MP § | Durum |
 |---|---|---|---|
-| 0 | Kurulum: depo, katalog aracı, prototip derslerinin aktarımı | — | ✅ |
-| 1 | **Keşif** — ≥100 repo (hedef 150–300), 15 kategori, farklı teknik yaklaşımlar | 2–4 | ✅ 230 repo |
-| 2 | **Puanlama** — 13 kriter/100 puan, her puan gerekçeli | 5 | 🔄 39/230 puanlı |
-| 3 | **Veri toplama analizi** — yaklaşımların accuracy/reliability/privacy/… kıyası | 6 | 🔄 taslak v1 |
-| 4 | **Top 20** — kategori çeşitliliği korunarak | 7 | ⬜ |
-| 5 | **Derin analiz** — Top 20 kaynak kod seviyesi + iki referans repo özel inceleme | 8–9 | ⬜ |
-| 6 | **Sentez** — pattern'ler, anti-pattern'ler, çözülmemiş problemler, rekabet analizi | 38 | ⬜ |
-| 7 | **Mimari** — sistem/veri/event/collector/analytics/quota/forecast/anomaly/privacy/plugin/UI | 10–36, 39–40 | ⬜ |
-| 8 | **Ürün spesifikasyonu** — product/UX/dashboard/CLI/TUI/alert | 22–23 | ⬜ |
-| 9 | **Öz-eleştiri** — 18 soru, mimariyi yeniden optimize et | 41 | ⬜ |
-| 10 | **İmplementasyon** — Stage 1–16, sırayla | 42 | ⬜ |
-| 11 | **Benchmark → eleştiri → iyileştirme** döngüsü | 43, final | ⬜ |
-
-**Faz 2 tamamlanma ölçütü:** Top-20 adayı olabilecek her repo `fetched`
-ve puanlı; kategori başına en az 3 puanlı örnek. Shallow olanların tümünü
-puanlamak gerekmiyor (230'un çoğu düşük yıldızlı türev).
-**Faz 4 ölçütü:** 12 kategoriden ≥1'er örnek; her seçim için "neden bu,
-neden daha yüksek puanlı X değil" yazılı.
+| 0 | Kurulum | — | ✅ |
+| 1 | **Keşif** — ≥100 repo (hedef 150–300) | 2–4 | ✅ 232 repo |
+| 2 | **Puanlama** — 13 kriter/100, gerekçeli | 5 | ✅ 55 puanlı (Top-20 adaylarının tümü) |
+| 3 | **Veri toplama analizi** | 6 | ✅ v1 + resmî doküman doğrulaması |
+| 4 | **Top 20** | 7 | ✅ `research/reports/top20.md` |
+| 5 | **Derin analiz** — Top 20 kaynak kod + 2 referans repo | 8–9 | 🔄 2/20 (iki referans repo bitti) |
+| 6 | **Sentez** — pattern / anti-pattern / çözülmemiş / rekabet | 38 | ⬜ |
+| 7 | **Mimari** | 10–36, 39–40 | ⬜ |
+| 8 | **Ürün spesifikasyonu** | 22–23 | ⬜ |
+| 9 | **Öz-eleştiri** (18 soru) | 41 | ⬜ |
+| 10 | **İmplementasyon** Stage 1–16 | 42 | ⬜ |
+| 11 | **Benchmark → eleştiri → iyileştirme** | 43 | ⬜ |
 
 ---
 
 ## Araştırma katalog protokolü
-
-- Yeni bulgular `research/inbox/batch-NN.json`, sonra
-  `python research/tools/catalog.py ingest research/inbox/batch-NN.json`.
-- URL'ye göre tekilleştirme otomatik; alanlar birleşir, derinlik yükselir.
-- `depth`: `shallow` → `fetched` (README okundu) → `deep` (kaynak kod).
-  **Puan yalnızca `fetched`+ için** — araç shallow'a puanı reddeder.
-- Kanıtsız kriter boş kalır; `scored_weight` doldurulan ağırlığı gösterir.
-- `python research/tools/catalog.py gaps` → Faz 1 ölçütü; `top 20` → sıralama;
-  `report` → `research/reports/catalog.md`.
-- Konsolda Türkçe için `PYTHONIOENCODING=utf-8`.
+- `research/inbox/batch-NN.json` → `python research/tools/catalog.py ingest …`
+- `depth`: shallow → fetched (README) → deep (kaynak). Puan yalnız fetched+.
+- `gaps` / `top N` / `report`. Konsol: `PYTHONIOENCODING=utf-8`.
+- Testler: `python -m unittest research/tools/test_catalog.py` (9 test).
 
 ---
 
 ## Sıradaki işler (öncelik sırası)
 
-1. **Faz 2 devam:** Top-20 adayı olup henüz `shallow` olanları fetch + puanla:
-   stormzhang/token-tracker (509★), aqua5230/usage (309★), shanggqm/codexU
-   (343★), sr-kai/claudeusagewin, Tendo33/cursor-usage-tracker, rjwalters,
-   f-is-h/usage4claude, Golden0Voyager/kimi-code-usage (CLI+MCP+VSCode),
-   bevis7781/CodexQuotaSafe (resmî app-server), zcquant (OTLP), NikiforovAll/
-   ccdashboard (Aspire), lsvishaal/tokburn, tycho-cli, Ziit, telemetry-kit,
-   cacheeconomics, VibeBill, mag123c/toktrack (hız iddiası).
-2. **Faz 2:** `report` üret, `top 30`'a bak, kategori kapsamasını kontrol et.
-3. **Faz 4:** Top 20 seçimi + gerekçe → `research/reports/top20.md`.
-4. **Faz 5:** İki referans repo (CodeZeno, claude-meter) için kaynak kod
-   incelemesi — `git clone --depth 1` ile yerel okuma; notlar
-   `research/notes/deep/<owner-repo>.md`. Sonra Top 20'nin geri kalanı.
-5. **Faz 5 doğrulama listesi** (notes/01 §4): OTel cost.usage kaynağı,
-   alıcı kapalıyken davranış, rate-limit header'ları, hook zaman aşımı.
-6. **Faz 6:** pattern / anti-pattern / çözülmemiş problem / rekabet tablosu.
+1. **Faz 5 devam** — Top-20'nin kalan 18'i, klonlar scratchpad'de
+   (`…/scratchpad/repos/`). Her biri için `research/notes/deep/<owner-repo>.md`
+   (§8 başlıkları + "alınmaya değer mi"). Sıra ve odak:
+   codeburn (parser sözleşmesi, act journal, grade) · ccusage (tekilleştirme,
+   blocks) · toktrack (değişmez günlük cache) · tycho (yapısal gizlilik) ·
+   Maciek (provenance etiketleri, --write-state şeması) · vibe-bar (forecast
+   verdict/güven bandı) · claude-pace (bash; resmî alanlar) · codexU
+   (app-server JSON-RPC) · ActivityWatch (bucket/event/heartbeat) · litellm
+   (fiyat JSON şeması) · openllmetry (gen_ai semconv) · disler (olay şeması)
+   · zcquant (OTLP JSON ayrıştırma) · agenttrace (sağlık formülü) ·
+   TokenTracker (parser sözleşmesi) · cacheeconomics (çarpanlar) · VibeBill
+   (eşleştirme skoru) · tokentab (etiketleme akışı).
+2. **Faz 5 doğrulama deneyleri** (nazikçe, kendi makinede):
+   a. OTLP alıcı kapalıyken Claude Code davranışı (küçük HTTP alıcı yaz,
+      kapat, `[3P telemetry]` logunu gözle).
+   b. `settings-reference` sayfası: `cleanupPeriodDays`, `modelPricing` şeması.
+   c. `/api/oauth/usage` istek limiti: `Retry-After` var mı (tek 429'u
+      gözlemek yeter; zorlamadan).
+3. **Faz 6 sentez** — `research/reports/sentez.md`: pattern'ler,
+   anti-pattern'ler, çözülmemiş problemler, MP §38 rekabet tablosu
+   (özellik × bizim / en iyi mevcut / neden daha iyi / nerede onlar daha iyi /
+   ne alınacak).
+4. **Faz 7 mimari** — `docs/ARCHITECTURE.md` + `DATA_MODEL.md` +
+   `EVENTS.md` + `COLLECTORS.md` + `PRIVACY.md` + `PLUGINS.md`; MP §10–36.
+5. Faz 8–9, sonra Stage 1.
 
 ---
 
 ## Günlük
 
-### 7 Eylül 2026 — Faz 0 · Kurulum
-- Depo açıldı. Prototip (`claude-quota-monitor`) döngüsü durduruldu; işi
-  git'te (13 sürüm, 14 commit). Dersleri `research/notes/00-*`'a aktarıldı.
-- `research/tools/catalog.py`: ingest / stats / gaps / list / score / top /
-  report. Rubric MP §5 ile aynı (13 kriter, toplam 100).
-- Seed: bu oturumda gerçekten görülen 41 repo (`batch-00-seed.json`).
+### 7 Eylül 2026 — Faz 0 · Kurulum ✅
+Depo, katalog aracı (13 kriter/100), prototip dersleri (`notes/00`), seed 41.
 
 ### 7 Eylül 2026 — Faz 1 · Keşif ✅
-- **Tur 1** (`batch-01`, 49 repo): 12 kategori araması — LLM maliyet,
-  gözlemlenebilirlik, proxy, kota, geliştirici verimliliği, coding-agent,
-  TUI, tray, redaction, zaman serisi, çapraz sağlayıcı, local-first.
-- **Tur 2** (`batch-02`, 36 repo): adı geçen ama URL'si görünmeyen büyük
-  projeler **uydurulmadı, fetch ile doğrulandı** (LiteLLM 58.2k★, Langfuse
-  34.3k★, Opik 21.8k★, ActivityWatch 18.8k★, Phoenix 11.3k★, OpenLLMetry
-  7.4k★, Helicone 6.1k★, Wakapi 4.4k★, OpenLIT 2.7k★). Boşluk kategorileri
-  hedefli aramayla açıldı: hooks (disler, TechNickAI, karanb192), OTLP
-  (acreeger, rockdarko, ColeMurray, li0nel, ccdashboard, aaraujodata),
-  sqlite-inspection (cursor-clean, Tendo33, cursor-wrapped, cursor-chronicle).
-  İki ayrı "tokburn" bulundu (JSONL vs proxy). codeburn (41 araç) bulundu.
-- **Tur 3** (`batch-03`, 104 repo): GitHub topic sayfaları (claude-usage,
-  ai-usage-tracker, token-tracker, llm-costs, quota-tracker, codex-usage,
-  ai-cost-tracking). Kripto/bot/spam elendi. Yeni yüzeyler: ESP32 AMOLED
-  ekran (vibepulse 187★), WiFi masa saati, GNOME Shell, Waybar, macOS notch,
-  MCP sunucusu (llm-usage-mcp, kimi-code-usage), Codex Skill, mobil.
-- **Sonuç:** 230 repo · 14 kategori hepsi ≥3 · 11 yaklaşım hepsi ≥2 ·
-  `gaps` çıkış 0. 26 → 40 fetched.
-- **Öğrenilen:** topic sayfaları arama motorundan 5–10× verimli; tek
-  fetch'te 20 repo + yıldız + tek satır açıklama.
+batch-01 (49, 12 kategori) · batch-02 (36, fetch ile doğrulanmış büyük
+projeler + hooks/OTLP/sqlite) · batch-03 (104, GitHub topic sayfaları).
+**232 repo**, 14 kategori ≥3, 11 yaklaşım ≥2. Topic sayfaları arama
+motorundan 5–10× verimli.
 
-### 7 Eylül 2026 — Faz 2 · Puanlama (tur 1) 🔄
-- 14 yeni README okundu ve toplam **39 repo** 13 kriterde puanlandı
-  (`batch-04.json`, gerekçeli `score_notes`, `confidence` etiketi).
-- **Kritik bulgular:**
-  - **Claude Code'un yerleşik OTel çıkışı resmî maliyet metriği veriyor:**
-    `claude_code.cost.usage` (model bazlı USD), `token.usage` (in/out/cache),
-    `session.count`, `lines_of_code.count`, `commit.count`,
-    `pull_request.count`, `code_edit_tool.decision` (acreeger). "Üç araç üç
-    maliyet" sorununu Claude Code için çözebilir. Kaynağı doğrulanacak.
-  - **vibe-bar** tahmini nokta değil **karar + güven bandı** olarak veriyor
-    (Learning/Enough/Watch/At risk/Surplus); kota gözlemi + hız + tamamlanmış
-    döngüler + çalışma saati kalıpları. §17–18 için en güçlü referans.
-  - **claude-pace** "pace" = kullanım% − geçen süre%; veri yoksa `--`,
-    cache'li yedek bilinçli reddedilmiş. Dürüstlük örneği.
-  - **codeburn** (10.9k★) §21 öneri motorunun en olgun hali: israf
-    kalıpları + A–F notu + geri alınabilir otomatik düzeltme + 3 gün sonra
-    gerçek tasarruf raporu.
-  - **disler** 12 hook olayının payload'larını belgeliyor (SubagentStart/
-    Stop, PreCompact, PostToolUseFailure) — olay hattı referansı.
-  - **tokentab** "başarılı görev başına maliyet"i eval assertion'larıyla
-    ölçüyor, ≥30 görev/%95 GA eşiği; içerik alanlarını girişte reddediyor.
-  - **caut** çıktıyı "AI ajanının tüketmesi için" JSON/Markdown veriyor;
-    3 MB/10 ms/10 MB — performans çıtası.
-  - **TokenTracker** üç yolu (hook + SQLite + JSONL) birlikte kullanan tek
-    araç; "yeni sağlayıcı bir parser dosyası uzağında".
-- **Faz 3 taslak v1** yazıldı: `research/notes/01-veri-toplama-yaklasimlari.md`
-  — 11 yaklaşım × 8 boyut, özet matris, platform için ön karar
-  (birincil: gömülü OTLP alıcı + nazik kota poller + artımlı transcript;
-  ikincil: statusline-tap + bloke etmeyen hooks + diğer ajan adaptörleri;
-  araştırma modu: proxy; reddedilen: token rotasyonu, scrape).
+### 7 Eylül 2026 — Faz 2 · Puanlama ✅
+- Tur 1 (batch-04): 39 repo. Tur 2 (batch-05): 16 repo. **Toplam 55.**
+- **Araç hatası bulundu ve düzeltildi:** gelen kayıtta `depth` yoksa
+  `shallow` varsayılıp mevcut `fetched` kaydın puanları sessizce
+  düşüyordu (25 kayıt). Etkin derinlik = mevcut ∨ gelen; 9 testli
+  `test_catalog.py` eklendi. (Kullanıcının ilkesi: hatayı düzeltme,
+  sınıfını yok et.)
+- Sıralama (özet): litellm 70.7 · langfuse 69.7 · codeburn 69.3 ·
+  activitywatch 68.1 · opik/toktrack 67.2 · Maciek 66.9 · vibe-bar 66.8 ·
+  phoenix 66.4 · tycho 66.3 · helicone 66.1 · ccusage 65.7 · codexU 65.4 …
+  `research/reports/catalog.md`.
+
+### 7 Eylül 2026 — Faz 3 · Veri toplama analizi ✅ (v1)
+`notes/01`: 11 yaklaşım × 8 boyut, özet matris, ön karar. Resmî
+dokümanlarla doğrulandı (`notes/02`):
+- **OTel:** `claude_code.cost.usage` istemci tarafı fiyat tablosu ("satıcı
+  tahmini"); `query_source`/`agent.name`/`skill.name`/`mcp_tool.name`
+  öznitelikleri → atıf bedava; `api_request` olayı `cost_usd_micros` +
+  `request_id`; `prompt.id`/`message.uuid`/`client_request_id`
+  korelasyonu; prompt/yanıt varsayılan redakte; alıcı kapalıyken davranış
+  belgelenmemiş; `rate_limits` yok.
+- **Hooks:** 30+ olay; stdin'de token yok; `async:true` bloke etmez ve
+  zaman aşımsız; çıkış 2 bloke eder; `prompt_id` OTel ile aynı anahtar;
+  `PreCompact/PostCompact` gözlenmiş sıkıştırma sinyali.
+- **Statusline:** `rate_limits.five_hour.used_percentage`/`resets_at`
+  (epoch sn), yalnız Pro/Max ve ilk yanıttan sonra, pencere sıfırlanınca
+  alan düşer; `cost.total_cost_usd` istemci tarafı, **`modelPricing`
+  ayarıyla değiştirilebilir**; `context_window.used_percentage` yalnız girdi.
+- **Settings:** `env` bloğu OTel değişkenlerini taşıyabilir (kullanıcı
+  seviyesi her projede).
+- **Rate-limit header'ları kaynak koddan kesinleşti** (`anthropic-
+  ratelimit-unified-{5h,7d}-{utilization,reset,status,surpassed-threshold}`,
+  `-status`, `-representative-claim`, `-fallback-percentage`, `-overage-*`).
+
+### 7 Eylül 2026 — Faz 4 · Top 20 ✅
+`research/reports/top20.md`: 20 repo, 12 kategori kapsaması, her seçim için
+"neden bu / neden daha yüksek puanlı X değil", runner-up'lar, anti-pattern
+vaka listesi, repo başına derin analiz planı.
+
+### 7 Eylül 2026 — Faz 5 · Derin analiz 🔄 (2/20)
+- **CodeZeno** (`notes/deep/CodeZeno-…md`): usage ucu → yalnız 404'te
+  Messages header yedeği ("429'da kota harcama" testli kural); kimlik
+  zinciri CLI → **Claude Desktop OSCrypt cache (DPAPI + AES-GCM)** → WSL;
+  `claude -p .` ile token yenileme (gerçek çağrı!); veri modeli yalnız
+  yüzde; atomik persist; `time_until_display_change`; tema/expression
+  motoru (v1 için fazla); `limits[]` dizisini kullanmıyor.
+- **claude-meter** (`notes/deep/abhishekray07-…md`): proxy tüm gövdeyi
+  tamponlar, kanal dolunca düşürür; `Record` şeması; `session_id` isteğin
+  `metadata.user_id`'sinden; günlük JSONL 0600; **kota birimi estimator'ı:
+  aday sayaçlar (raw / no_cache_read / io_only / weighted /
+  price_equivalent) × hesap genelinde kümülatif aralık × percentile bandı,
+  <3 nokta dürüstlüğü** — en değerli fikir; ham gövde varsayılan diskte
+  (Authorization header'ı da yazılıyor olabilir — doğrulanacak).
+- RAW→NORMALIZE→ANALYSIS→ESTIMATION→VISUALIZATION ilkesi **doğru, iki
+  düzeltmeyle**: ham veri kaynağa göre sınıflandırılmalı ve hassas olan
+  yazılmamalı; estimation çıktısı dağılım + sürüm olmalı.
 
 ---
 
 ## Bilinen riskler / açık sorular
-
-- `/api/oauth/usage` belgelenmemiş; şema değişebilir. Yedek ayrıştırıcı +
-  ham görünürlük + fixture testi şart (prototipte uygulandı).
-- OTLP alıcısı kapalıyken Claude Code'un davranışı bilinmiyor.
-- Abonelik trafiğinde rate-limit header'ları var mı bilinmiyor.
-- Puanlar README'ye dayalı (`confidence` medium çoğunlukta); Faz 5 kaynak
-  kod okuması puanları değiştirebilir — değişince `score_notes`'a "rev" notu.
+- `/api/oauth/usage` belgelenmemiş; şema değişebilir.
+- OTLP alıcısı kapalıyken Claude Code davranışı bilinmiyor (deney).
+- Claude Desktop token cache'ini çözmek güçlü ve hassas — opt-in, salt
+  okunur, asla diske yazılmaz; README'de açık anlatım.
+- Puanlar README'ye dayalı; kaynak kod okumaları puanları değiştirebilir
+  ("rev" notuyla).

@@ -141,20 +141,132 @@ okunur veya OTel `api_request` olayı kullanılır.
 4. `SubagentStart/Stop` + OTel `query_source=subagent` → alt-ajan
    maliyeti gözlenmiş.
 
-## C. Statusline `rate_limits` (dolaylı kaynaklar)
-claude-pace README: Claude Code ≥2.1.80 statusline stdin'inde
-`rate_limits.five_hour` ve `.seven_day`. Resmî doküman URL'si henüz
-okunmadı — Faz 5'te `docs/en/statusline` okunacak ve alan adları
-doğrulanacak.
+## C. Statusline stdin JSON — `https://code.claude.com/docs/en/statusline` (resmî)
+
+| Alan | Anlam |
+|---|---|
+| `rate_limits.five_hour.used_percentage` / `.seven_day.used_percentage` | 0–100 |
+| `rate_limits.five_hour.resets_at` / `.seven_day.resets_at` | Unix epoch **saniye** |
+| `rate_limits.spend_limit.used_percentage` / `.resets_at` | Claude apps gateway harcama limiti; 100'ü aşabilir; v2.1.251+ |
+| `cost.total_cost_usd` | **İstemci tarafı liste fiyatıyla tahmin**; `modelPricing` ayarı varsa o tablo; faturadan farklı olabilir; `/clear` ile sıfırlanır (v2.1.211+) |
+| `cost.total_duration_ms`, `cost.total_api_duration_ms` | duvar saati / yalnız API bekleme |
+| `context_window.context_window_size` | 200000 veya 1000000 |
+| `context_window.used_percentage` | **yalnız girdi**: input + cache_creation + cache_read (çıktı hariç); oturum başında `null` olabilir |
+| `context_window.remaining_percentage`, `current_usage` | |
+| `exceeds_200k_tokens` | son yanıtın toplam tokenı >200k (sabit eşik) |
+| cache bölümü (`warm`, `hit_ratio` …) | cache durumu özeti — alan listesi ayrıca çıkarılacak |
+| `model.display_name`, `version` (ör. 2.1.90), `workspace`, `session_id`, `transcript_path` | |
+
+**Ek alanlar (örnek JSON'dan):** `cost.total_lines_added/removed`,
+`context_window.total_input_tokens/total_output_tokens/current_usage
+{input, output, cache_creation, cache_read}` (ilk çağrıdan önce ve
+`/compact` sonrası `null`), `fast_mode`, `effort.level`, `thinking.enabled`,
+`output_style.name`.
+
+**`prompt_cache` — Claude Code'un kendi cache analitiği** (API yanıtlarındaki
+cache sayılarından hesaplanır, her sağlayıcıda çalışır):
+
+| Alan | Anlam |
+|---|---|
+| `warm` | Cache'li önek TTL içinde mi (son yanıtta cache tokenı yoksa `false`) |
+| `caching_observed` | Oturumda hiç cache tokenı görüldü mü |
+| `ttl` | `"5m"` veya `"1h"` |
+| `expires_at` | Öneğin soğuyacağı epoch sn |
+| `requests` | Ana konuşmada kaydedilen API isteği |
+| `misses` | **Tanım:** cache'te olanın >%5'ini ve ≥2 000 tokenını yeniden işleyen istekler, sıkıştırma/araç-sonucu temizliğiyle açıklanamayan |
+| `expected_rebuilds` | Sıkıştırma/temizlik sonrası beklenen yeniden inşalar |
+| `hit_ratio` | cache okuma / tüm girdi (okuma+yazma+cache'siz), 0–1 |
+| `cache_write_tokens`, `miss_recache_tokens` | |
+| `last_miss_at`, `last_miss_cause` (`tools_changed` vb., v2.1.260+), `miss_causes` | **teşhis** |
+| `recache_tokens_if_cold` | Cache soğursa sonraki isteğin yeniden yazacağı token |
+
+→ Bu, `/usage` komutunun "Prompt cache (main)" satırıyla aynı istatistik.
+Platform cache analitiğini **sıfırdan yazmak yerine** bu alanları
+(statusline'dan veya OTel `api_request`'ten türeterek) kullanmalı;
+cacheeconomics'in çarpanlarıyla dolara çevirmeli.
+
+Kurallar:
+- `rate_limits` **yalnızca Pro/Max** (veya gateway) ve **ilk API
+  yanıtından sonra**; her pencere bağımsız olarak **yok olabilir**;
+  pencere `resets_at`'ini geçince Claude Code alanı **düşürür**.
+- Yeniden çalıştırma tetikleri: 300 ms debounce; pencere `resets_at`'e
+  ulaşınca; komut değişince anında; devam eden script iptal edilir.
+- `jq -r '.rate_limits.five_hour.used_percentage // empty'` kalıbı.
+
+→ `used_percentage` = uçtaki `utilization`; `resets_at` **saniye** (uç
+ISO-8601 verir). Birleşik modelde ikisi de epoch saniyeye normalize edilir.
+→ `modelPricing` ayarı: kullanıcı kendi fiyat tablosunu Claude Code'a
+verebiliyor — platformun fiyat tablosu ile **aynı** tabloyu buraya yazmak
+"üç maliyet" sorununu kökten çözer (tek fiyat kaynağı).
+
+## G. Settings `env` bloğu — `https://code.claude.com/docs/en/settings` (resmî)
+- Ayar dosyalarında `env` bloğu **sıradan bir anahtar**; öncelik
+  seviyelerini izler (managed > `--settings` > `.claude/settings.local.json`
+  > `.claude/settings.json` > `~/.claude/settings.json`).
+- Proje seviyesindeki çoğu `env` değeri klasöre **güven verildikten sonra**
+  uygulanır; kullanıcı seviyesi (`~/.claude/settings.json`) her projede.
+- Kabuk değişkeni ile ayar anahtarı çiftlerinde hangisinin kazandığı çift
+  çift belirlenir (`env-vars` referansı).
+→ Kurulum sihirbazı `~/.claude/settings.json` → `env` içine
+`CLAUDE_CODE_ENABLE_TELEMETRY=1`, `OTEL_*` yazabilir. `cleanupPeriodDays`
+(transcript saklama, toktrack'e göre varsayılan 30 gün) bu sayfada değil;
+`settings-reference` okunacak.
 
 ## D. Kota ucu (gözlenmiş, prototipten)
 `GET https://api.anthropic.com/api/oauth/usage` — bkz. notes/00 §1.
 Belgelenmemiş. `limits[]` dizisi: kind/group/percent/severity/resets_at/
 scope/is_active.
 
-## E. Rate-limit header'ları (dolaylı kanıt)
-rjwalters/claude-monitor: `POST /v1/messages`'a 1 tokenlık istekle
-rate-limit header'ları okunuyor; 429 yanıtı bile header taşıyor;
-`claude setup-token` ile ~1 yıllık OAuth token. → Header'lar OAuth
-trafiğinde var. Ama bu yöntem kota harcar; platformda kullanılmayacak.
-claude-meter proxy'de aynı header'ları pasif okuyor (Faz 5: alan adları).
+## E. Rate-limit header'ları — **kaynak koddan doğrulandı**
+
+İki bağımsız uygulama aynı aileyi ayrıştırıyor: CodeZeno
+`src/poller/claude.rs` (`parse_rate_limit_headers`) ve claude-meter
+`internal/normalize/normalizer.go` (`parseRatelimit`). `/v1/messages`
+yanıtında (OAuth abonelik trafiği dahil; 429'da bile) dönüyor.
+
+Önek: `anthropic-ratelimit-unified-`
+
+| Header (önek sonrası) | Tip | Anlam |
+|---|---|---|
+| `5h-utilization` | 0–1 float | 5 saatlik pencere doluluğu (×100 = %) |
+| `5h-reset` | unix sn | 5 saatlik sıfırlanma |
+| `5h-status` | string | pencere durumu |
+| `5h-surpassed-threshold` | bool | eşik aşıldı |
+| `7d-utilization` / `7d-reset` / `7d-status` / `7d-surpassed-threshold` | | haftalık karşılıkları |
+| `reset` | unix sn | genel sıfırlanma |
+| `status` | string | `rejected` → istek reddedildi |
+| `representative-claim` | `five_hour` \| `seven_day` | reddin hangi pencereden kaynaklandığı |
+| `fallback-percentage` | float | |
+| `overage-status`, `overage-disabled-reason` | string | ek kullanım durumu |
+| (ayrıca) `retry-after` | sn | |
+
+claude-meter pencere adlarını genel ayrıştırıyor (`<pencere>-<alan>`), yani
+`5h`/`7d` dışında yeni pencereler gelirse de yakalar.
+
+**`/api/oauth/usage` ile eşleme:** `limits[].kind=session` ↔ `5h`,
+`weekly_all` ↔ `7d`; `limits[].is_active` ≈ `representative-claim`;
+`limits[].severity` ≈ `surpassed-threshold`/`status`.
+
+**Nasıl okunur:** CodeZeno yalnızca usage ucu **404/desteklenmiyor**
+döndüğünde `max_tokens:1` bir Messages isteğiyle header okuyor; 429/5xx'te
+**bilerek** okumuyor ("rate limit'e cevap olarak kota harcamak yanlış ve
+sorunu büyütür" — kaynak koddaki yorum). claude-meter proxy'de pasif
+okuyor. Platform için: **pasif** (kullanıcının zaten yaptığı isteklerden,
+yalnızca Research Mode proxy'siyle) veya hiç.
+
+## F. Claude Desktop token cache'i (CodeZeno `poller/claude_desktop.rs`)
+
+CodeZeno kimlik kaynaklarını ucuzdan pahalıya sıralıyor:
+1. `~/.claude/.credentials.json` (CLI girişi)
+2. **Claude Desktop uygulamasının kendi token cache'i** — CLI hiç
+   kullanılmamış, yalnızca masaüstü uygulaması varsa tek kaynak bu
+3. WSL dağıtımları (`wsl.exe -l -q` → `wsl -d <distro> cat ~/.claude/…`;
+   UTF-16LE çıktı çözümü)
+
+Kimlik değişimini izlemek için yol|boyut|mtime imzası tutuluyor.
+Token süresi dolmuşsa `claude -p .` (headless prompt) çalıştırılıp
+Claude Code'un yan etki olarak token yenilemesi bekleniyor (30 sn).
+**Dikkat:** bu bir gerçek model çağrısıdır ("." prompt'u) — küçük ama
+kota tüketir. Desktop kaynağında yenileme denenmez (uygulama kendi
+yeniler). Bundled masaüstü CLI: `%APPDATA%\Claude\claude-code\<sürüm>\claude.exe`.
+Kullanıcımız Desktop agent mode'da — bu kaynak platform için zorunlu.
