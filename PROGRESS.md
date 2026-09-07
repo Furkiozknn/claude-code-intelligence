@@ -28,8 +28,8 @@ yazma — parse patlıyor; böyle dosyalar için Write. Python konsolunda her
 | 3 | **Veri toplama analizi** | 6 | ✅ v1 + resmî doküman doğrulaması |
 | 4 | **Top 20** | 7 | ✅ `research/reports/top20.md` |
 | 5 | **Derin analiz** — Top 20 kaynak kod + 2 referans repo | 8–9 | ✅ 20 not + `notes/03` semconv + batch-06 puan revizyonu |
-| 6 | **Sentez** — pattern / anti-pattern / çözülmemiş / rekabet | 38 | 🔄 başlıyor |
-| 7 | **Mimari** | 10–36, 39–40 | ⬜ |
+| 6 | **Sentez** — pattern / anti-pattern / çözülmemiş / rekabet | 38 | ✅ `research/reports/sentez.md` (58 kalıp, 14 anti-kalıp, 10 açık problem, matris, §38 tablosu, D1–D10) |
+| 7 | **Mimari** | 10–36, 39–40 | 🔄 docs/ yazılıyor |
 | 8 | **Ürün spesifikasyonu** | 22–23 | ⬜ |
 | 9 | **Öz-eleştiri** (18 soru) | 41 | ⬜ |
 | 10 | **İmplementasyon** Stage 1–16 | 42 | ⬜ |
