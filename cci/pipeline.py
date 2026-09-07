@@ -16,7 +16,9 @@ from typing import Iterable
 
 from cci.adapters.base import Cursor
 from cci.adapters.claude_code.adapter import ClaudeCodeAdapter
+from cci.analytics.diagnostics import SessionDiagnostics, diagnose_session, worst_attention
 from cci.analytics.summaries import DailySummary, SessionSummary, price_records, summarize_daily, summarize_sessions
+from cci.model.figure import Figure
 from cci.collectors.transcript import COLLECTOR_NAME, COLLECTOR_VERSION, SCHEMA_VERSION, TranscriptCollector
 from cci.events.envelope import Envelope, SourceRef
 from cci.ingest.allowlist import IngestGate
@@ -114,3 +116,22 @@ class Pipeline:
 
     def sessions(self, *, since: datetime | None = None, until: datetime | None = None, strict: bool = False) -> list[SessionSummary]:
         return summarize_sessions(self.records(since=since, until=until), strict=strict)
+
+    # --- teshis (Stage 8) ------------------------------------------------------
+    DIAG_TYPES = ("tool.call", "usage.error", "session.compacted", "usage.request", "statusline.tick")
+
+    def diagnose(self, session_id: str, *, cost: Figure | None = None, summaries: list[SessionSummary] | None = None) -> SessionDiagnostics:
+        if cost is None:
+            for s in (summaries if summaries is not None else self.sessions()):
+                if s.session_id == session_id:
+                    cost = s.totals.cost
+                    break
+        events = self.store.query(types=self.DIAG_TYPES, session_id=session_id)
+        return diagnose_session(session_id, events, cost=cost)
+
+    def attention(self, now: datetime, *, active_window_s: int = 1800) -> tuple[str, list[SessionDiagnostics]]:
+        """Aktif oturumlarin (son `active_window_s` icinde) en kotu dikkat seviyesi."""
+        summaries = self.sessions()
+        active = [s for s in summaries if (now - s.last_at).total_seconds() <= active_window_s]
+        diags = [self.diagnose(s.session_id, cost=s.totals.cost) for s in active]
+        return worst_attention(d.attention for d in diags), diags

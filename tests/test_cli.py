@@ -35,6 +35,33 @@ def test_scan_then_today_and_sessions(workspace, capsys):
     assert code == EXIT_OK and "≈" in out.out and "gizli" not in out.out
 
 
+def test_session_diagnostics_via_cli(workspace, capsys):
+    from datetime import UTC, datetime
+    from cci.events import Envelope, SourceRef
+    from cci.store import EventStore
+    tmp, env = workspace
+    run(["scan"], tmp, env, capsys)
+    code, out = run(["session", "sess-1"], tmp, env, capsys)
+    assert code == EXIT_OK and "saglik 100/100" in out.out and "dikkat: ok" in out.out
+    # OTLP'den gelmis gibi 4 ardisik basarisiz Bash cagrisi ekle -> dongu + hata
+    src = SourceRef(collector="otlp", instance_id="otlp:claude-code", collector_version="0.0.1", schema_version=1)
+    with EventStore(tmp / "data" / "events.db") as store:
+        for i in range(4):
+            store.append(Envelope(type="tool.call", ts=datetime.now(UTC), source=src, provider="anthropic", session_id="sess-1",
+                                  payload={"tool_name": "Bash", "tool_use_id": f"t{i}", "success": False, "duration_ms": 10,
+                                           "input_size_bytes": 77, "error_type": "exit_code"}))
+    code, out = run(["--json", "session", "sess"], tmp, env, capsys)
+    doc = json.loads(out.out)
+    assert code == EXIT_OK and doc["diagnostics"]["attention"] == "failures" and len(doc["diagnostics"]["loops"]) == 1
+    code, out = run(["sessions"], tmp, env, capsys)
+    assert "failures" in out.out and "saglik" in out.out
+    code, out = run(["snapshot"], tmp, env, capsys)
+    snap = json.loads((tmp / "data" / "state" / "latest.json").read_text(encoding="utf-8"))
+    assert snap["attention"] == "failures"
+    code, out = run(["session", "yok"], tmp, env, capsys)
+    assert code == EXIT_NO_DATA
+
+
 def test_today_without_data_exits_4(tmp_path, capsys):
     code, out = run(["today"], tmp_path, {"CLAUDE_CONFIG_DIR": str(tmp_path / "none")}, capsys)
     assert code == EXIT_NO_DATA and "veri yok" in out.out

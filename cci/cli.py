@@ -209,13 +209,44 @@ def cmd_sessions(ctx: Context, args: argparse.Namespace) -> int:
     if not sessions:
         ctx.out({"sessions": []}, lambda: "oturum yok")
         return EXIT_NO_DATA
+    diags = {s.session_id: ctx.pipe.diagnose(s.session_id, cost=s.totals.cost) for s in sessions}
 
     def text() -> str:
         return "\n".join(f"{s.last_at.astimezone(ctx.tz).strftime('%m-%d %H:%M')}  {s.session_id[:8]}…  istek {s.totals.requests:>4}  "
                          f"token {s.totals.tokens.billable_total:>10,}  {_fig(s.totals.cost):>9}  "
-                         f"alt-ajan {s.subagent_requests}  {'proje ' + s.project_key[:8] if s.project_key else ''}" for s in sessions)
+                         f"alt-ajan {s.subagent_requests}  saglik {diags[s.session_id].health:>3}  {diags[s.session_id].attention}"
+                         f"  {'proje ' + s.project_key[:8] if s.project_key else ''}" for s in sessions)
 
-    ctx.out({"sessions": [s.model_dump(mode="json") for s in sessions]}, text)
+    ctx.out({"sessions": [{**s.model_dump(mode="json"), "diagnostics": diags[s.session_id].model_dump(mode="json")} for s in sessions]}, text)
+    return EXIT_OK
+
+
+def cmd_session(ctx: Context, args: argparse.Namespace) -> int:
+    summaries = ctx.pipe.sessions()
+    match = [s for s in summaries if s.session_id == args.session_id or s.session_id.startswith(args.session_id)]
+    if len(match) != 1:
+        print("oturum bulunamadi ya da belirsiz: " + ", ".join(s.session_id[:8] for s in match) if match else "oturum bulunamadi", file=sys.stderr)
+        return EXIT_NO_DATA
+    s = match[0]
+    d = ctx.pipe.diagnose(s.session_id, cost=s.totals.cost)
+
+    def text() -> str:
+        lines = [f"oturum {s.session_id}  {s.started_at.astimezone(ctx.tz).strftime('%m-%d %H:%M')} → {s.last_at.astimezone(ctx.tz).strftime('%H:%M')}",
+                 f"saglik {d.health}/100  dikkat: {d.attention}" + (f"  ({'; '.join(d.reasons)})" if d.reasons else ""),
+                 f"istek {d.requests}  hata {d.errors} (retry {d.retry_events})  compaction {d.compactions}  "
+                 f"token {s.totals.tokens.billable_total:,}  maliyet {_fig(s.totals.cost)}≈  satici {_fig(s.totals.vendor_cost)}"]
+        if d.context:
+            lines.append(f"context %{d.context.used_pct:.0f} ({d.context.risk})")
+        for t in d.tools:
+            lines.append(f"  arac {t.tool_name:<16} cagri {t.calls:>4}  hata {t.failures:>3}  timeout {t.timeouts:>2}  "
+                         f"p95 {'-' if t.p95_ms is None else f'{t.p95_ms / 1000:.1f}s'}{'  YAVAS' if t.is_slow else ''}")
+        for lp in d.loops:
+            lines.append(f"  DONGU {lp.tool_name} ×{lp.count} ({lp.severity}) [{lp.first_index}-{lp.last_index}]")
+        for m in s.models:
+            lines.append(f"  model {m.display:<14} istek {m.totals.requests:>4}  {_fig(m.totals.cost)}")
+        return "\n".join(lines)
+
+    ctx.out({"session": s.model_dump(mode="json"), "diagnostics": d.model_dump(mode="json")}, text)
     return EXIT_OK
 
 
@@ -292,7 +323,8 @@ def cmd_snapshot(ctx: Context, args: argparse.Namespace) -> int:
     today_local = datetime.now(ctx.tz).date()
     today = next((d for d in days if d.day == today_local), None)
     health = {"adapter": ctx.adapter.health().model_dump(mode="json"), "store_events": ctx.store.count()}
-    snap = build_snapshot(now=now, quota=latest_quota(ctx), today=today, health=health)
+    attention, _ = ctx.pipe.attention(now)
+    snap = build_snapshot(now=now, quota=latest_quota(ctx), today=today, health=health, attention=attention)
     path = Path(args.out) if args.out else ctx.snapshot_path()
     write_snapshot(path, snap)
     ctx.out({"written": str(path), "generated_at": snap["generated_at"]}, lambda: f"snapshot yazildi: {path}")
@@ -397,7 +429,10 @@ def cmd_run(ctx: Context, args: argparse.Namespace) -> int:
             health = {"adapter": ctx.adapter.health().model_dump(mode="json"), "otlp": dict(receiver.counters),
                       "quota": poller.last_health.model_dump(mode="json") if poller else None,
                       "scan": {"written": report.written, "rejected": report.rejected}}
-            write_snapshot(ctx.snapshot_path(), build_snapshot(now=datetime.now(UTC), quota=latest_quota(ctx), today=today, health=health))
+            now = datetime.now(UTC)
+            attention, _ = ctx.pipe.attention(now)
+            write_snapshot(ctx.snapshot_path(), build_snapshot(now=now, quota=latest_quota(ctx), today=today, health=health,
+                                                               attention=attention))
             if args.once:
                 break
             time.sleep(args.interval)
@@ -422,6 +457,7 @@ def build_parser() -> argparse.ArgumentParser:
         s.add_argument("--strict", action="store_true")
         s.set_defaults(fn=cmd_daily, today=today)
     s = sub.add_parser("sessions"); s.add_argument("--limit", type=int, default=20); s.add_argument("--strict", action="store_true"); s.set_defaults(fn=cmd_sessions)
+    s = sub.add_parser("session", help="oturum teshisi"); s.add_argument("session_id"); s.set_defaults(fn=cmd_session)
     s = sub.add_parser("quota"); s.add_argument("--poll", action="store_true", help="canli sorgu (kimlik dosyasi gerekir)"); s.set_defaults(fn=cmd_quota)
     sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
     s = sub.add_parser("snapshot"); s.add_argument("--out", default=None); s.set_defaults(fn=cmd_snapshot)
