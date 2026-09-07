@@ -13,7 +13,7 @@ var ve hiçbir yaklaşım üçünü birden vermiyor:
 |---|---|---|
 | Abonelik kotası (5s/7g %) | hesap | Sağlayıcının kendi ucu (api-polling) **veya** Claude Code'un stdin `rate_limits`'i |
 | Token tüketimi | tur / oturum | Yerel transcript (jsonl-parsing) **veya** yerleşik OTel `token.usage` |
-| Maliyet | model × tur | **Yerleşik OTel `claude_code.cost.usage`** (Claude Code'un kendi hesabı) — yoksa fiyat tablosuyla *tahmin* |
+| Maliyet | model × tur | **Yerleşik OTel `claude_code.cost.usage`** — resmî dokümana göre *istemci tarafı fiyat tablosu* ("satıcı tahmini"); yine de tek ve tutarlı kaynak. Yoksa kendi fiyat tablomuzla *tahmin* |
 
 Bu yüzden birleşik veri modeli (§13) her alanda `source` ve `confidence`
 taşımak **zorunda**; aksi hâlde "üç araç üç maliyet" sorunu tekrarlanır.
@@ -39,6 +39,20 @@ openusage (kısmen), caut, prototip.
 sıfırlamak** (onWatch). Sağlayıcının korumasını aşar; hesap riski.
 Doğru davranış: backoff + son bilinen değeri "bayat" etiketiyle göstermek
 (rjwalters, jens-duttke, CodeZeno, prototip).
+
+**Tur 2 eklemeleri (7 Eylül):**
+- rjwalters `/v1/messages`'a **1 tokenlık istek** atıp rate-limit
+  header'larını okuyor. Kanıt değeri: header'lar OAuth trafiğinde var.
+  Ama her sorgu kota harcıyor — sınırda; platformda kullanılmayacak.
+- **"Resmî CLI'a devret" kalıbı** (CodexQuotaSafe, codexU, rjwalters'ın
+  OpenAI yolu): kimlik dosyasına hiç dokunmadan sağlayıcının kendi CLI
+  app-server'ından stdio/JSON-RPC ile kota okumak. Codex'te
+  `account/rateLimits/read` var. **Claude Code'da karşılığı var mı?**
+  (Bilinen tek resmî kanal statusline stdin'i.) Faz 5 sorusu.
+- aqua5230 Claude/Codex "kotasını" **yalnız yerel loglardan** türetip
+  kota gibi gösteriyor — tahmini gözlem gibi sunma hatası (§10).
+- Kimlik keşfi: Windows native + **WSL** (`\\wsl$\<distro>\home\…`)
+  (sr-kai). Adaptör bunu desteklemeli.
 
 ### 1.2 `stdin-statusline` — Claude Code'un statusline'a verdiği `rate_limits`
 **Örnekler:** claude-pace, ohugonnot, Maciek ("taze ise canlı gerçek"),
@@ -85,9 +99,18 @@ token-monitor, tokburn (lsvishaal), tycho, prototip atıfı.
 | Performans | **Kritik:** hook Claude Code'un yolunda; yavaş/çöken hook deneyimi bozar, `Pre*` hook'ları sıfır dışı çıkışla engelleyebilir. Gözlemlenebilirlik hook'u **asla bloke etmemeli, asla başarısız olmamalı, zaman aşımı olmalı, fire-and-forget** göndermeli. |
 | Hata modları | Alıcı kapalıyken hook ne yapar? (kuyruğa yaz, sessizce geç) · hook script bağımlılığı (uv/Python) yok · WSL/Windows yol. |
 
+**Resmî doküman doğrulaması (notes/02 §B):** hook girdisinde token yok;
+`"async": true` bloke etmeyen ve zaman aşımsız çalışır; çıkış 2 bloke
+eder, diğer sıfır dışı kodlar çoğunlukla etmez; `prompt_id` OTel
+`prompt.id` ile aynı → iki kaynak tek anahtarla birleşir;
+`SessionStart.match_value=compact` ve `PreCompact/PostCompact` gözlenmiş
+sıkıştırma sinyali verir; 30'dan fazla olay tipi (TaskCreated/Completed,
+WorktreeCreate, PreModelSwitch…).
+
 **Sonuç:** Oturum/araç istihbaratı (§14) için en iyi **gerçek zamanlı**
-kanal; transcript taramayı tamamlar (olay → transcript'ten token). Varsayılan
-kapalı, opt-in, bloke etmeyen tasarım şart.
+kanal; transcript taramayı tamamlar (olay → transcript/OTel'den token).
+Varsayılan kapalı, opt-in, **`async: true` + daima çıkış 0 + alıcı
+kapalıysa kuyruğa yaz** tasarımı şart.
 
 ### 1.5 `otlp` — Claude Code'un yerleşik OpenTelemetry çıkışı
 **Örnekler:** acreeger (metrik adları belgeli), rockdarko, ColeMurray,
@@ -101,10 +124,22 @@ li0nel, ccdashboard (hafif Aspire alternatifi), aaraujodata, zcquant.
 | Performans | Mevcut örnekler 4 konteynerli Grafana yığını kuruyor — kişisel kullanım için ağır. **Fırsat:** platform kendi minik OTLP alıcısını gömerse (HTTP :4318, protobuf/JSON) Grafana'ya gerek kalmaz. ccdashboard'un "Aspire Dashboard" alternatifi bu yönde. |
 | Hata modları | Env değişkenlerinin her oturumda ayarlı olması · gRPC/HTTP protokol seçimi · şema/ad değişimi (resmî olduğu için daha kararlı). |
 
-**Sonuç:** **Claude Code için birincil "gözlenmiş maliyet" kaynağı adayı.**
-"Üç araç üç maliyet" sorununu Claude Code oturumları için bitirebilir.
-Doğrulanacak: `cost.usage`'ın Anthropic tarafından mı yoksa istemci fiyat
-tablosuyla mı hesaplandığı. (Faz 5 görevi.)
+**Resmî doküman doğrulaması (notes/02 §A):** `cost.usage` **istemci tarafı
+fiyat tablosuyla** hesaplanıyor — gözlem değil, *satıcı tahmini*. Buna
+karşılık: (a) maliyet ve token metrikleri `query_source` (main/subagent/
+auxiliary), `agent.name`, `skill.name`, `mcp_server.name`, `mcp_tool.name`
+öznitelikleriyle geliyor → **atıf bedava**; (b) `api_request` olayı istek
+başına `cost_usd_micros` + `request_id`, `tool_result` olayı `duration_ms`
++ `success` veriyor; (c) `prompt.id` / `message.uuid` / `client_request_id`
+korelasyon anahtarları var; (d) prompt/yanıt metni varsayılan redakte;
+(e) alıcı kapalıyken davranış **belgelenmemiş**; (f) `rate_limits` yok.
+zcquant tek Node süreciyle gömülü OTLP alıcısının çalıştığını gösteriyor.
+
+**Sonuç:** **Claude Code için birincil token + maliyet + olay kaynağı.**
+Maliyet "satıcı tahmini" olarak etiketlenir (`source: claude_code_otel`),
+ama tek ve tutarlı olduğu için ccusage/token-dashboard'un ayrı ayrı
+fiyat tablolarına tercih edilir. Kota için yetmez; poller/statusline
+gerekir.
 
 ### 1.6 `proxy` — `ANTHROPIC_BASE_URL` ile araya girmek
 **Örnekler:** claude-meter (referans #2), tokburn/patheonsceo, LiteLLM,
@@ -209,9 +244,20 @@ REDDEDİLDİ
 
 ## 4. Faz 5'te doğrulanacaklar
 
-1. `claude_code.cost.usage` sunucu mu istemci hesabı mı?
-2. OTLP alıcısı kapalıyken Claude Code ne yapar?
-3. Abonelik OAuth trafiğinde `anthropic-ratelimit-*` header'ları dönüyor mu? (claude-meter kaynak kodu)
-4. Hook zaman aşımı ve hata davranışı (Claude Code dokümanı).
-5. `/api/oauth/usage`'ın gerçek istek limiti ve `Retry-After` verip vermediği.
-6. CodeZeno'nun "CLI'a token yenileme yaptırma" mekanizması — güvenli mi?
+1. ~~`claude_code.cost.usage` sunucu mu istemci hesabı mı?~~ **İstemci
+   fiyat tablosu** (resmî doküman). Kapandı.
+2. OTLP alıcısı kapalıyken Claude Code ne yapar? — dokümanda yok,
+   **deneyle ölçülecek**.
+3. Abonelik OAuth trafiğinde `anthropic-ratelimit-*` header'ları dönüyor
+   mu? — rjwalters dolaylı kanıt veriyor (evet); **alan adları** claude-meter
+   kaynak kodundan çıkarılacak.
+4. ~~Hook zaman aşımı ve hata davranışı~~ **Belgelendi** (notes/02 §B). Kapandı.
+5. `/api/oauth/usage`'ın gerçek istek limiti ve `Retry-After` verip
+   vermediği — deneyle (nazikçe).
+6. CodeZeno'nun "CLI'a token yenileme yaptırma" mekanizması — kaynak kod.
+7. **Yeni:** Claude Code'da Codex `app-server` benzeri resmî yerel IPC var
+   mı? (CodexQuotaSafe kalıbı.)
+8. **Yeni:** `~/.claude/settings.json` `env` bloğu OTel değişkenlerini
+   taşıyor mu? (Kurulum sihirbazı için.)
+9. **Yeni:** Statusline `rate_limits` alanlarının resmî doküman adları
+   (`docs/en/statusline`).

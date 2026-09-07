@@ -169,18 +169,33 @@ def cmd_ingest(path: str) -> int:
         if not url or "github.com/" not in url.lower():
             skipped += 1
             continue
+        key = norm_url(url)
+        existing = entries.get(key)
         e.setdefault("name", name_from_url(url))
-        e.setdefault("depth", "shallow")
         e.setdefault("found_at", today)
-        if e.get("scores") and e["depth"] == "shallow":
+
+        # Etkin derinlik = mevcut kaydin derinligi ile gelenin en yuksegi.
+        # Gelen kayit depth vermemisse mevcut korunur. (7 Eylul'de burada
+        # hata vardi: gelen kayda 'shallow' varsayilip 25 puanli kayit
+        # sessizce puansiz birakildi. test_catalog.py bunu yakalar.)
+        incoming_depth = e.get("depth")
+        existing_depth = existing.get("depth", "shallow") if existing else "shallow"
+        effective_depth = max(
+            [incoming_depth or "shallow", existing_depth],
+            key=lambda d: DEPTH_RANK.get(d, 0),
+        )
+        if incoming_depth is None:
+            e["depth"] = existing_depth
+
+        if e.get("scores") and effective_depth == "shallow":
             # Puan uydurma yasagi: README okunmadan puan kabul edilmez
             print(f"  [!] {e['name']}: depth=shallow ama scores var — puan atlandi",
                   file=sys.stderr)
             e.pop("scores", None)
             e.pop("score_notes", None)
-        key = norm_url(url)
-        if key in entries:
-            entries[key] = merge(entries[key], e)
+
+        if existing is not None:
+            entries[key] = merge(existing, e)
             updated += 1
         else:
             entries[key] = e
