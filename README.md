@@ -1,7 +1,7 @@
 # Claude Code Intelligence Platform
 
-> Çalışma adı: `claude-code-intelligence`. Ad geçicidir; araştırma bitince
-> ürün adına karar verilir.
+> Çalışma adı: `claude-code-intelligence` (CLI `cci`, daemon `ccid` — geçici).
+> Ad ürün kararıyla değişebilir.
 
 AI coding agent kullanımını (önce Claude Code, mimari olarak diğer
 sağlayıcılar) **gözlemleyen, normalize eden, analiz eden, ölçen, tahmin
@@ -10,43 +10,56 @@ veriye dayalı cevap veren** yerel-öncelikli bir istihbarat/kontrol katmanı.
 
 Bu bir usage monitor, token sayacı, kota görüntüleyici, pano, CLI aracı
 veya taskbar widget'ı **değildir** — bunların birleşiminden büyük bir sistem
-hedefleniyor. Ama araştırma bitmeden tek satır platform kodu yazılmayacak.
+hedefleniyor. Araştırma ve mimari bitmeden platform kodu yazılmadı.
 
-## Yöntem
+## Yöntem ve durum
 
 ```
 Research → Discover → Score → Deep Analyze → Extract → Synthesize
         → Design → Critique → Implement → Benchmark → Improve
+   ✅        ✅        ✅         ✅           ✅          ✅
+                                                    → 🔄 Design (Faz 7)
 ```
 
-Kaynak belge: `docs/MASTER_PROMPT.md` (kullanıcının görev tanımı).
-Fazlar ve günlük: `PROGRESS.md`.
-Araştırma veri seti: `research/catalog.jsonl` + `research/tools/catalog.py`.
+| Çıktı | Nerede |
+|---|---|
+| Görev tanımı (kullanıcı) | `docs/MASTER_PROMPT.md` |
+| Fazlar, günlük, sıradaki işler | `PROGRESS.md` |
+| Araştırma veri seti (232 repo, 13 kriter/100) | `research/catalog.jsonl`, `research/reports/catalog.md`, `research/tools/catalog.py` |
+| Veri toplama yaklaşımları + resmî kaynak doğrulaması | `research/notes/01-*.md`, `02-resmi-kaynaklar.md`, `03-otel-genai-semconv.md` |
+| Top 20 ve derin analizler (20 repo, kaynak kod düzeyi) | `research/reports/top20.md`, `research/notes/deep/*.md` |
+| Sentez: 58 kalıp, 14 anti-kalıp, 10 açık problem, rekabet tablosu, D1–D10 | `research/reports/sentez.md` |
+| Mimari | `docs/ARCHITECTURE.md` · `DATA_MODEL.md` · `EVENTS.md` · `PROVIDERS.md` · `PRIVACY.md` · `ANALYTICS.md` · `EXTENDING.md` · `RESEARCH_MODE.md` |
+| Katkı kuralları | `CONTRIBUTING.md` |
 
-## Temel ilkeler (araştırmadan bağımsız, baştan sabit)
+## Temel ilkeler (baştan sabit; araştırmayla somutlaştı)
 
-1. **Observed / Derived / Estimated / Predicted / Inferred** ayrımı her
-   yüzeyde açıkça korunur. Tahmin, gözlem gibi gösterilmez.
-2. **Local-first.** Prompt, yanıt, kimlik bilgisi, token, oturum verisi
-   gereksiz yere dışarı çıkmaz. Ham veri ile anonim analitik ayrılır.
-3. **Nazik veri toplama.** Sağlayıcı korumalarını aşan hiçbir teknik
-   (token rotasyonu vb.) kullanılmaz. Backoff vardır, hile yoktur.
-4. **Aşamalı inşa.** Core → Advanced → Intelligence → Ecosystem.
-   "Do not overbuild."
-5. **Tekrarlanabilir analitik.** Her tahminin nasıl üretildiği ve hangi
-   estimator sürümüyle üretildiği açıklanabilir.
-6. **Tek gerçek kaynak.** Aynı bilgi iki yerde elle tutulmaz; kopya varsa
-   testi vardır. (Prototipte öğrenilen ders — bkz. `research/notes/00-*`.)
+1. **Kanıt sınıfı her sayıda:** Observed / Derived / Vendor-estimated /
+   Estimated / Predicted / Inferred. Para ve tahmin alanları `Figure`
+   tipindedir; mutabakat kapısını geçmeyen sayı **basılmaz**.
+2. **İçerik alanı yok.** Prompt, yanıt, araç argümanı, dosya içeriği hiçbir
+   tipte tanımlı değildir; gizlilik incelemesi `grep` ile yapılabilir.
+3. **Local-first.** Ağ envanteri iki hedeften ibarettir (kota ucu, isteğe
+   bağlı fiyat yenileme); dışa aktarım yalnız açık rıza ile (Eco aşaması).
+4. **Nazik veri toplama.** Token rotasyonu/yenileme, UA taklidi, kota harcayan
+   sentetik istek yok; 429'a saygı, geri çekilme.
+5. **Koruma yasası.** Her rapor `toplam = Σ parça`; `--strict` çıkış 3.
+6. **Aşamalı inşa.** Core → Advanced → Intelligence → Ecosystem; "do not
+   overbuild".
+7. **Tekrarlanabilir analitik.** Türetimler saf fonksiyon; `cci replay`;
+   sürümlü özet/estimator/fiyat.
+8. **Tek gerçek kaynak.** Aynı bilgi iki yerde elle tutulmaz; kopya varsa
+   testi vardır.
 
 ## Önceki çalışmayla ilişki
 
-`D:\Repolar\claude-quota-monitor` bu platformun prototipidir. Orada
-öğrenilenler (resmî `/api/oauth/usage` şeması, `limits` dizisi, kod adı
-gürültüsü, nazik sorgulama politikası, yerel JSONL atıfı, `light-dark()`,
-tutarlılık testleri) `research/notes/00-seed-from-claude-quota-monitor.md`
-içinde araştırma girdisi olarak duruyor. Platform onu **kapsayacak**, ona
-bağımlı olmayacak.
+`D:\Repolar\claude-quota-monitor` bu platformun prototipidir; öğrenilenler
+`research/notes/00-seed-from-claude-quota-monitor.md` içinde. Platform onu
+**kapsayacak**, ona bağımlı olmayacak.
 
-## Durum
+## Güvenlik notu (araştırmadan)
 
-Bkz. `PROGRESS.md`.
+Üçüncü taraf repo klonlarken `.claude/skills` veya `hooks` taşıyan bir depo
+Claude Code oturumuna skill enjekte edebilir (bu projede yaşandı). Klonları
+geçici dizinde tutun; `.claude/` içeriğini çalıştırmayın. Ayrıntı:
+`docs/PRIVACY.md` §5.
