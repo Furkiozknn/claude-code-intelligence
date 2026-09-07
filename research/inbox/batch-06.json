@@ -1,0 +1,520 @@
+{
+ "source": "Faz 5 derin analiz puan revizyonu (2026-09-07)",
+ "entries": [
+  {
+   "url": "https://github.com/CodeZeno/Claude-Code-Usage-Monitor",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 9,
+    "analytics": 5,
+    "architecture": 8,
+    "accuracy": 7,
+    "prediction": 3,
+    "observability": 4,
+    "ux": 7,
+    "extensibility": 7,
+    "privacy": 7,
+    "performance": 6,
+    "documentation": 6,
+    "community": 6,
+    "cross_provider": 7
+   },
+   "score_notes": {
+    "data_collection": "Resmî sağlayıcı uçları; şifreli token cache; CLI'a yenileme yaptırma; backoff, rotasyon yok",
+    "architecture": "rev: kimlik keşif zinciri (CLI→Desktop OSCrypt→WSL), sağlayıcı tanımlayıcı, atomik persist",
+    "extensibility": "5 sağlayıcı adaptörü",
+    "community": "447★, 132 commit, winget",
+    "accuracy": "rev: limits[] dizisi kullanılmıyor; 'claude -p .' ile token yenileme gerçek çağrı (kota harcar)"
+   }
+  },
+  {
+   "url": "https://github.com/abhishekray07/claude-meter",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 7,
+    "analytics": 7,
+    "architecture": 8,
+    "accuracy": 8,
+    "prediction": 6,
+    "observability": 5,
+    "ux": 5,
+    "extensibility": 5,
+    "privacy": 5,
+    "performance": 5,
+    "documentation": 5,
+    "community": 3,
+    "cross_provider": 2
+   },
+   "score_notes": {
+    "data_collection": "ANTHROPIC_BASE_URL proxy: rate-limit header'ları dahil her istek — en zengin sinyal, ama tüm trafiği araya alır, yolda kalırsa iş durur",
+    "architecture": "RAW JSONL → normalizasyon → analiz → tahmin → görselleştirme katmanları",
+    "accuracy": "Ham/normalize ayrımı; tahmin + güven",
+    "privacy": "rev: storage/jsonl.go authorization/x-api-key başlıklarını temizliyor; gövdeler hâlâ ham",
+    "performance": "Kritik yolda proxy",
+    "community": "93★, 35 commit, alpha"
+   }
+  },
+  {
+   "url": "https://github.com/getagentseal/codeburn",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 8,
+    "analytics": 9,
+    "architecture": 8,
+    "accuracy": 8,
+    "prediction": 3,
+    "observability": 6,
+    "ux": 7,
+    "extensibility": 9,
+    "privacy": 5,
+    "performance": 6,
+    "documentation": 8,
+    "community": 9,
+    "cross_provider": 10
+   },
+   "score_notes": {
+    "data_collection": "41 araç için sağlayıcı-özel yerel parser; Cursor SQLite; anahtar/proxy gerekmez; tahmini alanlar işaretli",
+    "analytics": "En zengin israf analitiği: yinelenen okuma, düşük Read:Edit, kapaksız bash çıktısı, kullanılmayan MCP/ajan/skill, şişkin CLAUDE.md, model/proje/görev kırılımı",
+    "architecture": "rev: act günlüğü (yedek→hash→uygula→geri al), guard hook'ları fail-open, tek mutasyon yolu",
+    "accuracy": "Sağlayıcı başına 'estimated' etiketi; fiyat LiteLLM'den günlük — kaynak açık",
+    "prediction": "Tasarruf tahmini + 3 gün sonra gerçekle kıyas; kota tahmini yok",
+    "observability": "rev: doctor + probeRoots, realized-vs-estimated raporu",
+    "ux": "A–F notu güçlü bir bilişsel kısayol; CLI + desktop",
+    "extensibility": "rev: Provider arayüzü + SessionSource + probeRoots, plugins/, MCP sunucusu",
+    "privacy": "rev: session-cache userMessage saklıyor; UA taklidi; telemetri opt-in ve beyaz listeli (+)",
+    "performance": "2060 commit'lik olgun araç; ölçüm yok",
+    "documentation": "Sağlayıcı başına veri konumu belgeli",
+    "community": "10.9k★, 2060 commit",
+    "cross_provider": "41 araç"
+   }
+  },
+  {
+   "url": "https://github.com/ryoppippi/ccusage",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 7,
+    "analytics": 8,
+    "architecture": 9,
+    "accuracy": 8,
+    "prediction": 5,
+    "observability": 3,
+    "ux": 7,
+    "extensibility": 6,
+    "privacy": 8,
+    "performance": 9,
+    "documentation": 8,
+    "community": 10,
+    "cross_provider": 10
+   },
+   "score_notes": {
+    "data_collection": "Yerel JSONL, 18 araç; stdin statusline; resmî kota yok",
+    "analytics": "Günlük/haftalık/aylık/oturum/5s blok; cache ayrı; maliyet",
+    "accuracy": "rev: dedup (message.id, requestId, session) + max toplam token; sidechain replay #913; advisor iterasyonu; tarihli fiyat",
+    "prediction": "blocks --active: mevcut hızla blok sonu projeksiyonu (gözlendi)",
+    "privacy": "Yerel, yükleme yok",
+    "performance": "rev: Rust, snapshot testleri, yerel ikili",
+    "community": "18.4k★, 1812 commit",
+    "cross_provider": "rev: 19 adaptör",
+    "architecture": "rev: Rust'a yeniden yazım; adaptör başına crate (19), çekirdek/cli/config ayrımı"
+   }
+  },
+  {
+   "url": "https://github.com/mag123c/toktrack",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 8,
+    "analytics": 7,
+    "architecture": 9,
+    "accuracy": 7,
+    "prediction": 2,
+    "observability": 5,
+    "ux": 7,
+    "extensibility": 6,
+    "privacy": 8,
+    "performance": 10,
+    "documentation": 7,
+    "community": 6,
+    "cross_provider": 8
+   },
+   "score_notes": {
+    "performance": "simd-json + rayon, ~3 GiB/s; soğuk 1.0 sn, cache'li 0.04 sn — ölçülmüş çıta",
+    "architecture": "rev: CACHE_VERSION geçmişi koruyarak yeniden hesap; retroactive_reconciliation; SourceInstance; dosya kilidi",
+    "accuracy": "Tahmini '~', bilinmeyen '?' işaretli — provenance",
+    "observability": "audit: kapsama ve korunan geçmişi gösterir",
+    "cross_provider": "9 CLI",
+    "community": "188★"
+   }
+  },
+  {
+   "url": "https://github.com/vscarpenter/tycho-cli",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 7,
+    "analytics": 8,
+    "architecture": 8,
+    "accuracy": 9,
+    "prediction": 5,
+    "observability": 3,
+    "ux": 6,
+    "extensibility": 6,
+    "privacy": 10,
+    "performance": 8,
+    "documentation": 10,
+    "community": 0,
+    "cross_provider": 5
+   },
+   "score_notes": {
+    "privacy": "İçerik YAPISAL olarak yakalanamaz — yalnız metadata tipleri deserialize edilir; ağ yok; salt okunur",
+    "analytics": "Günlük/aylık, oturum, proje/model, cache isabet/tasarruf/kaldıraç, 5s blok projeksiyonu, 2 sn canlı",
+    "accuracy": "rev: ADR 0002 max output_tokens dedup; sentetik kayıt; 5m/1h TTL; ccusage ile mutabakat",
+    "architecture": "Rust; JSON çıktısı belgeli ve kararlı API",
+    "community": "1★, 90 commit",
+    "documentation": "rev: SCHEMA.md (49 810 kayıt), ADR'ler, maliyet dürüstlüğü spec'i"
+   }
+  },
+  {
+   "url": "https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 7,
+    "analytics": 7,
+    "architecture": 7,
+    "accuracy": 6,
+    "prediction": 6,
+    "observability": 4,
+    "ux": 7,
+    "extensibility": 6,
+    "privacy": 7,
+    "performance": 6,
+    "documentation": 7,
+    "community": 9,
+    "cross_provider": 2
+   },
+   "score_notes": {
+    "data_collection": "JSONL + opsiyonel OAuth usage API + taze statusline rate_limits 'canlı gerçek kaynak'",
+    "analytics": "Burn rate, P90 limit tespiti, anlık/günlük/aylık görünüm",
+    "accuracy": "rev: 'limit' = geçmiş bloklarının P90'ı (Inferred), resmi yüzde yok",
+    "prediction": "rev: P90 tahmini kota birimiyle ilişkisi kanıtsız",
+    "architecture": "--once/--compact/--write-state versiyonlu snapshot",
+    "community": "8.7k★",
+    "extensibility": "rev: atomik durum dosyası (yol arkadaşı yüzeyler)"
+   }
+  },
+  {
+   "url": "https://github.com/AstroQore/vibe-bar",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 8,
+    "analytics": 8,
+    "architecture": 7,
+    "accuracy": 8,
+    "prediction": 10,
+    "observability": 4,
+    "ux": 7,
+    "extensibility": 5,
+    "privacy": 4,
+    "performance": 6,
+    "documentation": 7,
+    "community": 4,
+    "cross_provider": 8
+   },
+   "score_notes": {
+    "data_collection": "Resmî uçlar (abonelik pencereleri) + yerel ajan logları (maliyet atıfı) — hedeflediğimiz birleşim; ama tarayıcı çerezi ve yerel dil sunucusu sondajı",
+    "analytics": "Kota + yerel maliyet, sıfırlanma döngüleri, çalışma saati kalıpları",
+    "architecture": "~/.vibebar: ayar, kota anlık görüntüleri, fiyat cache, SQLite olaylar, oturum indeksi; MCP sunucusu (Unix socket)",
+    "accuracy": "rev: taze pencere bail-out, reset toleransı, yalnız kota gözlemi",
+    "prediction": "rev: üç adaylı harman + 4 bileşenli güven + belirsizlik bandı + uyarlanabilir hedef, ML yok",
+    "privacy": "Bilerek sandbox dışı (çerez okumak için); telemetri yok",
+    "community": "19★ ama 1035 commit — tek kişi, çok aktif",
+    "cross_provider": "20+",
+    "documentation": "rev: kod içi gerekçeler ayrıntılı"
+   }
+  },
+  {
+   "url": "https://github.com/Astro-Han/claude-pace",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 9,
+    "analytics": 5,
+    "architecture": 7,
+    "accuracy": 9,
+    "prediction": 6,
+    "observability": 3,
+    "ux": 6,
+    "extensibility": 2,
+    "privacy": 9,
+    "performance": 8,
+    "documentation": 8,
+    "community": 5,
+    "cross_provider": 1
+   },
+   "score_notes": {
+    "data_collection": "Statusline stdin rate_limits (Claude Code ≥2.1.80); sıfır ağ; cache'li yedek bilinçli reddedilmiş",
+    "analytics": "Model, effort, git diff, 5s/7g %, sıfırlanma, pace delta",
+    "accuracy": "Veri yoksa '--' gösterir, uydurmaz; formül açık",
+    "prediction": "Pace = kullanım% − geçen süre%: basit, dürüst hız sinyali; ETA/güven yok",
+    "privacy": "Ağ çağrısı yok",
+    "performance": "Bash+jq tek dosya",
+    "documentation": "rev: docs/decisions kayıtları",
+    "community": "229★, Tem 2026 v0.9.4",
+    "architecture": "rev: kota cache kaldırma kararı belgeli; iptal edilebilir script tasarımı"
+   }
+  },
+  {
+   "url": "https://github.com/shanggqm/codexU",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 9,
+    "analytics": 8,
+    "architecture": 8,
+    "accuracy": 8,
+    "prediction": 4,
+    "observability": 3,
+    "ux": 8,
+    "extensibility": 4,
+    "privacy": 8,
+    "performance": 7,
+    "documentation": 6,
+    "community": 6,
+    "cross_provider": 3
+   },
+   "score_notes": {
+    "data_collection": "Üç kaynak: ~/.codex/state_5.sqlite + rollout-*.jsonl + RESMÎ Codex app-server API (account/read, account/rateLimits/read, account/usage/read)",
+    "analytics": "5s/7g %, token in/cached/out, 180 gün trend, proje sıralaması, görev panosu, 'AI leadership' skoru",
+    "accuracy": "rev: belirsizlikte nil, eşleşme sayıları",
+    "ux": "Swift/SwiftUI widget (macOS), Tauri (Windows)",
+    "privacy": "Yalnız GitHub sürüm kontrolü dışarı",
+    "community": "343★, 290 commit",
+    "architecture": "rev: süre tabanlı pencere normalizasyonu, authoritative bayrağı"
+   }
+  },
+  {
+   "url": "https://github.com/BerriAI/litellm",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 8,
+    "analytics": 7,
+    "architecture": 8,
+    "accuracy": 8,
+    "prediction": 3,
+    "observability": 8,
+    "ux": 6,
+    "extensibility": 9,
+    "privacy": 5,
+    "performance": 6,
+    "documentation": 8,
+    "community": 10,
+    "cross_provider": 10
+   },
+   "score_notes": {
+    "data_collection": "Gateway: her çağrı tam gözlenir; abonelik OAuth trafiğinin proxy'den geçip geçmeyeceği belirsiz",
+    "extensibility": "100+ sağlayıcı, callback'ler",
+    "accuracy": "rev: 5 bileşenli fiyat + above_1hr + 200k kademeleri + deprecation_date",
+    "community": "58.2k★, 47k commit"
+   }
+  },
+  {
+   "url": "https://github.com/disler/claude-code-hooks-multi-agent-observability",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 8,
+    "analytics": 4,
+    "architecture": 6,
+    "accuracy": 7,
+    "prediction": 1,
+    "observability": 6,
+    "ux": 7,
+    "extensibility": 6,
+    "privacy": 2,
+    "performance": 6,
+    "documentation": 7,
+    "community": 7,
+    "cross_provider": 1
+   },
+   "score_notes": {
+    "data_collection": "12 hook olayı: PreToolUse/PostToolUse/PostToolUseFailure/PermissionRequest/Notification/UserPromptSubmit/SessionStart/End/SubagentStart/Stop/PreCompact/Stop — en geniş hook kapsamı",
+    "analytics": "rev: yalnız olay akışı + LLM özeti",
+    "architecture": "rev: şema sürümü yok (PRAGMA ile göç), tema pazarı kapsam şişmesi",
+    "accuracy": "Gözlenen olaylar; tahmin yok",
+    "ux": "Gerçek zamanlı zaman çizelgesi, oturum kulvarları, transcript görüntüleyici",
+    "extensibility": "session_id + source_app etiketleri; Python hook'ları",
+    "privacy": "rev: payload + chat (tüm transkript) SQLite'ta, redaksiyon/saklama yok",
+    "community": "1.5k★ ama 16 commit (eğitim deposu)"
+   }
+  },
+  {
+   "url": "https://github.com/zcquant/claude-code-monitor",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 5,
+    "analytics": 5,
+    "architecture": 4,
+    "accuracy": 5,
+    "prediction": 1,
+    "observability": 5,
+    "ux": 5,
+    "extensibility": 4,
+    "privacy": 6,
+    "performance": 6,
+    "documentation": 4,
+    "community": 1,
+    "cross_provider": 1
+   },
+   "score_notes": {
+    "data_collection": "rev: protobuf işlenmiyor, logs/traces atılıyor, öznitelikler kayıp",
+    "architecture": "rev: tek dosya sayaçlar; içerik türü kontrolsüz 200 OK",
+    "performance": "Tek Node süreci — Grafana yığınına göre hafif",
+    "community": "12★, tek commit",
+    "accuracy": "rev: session/user kırılımı yok"
+   }
+  },
+  {
+   "url": "https://github.com/luoyuctl/agenttrace",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 6,
+    "analytics": 9,
+    "architecture": 7,
+    "accuracy": 8,
+    "prediction": 2,
+    "observability": 4,
+    "ux": 7,
+    "extensibility": 5,
+    "privacy": 7,
+    "performance": 6,
+    "documentation": 6,
+    "community": 5,
+    "cross_provider": 8
+   },
+   "score_notes": {
+    "data_collection": "14 ajan + genel JSON/JSONL; yollar belgelenmemiş",
+    "analytics": "rev: teşhis modeli (döngü parmak izi, p95, context bütçesi) + dikkat merdiveni",
+    "architecture": "Rust, yerel, JSON/MD/HTML rapor; 'Limited' yetenek seviyesi etiketi",
+    "accuracy": "'Eksik olay kanıtı asla tam trace gibi sunulmaz' — açık provenance",
+    "ux": "TUI: sıralama (maliyet/süre/sağlık/anomali), arama, detay",
+    "community": "130★, 488 commit",
+    "cross_provider": "14 kaynak"
+   }
+  },
+  {
+   "url": "https://github.com/xiufengsun/TokenTracker",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 8,
+    "analytics": 8,
+    "architecture": 7,
+    "accuracy": 7,
+    "prediction": 2,
+    "observability": 3,
+    "ux": 8,
+    "extensibility": 8,
+    "privacy": 5,
+    "performance": 5,
+    "documentation": 6,
+    "community": 7,
+    "cross_provider": 10
+   },
+   "score_notes": {
+    "data_collection": "Claude/Codex/Gemini için SessionEnd HOOK (erken+ucuz), Cursor/Kiro/Copilot/Zed için SQLite, diğerleri JSONL — üç yolu birlikte kullanan tek araç",
+    "analytics": "rev: context-health, kaynak kapsamı, çapraz cihaz",
+    "architecture": "SQLite; web+menü çubuğu+tray+4 widget aynı backend",
+    "accuracy": "rev: LWW dedup spesifikasyonu, doğrulama durumu kodda",
+    "ux": "Web :7680, menubar, tray, widget'lar, masaüstü evcil hayvan",
+    "extensibility": "'Yeni sağlayıcı bir parser dosyası uzağında'",
+    "privacy": "rev: bulut senkron/leaderboard ürünün parçası; telemetri hash'li ve opt-out (+)",
+    "community": "1.5k★",
+    "cross_provider": "36"
+   }
+  },
+  {
+   "url": "https://github.com/Tanisha-Katara/cacheeconomics",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 6,
+    "analytics": 9,
+    "architecture": 7,
+    "accuracy": 10,
+    "prediction": 3,
+    "observability": 3,
+    "ux": 4,
+    "extensibility": 5,
+    "privacy": 8,
+    "performance": 5,
+    "documentation": 7,
+    "community": 2,
+    "cross_provider": 4
+   },
+   "score_notes": {
+    "analytics": "Maliyet çarpanları: cache okuma 0.1×, girdi 1×, 5 dk yazma 1.25×, 1 sa yazma 2× (20× yayılım); cache sona erme/yeniden inşa/işaret yerleşimi/model geçişi kanıtı; etkiye göre sıralı düzeltme; TTL politika kıyası; CI doğrulama",
+    "accuracy": "rev: Figure withheld/DRAFT/RECONCILED, ALIGNMENT_FLOOR, ölçülmüş TTL, karışık TTL bilinemez",
+    "data_collection": "Transcript, LiteLLM log, istek gövdesi, proxy yakalama",
+    "community": "7★, 164 commit; KCG Consulting",
+    "architecture": "rev: analyzer/allocator/adapters ayrımı, blocking_notes yapısal",
+    "privacy": "rev: allow-list olay şeması, FORBIDDEN_KEYS, jenerik hata"
+   }
+  },
+  {
+   "url": "https://github.com/JARACH-209/VibeBill",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 6,
+    "analytics": 8,
+    "architecture": 8,
+    "accuracy": 10,
+    "prediction": 1,
+    "observability": 3,
+    "ux": 5,
+    "extensibility": 4,
+    "privacy": 8,
+    "performance": 5,
+    "documentation": 8,
+    "community": 1,
+    "cross_provider": 5
+   },
+   "score_notes": {
+    "accuracy": "rev: koruma yasası + güven katmanları + determinizm + doğrulanmış format gerçekleri",
+    "analytics": "Commit/sürüm başına maliyet; git log'a maliyet sütunu; Markdown defter",
+    "architecture": "rev: saf çekirdek, zod sınırları, manifest artımlı ingest, 3 bağımlılık",
+    "community": "4★, 32 commit",
+    "privacy": "rev: içerik yok, yalnız dosya yolu; tek ağ çağrısı",
+    "documentation": "rev: how-attribution-works + contracts.md"
+   }
+  },
+  {
+   "url": "https://github.com/adididitagain/tokentab",
+   "depth": "deep",
+   "scores": {
+    "data_collection": 6,
+    "analytics": 7,
+    "architecture": 6,
+    "accuracy": 8,
+    "prediction": 3,
+    "observability": 3,
+    "ux": 5,
+    "extensibility": 5,
+    "privacy": 9,
+    "performance": 6,
+    "documentation": 7,
+    "community": 1,
+    "cross_provider": 6
+   },
+   "score_notes": {
+    "data_collection": "SDK sarmalayıcı: gerçek yanıt token sayısı; ama uygulama kodu gerektirir, CLI ajanlar için değil",
+    "analytics": "Başarılı görev başına maliyet; kalite = eval assertion'ları (exact/contains/regex/json-valid); deneme/süre",
+    "accuracy": "≥30 eşleşmiş görev ve %95 GA ±5 puan doğrulama eşiği — istatistiksel disiplin",
+    "privacy": "prompt/response/messages/content/code alanları girişte REDDEDİLİR",
+    "community": "2★, 17 commit",
+    "cross_provider": "OpenAI/Anthropic/Gemini + özel",
+    "documentation": "rev: THREAT_MODEL.md"
+   }
+  },
+  {
+   "url": "https://github.com/ActivityWatch/activitywatch",
+   "depth": "deep"
+  },
+  {
+   "url": "https://github.com/traceloop/openllmetry",
+   "depth": "deep"
+  }
+ ]
+}

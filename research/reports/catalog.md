@@ -4,56 +4,56 @@ Toplam 232 repo · üretim: 2026-09-07
 
 | # | Repo | ⭐ | Derinlik | Toplam | Kategoriler | Yaklaşım | Yüzey |
 |--:|---|--:|---|--:|---|---|---|
-| 1 | [berriai/litellm](https://github.com/BerriAI/litellm) | 58200 | fetched | 70.7 | proxy, cost, cross-provider, observability | proxy, sdk-instrumentation | daemon, web, library |
-| 2 | [langfuse/langfuse](https://github.com/langfuse/langfuse) | 34300 | fetched | 69.7 | observability, cost, otlp | sdk-instrumentation, otlp | web |
-| 3 | [getagentseal/codeburn](https://github.com/getagentseal/codeburn) | 10900 | fetched | 69.3 | coding-agent, cross-provider, cost, llm-usage, local-first | log-parsing, sqlite-inspection | cli, web |
-| 4 | [activitywatch/activitywatch](https://github.com/ActivityWatch/activitywatch) | 18800 | fetched | 68.1 | dev-productivity, local-first, privacy, timeseries | os-monitor | web, daemon |
-| 5 | [comet-ml/opik](https://github.com/comet-ml/opik) | 21800 | fetched | 67.2 | observability, otlp | sdk-instrumentation, otlp | web |
-| 6 | [mag123c/toktrack](https://github.com/mag123c/toktrack) | 188 | fetched | 67.2 | llm-usage, cost, terminal, claude-code | jsonl-parsing | cli |
-| 7 | [maciek-roboblog/claude-code-usage-monitor](https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor) | 8700 | fetched | 66.9 | claude-code, quota, timeseries, terminal, cost | jsonl-parsing, api-polling, stdin-statusline | tui, cli |
-| 8 | [astroqore/vibe-bar](https://github.com/AstroQore/vibe-bar) | 19 | fetched | 66.8 | cross-provider, quota, cost, timeseries, desktop | api-polling, log-parsing | menubar |
-| 9 | [arize-ai/phoenix](https://github.com/Arize-ai/phoenix) | 11300 | fetched | 66.4 | observability, otlp | otlp, sdk-instrumentation | web |
-| 10 | [vscarpenter/tycho-cli](https://github.com/vscarpenter/tycho-cli) | 1 | fetched | 66.3 | claude-code, privacy, local-first, terminal | jsonl-parsing | cli |
-| 11 | [helicone/helicone](https://github.com/Helicone/helicone) | 6100 | fetched | 66.1 | observability, cost, proxy, otlp | proxy, otlp | web, daemon |
-| 12 | [ryoppippi/ccusage](https://github.com/ryoppippi/ccusage) | 18400 | fetched | 65.7 | claude-code, llm-usage, cost, cross-provider, terminal, statusline | jsonl-parsing, stdin-statusline | cli, statusline |
-| 13 | [shanggqm/codexu](https://github.com/shanggqm/codexU) | 343 | fetched | 65.4 | coding-agent, quota, desktop, llm-usage | api-polling | widget |
-| 14 | [openlit/openlit](https://github.com/openlit/openlit) | 2700 | fetched | 65.3 | observability, cost, otlp | otlp | web, library |
-| 15 | [codezeno/claude-code-usage-monitor](https://github.com/CodeZeno/Claude-Code-Usage-Monitor) | 447 | fetched | 64.2 | claude-code, quota, desktop, cross-provider | api-polling | taskbar, tray, desktop-app |
+| 1 | [getagentseal/codeburn](https://github.com/getagentseal/codeburn) | 10900 | deep | 72.9 | coding-agent, cross-provider, cost, llm-usage, local-first | log-parsing, sqlite-inspection | cli, web |
+| 2 | [ryoppippi/ccusage](https://github.com/ryoppippi/ccusage) | 18400 | deep | 72.2 | claude-code, llm-usage, cost, cross-provider, terminal, statusline | jsonl-parsing, stdin-statusline | cli, statusline |
+| 3 | [berriai/litellm](https://github.com/BerriAI/litellm) | 58200 | deep | 71.7 | proxy, cost, cross-provider, observability | proxy, sdk-instrumentation | daemon, web, library |
+| 4 | [astroqore/vibe-bar](https://github.com/AstroQore/vibe-bar) | 19 | deep | 70.1 | cross-provider, quota, cost, timeseries, desktop | api-polling, log-parsing | menubar |
+| 5 | [langfuse/langfuse](https://github.com/langfuse/langfuse) | 34300 | fetched | 69.7 | observability, cost, otlp | sdk-instrumentation, otlp | web |
+| 6 | [mag123c/toktrack](https://github.com/mag123c/toktrack) | 188 | deep | 68.4 | llm-usage, cost, terminal, claude-code | jsonl-parsing | cli |
+| 7 | [vscarpenter/tycho-cli](https://github.com/vscarpenter/tycho-cli) | 1 | deep | 68.2 | claude-code, privacy, local-first, terminal | jsonl-parsing | cli |
+| 8 | [activitywatch/activitywatch](https://github.com/ActivityWatch/activitywatch) | 18800 | deep | 68.1 | dev-productivity, local-first, privacy, timeseries | os-monitor | web, daemon |
+| 9 | [shanggqm/codexu](https://github.com/shanggqm/codexU) | 343 | deep | 67.6 | coding-agent, quota, desktop, llm-usage | api-polling | widget |
+| 10 | [comet-ml/opik](https://github.com/comet-ml/opik) | 21800 | fetched | 67.2 | observability, otlp | sdk-instrumentation, otlp | web |
+| 11 | [arize-ai/phoenix](https://github.com/Arize-ai/phoenix) | 11300 | fetched | 66.4 | observability, otlp | otlp, sdk-instrumentation | web |
+| 12 | [helicone/helicone](https://github.com/Helicone/helicone) | 6100 | fetched | 66.1 | observability, cost, proxy, otlp | proxy, otlp | web, daemon |
+| 13 | [openlit/openlit](https://github.com/openlit/openlit) | 2700 | fetched | 65.3 | observability, cost, otlp | otlp | web, library |
+| 14 | [xiufengsun/tokentracker](https://github.com/xiufengsun/TokenTracker) | 1500 | deep | 64.5 | cross-provider, coding-agent, cost, local-first | log-parsing | unknown |
+| 15 | [codezeno/claude-code-usage-monitor](https://github.com/CodeZeno/Claude-Code-Usage-Monitor) | 447 | deep | 64.4 | claude-code, quota, desktop, cross-provider | api-polling | taskbar, tray, desktop-app |
 | 16 | [onllm-dev/onwatch](https://github.com/onllm-dev/onWatch) | 728 | fetched | 63.7 | quota, cross-provider, desktop, local-first | api-polling | web, daemon, cli |
-| 17 | [xiufengsun/tokentracker](https://github.com/xiufengsun/TokenTracker) | 1500 | fetched | 63.5 | cross-provider, coding-agent, cost, local-first | log-parsing | unknown |
-| 18 | [astro-han/claude-pace](https://github.com/Astro-Han/claude-pace) | 229 | fetched | 62.2 | claude-code, quota, statusline, timeseries | stdin-statusline | statusline |
-| 19 | [janekbaraniewski/openusage](https://github.com/janekbaraniewski/openusage) | 187 | fetched | 61.3 | coding-agent, cross-provider, quota, cost, terminal | api-polling, log-parsing | tui, cli |
-| 20 | [luoyuctl/agenttrace](https://github.com/luoyuctl/agenttrace) | 130 | fetched | 60.9 | coding-agent, cost, terminal, observability | log-parsing | tui |
-| 21 | [abhishekray07/claude-meter](https://github.com/abhishekray07/claude-meter) | 93 | fetched | 60.9 | claude-code, proxy, quota, timeseries, local-first | proxy | web, cli |
+| 17 | [astro-han/claude-pace](https://github.com/Astro-Han/claude-pace) | 229 | deep | 63.7 | claude-code, quota, statusline, timeseries | stdin-statusline | statusline |
+| 18 | [maciek-roboblog/claude-code-usage-monitor](https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor) | 8700 | deep | 63.6 | claude-code, quota, timeseries, terminal, cost | jsonl-parsing, api-polling, stdin-statusline | tui, cli |
+| 19 | [luoyuctl/agenttrace](https://github.com/luoyuctl/agenttrace) | 130 | deep | 62.1 | coding-agent, cost, terminal, observability | log-parsing | tui |
+| 20 | [abhishekray07/claude-meter](https://github.com/abhishekray07/claude-meter) | 93 | deep | 61.5 | claude-code, proxy, quota, timeseries, local-first | proxy | web, cli |
+| 21 | [janekbaraniewski/openusage](https://github.com/janekbaraniewski/openusage) | 187 | fetched | 61.3 | coding-agent, cross-provider, quota, cost, terminal | api-polling, log-parsing | tui, cli |
 | 22 | [javis603/token-monitor](https://github.com/Javis603/token-monitor) | 2000 | fetched | 60.6 | cross-provider, coding-agent, cost, quota, local-first, desktop | log-parsing | widget |
-| 23 | [jens-duttke/usage-monitor-for-claude](https://github.com/jens-duttke/usage-monitor-for-claude) | 276 | fetched | 60.3 | claude-code, quota, desktop | api-polling | tray |
-| 24 | [acreeger/claude-code-metrics-stack](https://github.com/acreeger/claude-code-metrics-stack) | 11 | fetched | 59.4 | claude-code, observability, otlp, cost | otlp | web |
-| 25 | [traceloop/openllmetry](https://github.com/traceloop/openllmetry) | 7400 | fetched | 58.7 | observability, otlp, library, cross-provider | otlp, sdk-instrumentation | library |
-| 26 | [owloops/claude-powerline](https://github.com/Owloops/claude-powerline) | 1200 | fetched | 58.7 | claude-code, statusline, cost | stdin-statusline, jsonl-parsing | statusline |
-| 27 | [disler/claude-code-hooks-multi-agent-observability](https://github.com/disler/claude-code-hooks-multi-agent-observability) | 1500 | fetched | 58.2 | claude-code, observability, coding-agent | hooks | web |
-| 28 | [sr-kai/claudeusagewin](https://github.com/sr-kai/claudeusagewin) | 25 | fetched | 58.1 | claude-code, quota, desktop | api-polling | tray |
-| 29 | [stormzhang/token-tracker](https://github.com/stormzhang/token-tracker) | 509 | fetched | 57.8 | claude-code, cross-provider, cost, statusline | jsonl-parsing, stdin-statusline | statusline, cli |
-| 30 | [szaher/claude-monitor](https://github.com/szaher/claude-monitor) | 6 | fetched | 57.2 | claude-code, observability, local-first | hooks, jsonl-parsing | web, daemon |
-| 31 | [yahav10/claude-code-dashboard](https://github.com/yahav10/claude-code-dashboard) | 4 | fetched | 56.8 | claude-code, local-first, privacy, cost | jsonl-parsing | web |
-| 32 | [muety/wakapi](https://github.com/muety/wakapi) | 4400 | fetched | 56.7 | dev-productivity, local-first, privacy | sdk-instrumentation | web, daemon |
-| 33 | [adididitagain/tokentab](https://github.com/adididitagain/tokentab) | 2 | fetched | 56.7 | cost, local-first, privacy | unknown | unknown |
-| 34 | [nateherkai/token-dashboard](https://github.com/nateherkai/token-dashboard) | 685 | fetched | 56.4 | claude-code, llm-usage, cost, local-first | jsonl-parsing | web, cli |
-| 35 | [rjwalters/claude-monitor](https://github.com/rjwalters/claude-monitor) | 22 | fetched | 56.4 | quota, desktop | api-polling | menubar |
-| 36 | [f-is-h/usage4claude](https://github.com/f-is-h/usage4claude) | 381 | fetched | 56.3 | quota, desktop | api-polling | menubar |
-| 37 | [dicklesworthstone/coding_agent_usage_tracker](https://github.com/Dicklesworthstone/coding_agent_usage_tracker) | 82 | fetched | 56.2 | coding-agent, cross-provider, quota, cost, terminal | api-polling | cli |
-| 38 | [tanisha-katara/cacheeconomics](https://github.com/Tanisha-Katara/cacheeconomics) | 7 | fetched | 56.2 | cost, library | unknown | library |
-| 39 | [jarach-209/vibebill](https://github.com/JARACH-209/VibeBill) | 4 | fetched | 54.3 | cost, dev-productivity | log-parsing | cli |
-| 40 | [technickai/claude_telemetry](https://github.com/TechNickAI/claude_telemetry) | 31 | fetched | 54.1 | claude-code, observability, otlp | hooks, otlp | cli |
+| 23 | [tanisha-katara/cacheeconomics](https://github.com/Tanisha-Katara/cacheeconomics) | 7 | deep | 60.6 | cost, library | unknown | library |
+| 24 | [jens-duttke/usage-monitor-for-claude](https://github.com/jens-duttke/usage-monitor-for-claude) | 276 | fetched | 60.3 | claude-code, quota, desktop | api-polling | tray |
+| 25 | [acreeger/claude-code-metrics-stack](https://github.com/acreeger/claude-code-metrics-stack) | 11 | fetched | 59.4 | claude-code, observability, otlp, cost | otlp | web |
+| 26 | [jarach-209/vibebill](https://github.com/JARACH-209/VibeBill) | 4 | deep | 58.9 | cost, dev-productivity | log-parsing | cli |
+| 27 | [traceloop/openllmetry](https://github.com/traceloop/openllmetry) | 7400 | deep | 58.7 | observability, otlp, library, cross-provider | otlp, sdk-instrumentation | library |
+| 28 | [owloops/claude-powerline](https://github.com/Owloops/claude-powerline) | 1200 | fetched | 58.7 | claude-code, statusline, cost | stdin-statusline, jsonl-parsing | statusline |
+| 29 | [sr-kai/claudeusagewin](https://github.com/sr-kai/claudeusagewin) | 25 | fetched | 58.1 | claude-code, quota, desktop | api-polling | tray |
+| 30 | [stormzhang/token-tracker](https://github.com/stormzhang/token-tracker) | 509 | fetched | 57.8 | claude-code, cross-provider, cost, statusline | jsonl-parsing, stdin-statusline | statusline, cli |
+| 31 | [szaher/claude-monitor](https://github.com/szaher/claude-monitor) | 6 | fetched | 57.2 | claude-code, observability, local-first | hooks, jsonl-parsing | web, daemon |
+| 32 | [adididitagain/tokentab](https://github.com/adididitagain/tokentab) | 2 | deep | 57.0 | cost, local-first, privacy | unknown | unknown |
+| 33 | [yahav10/claude-code-dashboard](https://github.com/yahav10/claude-code-dashboard) | 4 | fetched | 56.8 | claude-code, local-first, privacy, cost | jsonl-parsing | web |
+| 34 | [muety/wakapi](https://github.com/muety/wakapi) | 4400 | fetched | 56.7 | dev-productivity, local-first, privacy | sdk-instrumentation | web, daemon |
+| 35 | [nateherkai/token-dashboard](https://github.com/nateherkai/token-dashboard) | 685 | fetched | 56.4 | claude-code, llm-usage, cost, local-first | jsonl-parsing | web, cli |
+| 36 | [rjwalters/claude-monitor](https://github.com/rjwalters/claude-monitor) | 22 | fetched | 56.4 | quota, desktop | api-polling | menubar |
+| 37 | [f-is-h/usage4claude](https://github.com/f-is-h/usage4claude) | 381 | fetched | 56.3 | quota, desktop | api-polling | menubar |
+| 38 | [dicklesworthstone/coding_agent_usage_tracker](https://github.com/Dicklesworthstone/coding_agent_usage_tracker) | 82 | fetched | 56.2 | coding-agent, cross-provider, quota, cost, terminal | api-polling | cli |
+| 39 | [technickai/claude_telemetry](https://github.com/TechNickAI/claude_telemetry) | 31 | fetched | 54.1 | claude-code, observability, otlp | hooks, otlp | cli |
+| 40 | [disler/claude-code-hooks-multi-agent-observability](https://github.com/disler/claude-code-hooks-multi-agent-observability) | 1500 | deep | 54.0 | claude-code, observability, coding-agent | hooks | web |
 | 41 | [nikiforovall/ccdashboard](https://github.com/NikiforovAll/ccdashboard) | 4 | fetched | 53.8 | claude-code, otlp, observability | otlp | web |
 | 42 | [aqua5230/usage](https://github.com/aqua5230/usage) | 309 | fetched | 53.5 | cross-provider, quota, cost, desktop | api-polling | menubar, tray |
 | 43 | [winfunc/opcode](https://github.com/winfunc/opcode) | 22400 | fetched | 51.3 | claude-code, gui, cost | jsonl-parsing | desktop-app |
-| 44 | [zcquant/claude-code-monitor](https://github.com/zcquant/claude-code-monitor) | 12 | fetched | 51.3 | claude-code, observability, otlp, cost | otlp | web |
-| 45 | [ohugonnot/claude-code-statusline](https://github.com/ohugonnot/claude-code-statusline) | 9 | fetched | 50.5 | claude-code, quota, statusline | stdin-statusline, api-polling | statusline |
-| 46 | [golden0voyager/kimi-code-usage](https://github.com/Golden0Voyager/kimi-code-usage) | 13 | fetched | 49.6 | quota, coding-agent | api-polling | cli, mcp, vscode |
-| 47 | [phuryn/claude-usage](https://github.com/phuryn/claude-usage) | 2200 | fetched | 48.8 | claude-code, llm-usage, cost, local-first | jsonl-parsing | web, cli |
-| 48 | [bevis7781/codexquotasafe](https://github.com/bevis7781/CodexQuotaSafe) | 1 | fetched | 48.6 | coding-agent, quota, desktop | api-polling | desktop-app |
-| 49 | [lsvishaal/tokburn](https://github.com/lsvishaal/tokburn) | 10 | fetched | 45.7 | claude-code, cost, local-first | jsonl-parsing | web |
-| 50 | [tendo33/cursor-usage-tracker](https://github.com/Tendo33/cursor-usage-tracker) | 3 | fetched | 42.7 | coding-agent, quota, vscode | sqlite-inspection, api-polling | vscode |
+| 44 | [ohugonnot/claude-code-statusline](https://github.com/ohugonnot/claude-code-statusline) | 9 | fetched | 50.5 | claude-code, quota, statusline | stdin-statusline, api-polling | statusline |
+| 45 | [golden0voyager/kimi-code-usage](https://github.com/Golden0Voyager/kimi-code-usage) | 13 | fetched | 49.6 | quota, coding-agent | api-polling | cli, mcp, vscode |
+| 46 | [phuryn/claude-usage](https://github.com/phuryn/claude-usage) | 2200 | fetched | 48.8 | claude-code, llm-usage, cost, local-first | jsonl-parsing | web, cli |
+| 47 | [bevis7781/codexquotasafe](https://github.com/bevis7781/CodexQuotaSafe) | 1 | fetched | 48.6 | coding-agent, quota, desktop | api-polling | desktop-app |
+| 48 | [lsvishaal/tokburn](https://github.com/lsvishaal/tokburn) | 10 | fetched | 45.7 | claude-code, cost, local-first | jsonl-parsing | web |
+| 49 | [tendo33/cursor-usage-tracker](https://github.com/Tendo33/cursor-usage-tracker) | 3 | fetched | 42.7 | coding-agent, quota, vscode | sqlite-inspection, api-polling | vscode |
+| 50 | [zcquant/claude-code-monitor](https://github.com/zcquant/claude-code-monitor) | 12 | deep | 42.4 | claude-code, observability, otlp, cost | otlp | web |
 | 51 | [gagar1n/vscode-claude-statusline](https://github.com/gagar1n/vscode-claude-statusline) | 0 | fetched | 33.9 | claude-code, vscode | stdin-statusline, jsonl-parsing | vscode |
 | 52 | [selimfirat/pysad](https://github.com/selimfirat/pysad) | 291 | fetched | 25.1 | library, timeseries |  |  |
 | 53 | [linkedin/luminol](https://github.com/linkedin/luminol) | 1200 | fetched | 24.6 | library, timeseries |  |  |
@@ -239,14 +239,60 @@ Toplam 232 repo · üretim: 2026-09-07
 
 ## Özetler
 
+### getagentseal/codeburn
+https://github.com/getagentseal/codeburn  
+codeburn — 41 AI kodlama aracında yerel dosya parser'larıyla token/maliyet; A–F kurulum notu; israf kalıpları (yinelenen okuma, context şişmesi, kullanılmayan MCP/ajan, şişkin CLAUDE.md); --apply ile geri alınabilir düzeltmeler (yedek+journal, 3 gün sonra gerçek tasarruf raporu). Fiyat LiteLLM'den günlük. Cursor çıktı tokenı tahmini. Masaüstü telemetri AB dışı varsayılan açık. MIT, 10.9k★, 2060 commit. §21 'öneri motoru'nun en olgun mevcut uygulaması.
+
+- **data_collection** (8): 41 araç için sağlayıcı-özel yerel parser; Cursor SQLite; anahtar/proxy gerekmez; tahmini alanlar işaretli
+- **analytics** (9): En zengin israf analitiği: yinelenen okuma, düşük Read:Edit, kapaksız bash çıktısı, kullanılmayan MCP/ajan/skill, şişkin CLAUDE.md, model/proje/görev kırılımı
+- **architecture** (8): rev: act günlüğü (yedek→hash→uygula→geri al), guard hook'ları fail-open, tek mutasyon yolu
+- **accuracy** (8): Sağlayıcı başına 'estimated' etiketi; fiyat LiteLLM'den günlük — kaynak açık
+- **prediction** (3): Tasarruf tahmini + 3 gün sonra gerçekle kıyas; kota tahmini yok
+- **observability** (6): rev: doctor + probeRoots, realized-vs-estimated raporu
+- **ux** (7): A–F notu güçlü bir bilişsel kısayol; CLI + desktop
+- **extensibility** (9): rev: Provider arayüzü + SessionSource + probeRoots, plugins/, MCP sunucusu
+- **privacy** (5): rev: session-cache userMessage saklıyor; UA taklidi; telemetri opt-in ve beyaz listeli (+)
+- **performance** (6): 2060 commit'lik olgun araç; ölçüm yok
+- **documentation** (8): Sağlayıcı başına veri konumu belgeli
+- **community** (9): 10.9k★, 2060 commit
+- **cross_provider** (10): 41 araç
+
+### ryoppippi/ccusage
+https://github.com/ryoppippi/ccusage  
+Yerel JSONL loglarından günlük/haftalık/aylık/oturum/5s-blok raporu ve API-eşdeğeri maliyet tahmini; cache oluşturma/okuma ayrı. Claude Code, Codex, OpenCode, Amp, Droid, Gemini CLI, Copilot CLI vb. 18 aracı tek CLI'dan okur. Statusline modu (beta). Kalan kotayı değil harcananı gösterir. npx ile kurulumsuz; global kurulumda statusline ~400 ms.
+
+- **data_collection** (7): Yerel JSONL, 18 araç; stdin statusline; resmî kota yok
+- **analytics** (8): Günlük/haftalık/aylık/oturum/5s blok; cache ayrı; maliyet
+- **accuracy** (8): rev: dedup (message.id, requestId, session) + max toplam token; sidechain replay #913; advisor iterasyonu; tarihli fiyat
+- **prediction** (5): blocks --active: mevcut hızla blok sonu projeksiyonu (gözlendi)
+- **privacy** (8): Yerel, yükleme yok
+- **performance** (9): rev: Rust, snapshot testleri, yerel ikili
+- **community** (10): 18.4k★, 1812 commit
+- **cross_provider** (10): rev: 19 adaptör
+- **architecture** (9): rev: Rust'a yeniden yazım; adaptör başına crate (19), çekirdek/cli/config ayrımı
+
 ### berriai/litellm
 https://github.com/BerriAI/litellm  
 AI Gateway: 100+ sağlayıcıya tek arayüz; Python SDK veya merkezi proxy. Proje/kullanıcı/anahtar bazında maliyet takibi ve harcama yönetimi, loglama, admin panosu, yük dengeleme. Anthropic tam destek. Docker/K8s/Helm/AWS/GCP. Çift lisans (açık çekirdek + kurumsal). 47k commit. Proxy yaklaşımının en olgun örneği; bizim için 'gateway olarak collector' referansı.
 
 - **data_collection** (8): Gateway: her çağrı tam gözlenir; abonelik OAuth trafiğinin proxy'den geçip geçmeyeceği belirsiz
 - **extensibility** (9): 100+ sağlayıcı, callback'ler
-- **accuracy** (7): model_prices_and_context_window.json = ccusage/codeburn/aarora79'un fiyat kaynağı — estimator versiyonlama bu dosyayı sabitlemeli
+- **accuracy** (8): rev: 5 bileşenli fiyat + above_1hr + 200k kademeleri + deprecation_date
 - **community** (10): 58.2k★, 47k commit
+
+### astroqore/vibe-bar
+https://github.com/AstroQore/vibe-bar  
+macOS 26+ native menü çubuğu (AGPL-3.0): resmî abonelik pencereleri + yerel ajan loglarından maliyet atıfı; sıfırlanma tahmini kota gözlemi, tüketim hızı, tamamlanmış döngüler ve çalışma saati kalıplarını harmanlar; nokta tahmin yerine karar (Learning/Enough/Watch/At risk/Surplus) + güven bandı. ~/.vibebar SQLite. MCP sunucusu Unix socket. Sandbox dışı, tarayıcı çerezi okur. §17–18 tahmin motoru için en güçlü referans.
+
+- **data_collection** (8): Resmî uçlar (abonelik pencereleri) + yerel ajan logları (maliyet atıfı) — hedeflediğimiz birleşim; ama tarayıcı çerezi ve yerel dil sunucusu sondajı
+- **analytics** (8): Kota + yerel maliyet, sıfırlanma döngüleri, çalışma saati kalıpları
+- **architecture** (7): ~/.vibebar: ayar, kota anlık görüntüleri, fiyat cache, SQLite olaylar, oturum indeksi; MCP sunucusu (Unix socket)
+- **accuracy** (8): rev: taze pencere bail-out, reset toleransı, yalnız kota gözlemi
+- **prediction** (10): rev: üç adaylı harman + 4 bileşenli güven + belirsizlik bandı + uyarlanabilir hedef, ML yok
+- **privacy** (4): Bilerek sandbox dışı (çerez okumak için); telemetri yok
+- **community** (4): 19★ ama 1035 commit — tek kişi, çok aktif
+- **cross_provider** (8): 20+
+- **documentation** (7): rev: kod içi gerekçeler ayrıntılı
 
 ### langfuse/langfuse
 https://github.com/langfuse/langfuse  
@@ -255,23 +301,27 @@ LLM mühendislik platformu: tracing, değerlendirme, prompt yönetimi, datasets.
 - **data_collection** (7): SDK/OTel — uygulama enstrümantasyonu; kapalı CLI ajan için değil
 - **performance** (4): Kişisel yerel kullanım için ağır
 
-### getagentseal/codeburn
-https://github.com/getagentseal/codeburn  
-codeburn — 41 AI kodlama aracında yerel dosya parser'larıyla token/maliyet; A–F kurulum notu; israf kalıpları (yinelenen okuma, context şişmesi, kullanılmayan MCP/ajan, şişkin CLAUDE.md); --apply ile geri alınabilir düzeltmeler (yedek+journal, 3 gün sonra gerçek tasarruf raporu). Fiyat LiteLLM'den günlük. Cursor çıktı tokenı tahmini. Masaüstü telemetri AB dışı varsayılan açık. MIT, 10.9k★, 2060 commit. §21 'öneri motoru'nun en olgun mevcut uygulaması.
+### mag123c/toktrack
+https://github.com/mag123c/toktrack  
+Rust: 9 AI CLI için token/maliyet; simd-json+rayon (~3 GiB/s, cache'li 0.04 sn); Claude Code'un 30 günlük silmesine karşı değişmez günlük cache; 5 sekmeli TUI; tahmin '~', bilinmeyen '?'. MIT, 188★. Performans ve saklama referansı.
 
-- **data_collection** (8): 41 araç için sağlayıcı-özel yerel parser; Cursor SQLite; anahtar/proxy gerekmez; tahmini alanlar işaretli
-- **analytics** (9): En zengin israf analitiği: yinelenen okuma, düşük Read:Edit, kapaksız bash çıktısı, kullanılmayan MCP/ajan/skill, şişkin CLAUDE.md, model/proje/görev kırılımı
-- **architecture** (7): CLI + masaüstü; docs/providers; act journal (uygula/listele/geri al/rapor)
-- **accuracy** (8): Sağlayıcı başına 'estimated' etiketi; fiyat LiteLLM'den günlük — kaynak açık
-- **prediction** (3): Tasarruf tahmini + 3 gün sonra gerçekle kıyas; kota tahmini yok
-- **observability** (4): act report ile etki ölçümü var; kendi sağlığı yok
-- **ux** (7): A–F notu güçlü bir bilişsel kısayol; CLI + desktop
-- **extensibility** (7): Parser başına doküman; 41 sağlayıcı kanıtı
-- **privacy** (6): CLI hiçbir şey göndermez; masaüstü telemetri AB dışında varsayılan AÇIK — eksi
-- **performance** (6): 2060 commit'lik olgun araç; ölçüm yok
-- **documentation** (8): Sağlayıcı başına veri konumu belgeli
-- **community** (9): 10.9k★, 2060 commit
-- **cross_provider** (10): 41 araç
+- **performance** (10): simd-json + rayon, ~3 GiB/s; soğuk 1.0 sn, cache'li 0.04 sn — ölçülmüş çıta
+- **architecture** (9): rev: CACHE_VERSION geçmişi koruyarak yeniden hesap; retroactive_reconciliation; SourceInstance; dosya kilidi
+- **accuracy** (7): Tahmini '~', bilinmeyen '?' işaretli — provenance
+- **observability** (5): audit: kapsama ve korunan geçmişi gösterir
+- **cross_provider** (8): 9 CLI
+- **community** (6): 188★
+
+### vscarpenter/tycho-cli
+https://github.com/vscarpenter/tycho-cli  
+Rust CLI (Claude/Codex/Pi/Xcode): token/maliyet/cache ekonomisi, 5s blok projeksiyonu, canlı pano. Gizlilik yapısal: mesaj içeriği deserialize bile edilmez. Sınırları dürüstçe belgeli. MIT, 1★. Gizlilik-tasarımla referansı.
+
+- **privacy** (10): İçerik YAPISAL olarak yakalanamaz — yalnız metadata tipleri deserialize edilir; ağ yok; salt okunur
+- **analytics** (8): Günlük/aylık, oturum, proje/model, cache isabet/tasarruf/kaldıraç, 5s blok projeksiyonu, 2 sn canlı
+- **accuracy** (9): rev: ADR 0002 max output_tokens dedup; sentetik kayıt; 5m/1h TTL; ccusage ile mutabakat
+- **architecture** (8): Rust; JSON çıktısı belgeli ve kararlı API
+- **community** (0): 1★, 90 commit
+- **documentation** (10): rev: SCHEMA.md (49 810 kayıt), ADR'ler, maliyet dürüstlüğü spec'i
 
 ### activitywatch/activitywatch
 https://github.com/ActivityWatch/activitywatch  
@@ -281,60 +331,27 @@ MİMARİ REFERANS. Üç katman: server (REST: buckets, events, heartbeats, query
 - **extensibility** (9): Özel watcher API + Py/JS/Rust istemci
 - **privacy** (9): Varsayılan yerel, 'kullanıcı veriye sahip'
 
+### shanggqm/codexu
+https://github.com/shanggqm/codexU  
+Codex için macOS/Windows widget: resmî app-server uçları + yerel SQLite + rollout JSONL; 5s/7g %, token kırılımı, 180 günlük trend, proje sıralaması, görev panosu. 'Resmî yerel IPC' yaklaşımının en olgun örneği. MIT, 343★.
+
+- **data_collection** (9): Üç kaynak: ~/.codex/state_5.sqlite + rollout-*.jsonl + RESMÎ Codex app-server API (account/read, account/rateLimits/read, account/usage/read)
+- **analytics** (8): 5s/7g %, token in/cached/out, 180 gün trend, proje sıralaması, görev panosu, 'AI leadership' skoru
+- **accuracy** (8): rev: belirsizlikte nil, eşleşme sayıları
+- **ux** (8): Swift/SwiftUI widget (macOS), Tauri (Windows)
+- **privacy** (8): Yalnız GitHub sürüm kontrolü dışarı
+- **community** (6): 343★, 290 commit
+- **architecture** (8): rev: süre tabanlı pencere normalizasyonu, authoritative bayrağı
+
 ### comet-ml/opik
 https://github.com/comet-ml/opik  
 LLM/RAG/ajan tracing, değerlendirme, pano. Python/TS SDK + OpenTelemetry (Java/Ruby/.NET uyumlu), 70+ entegrasyon. Tam platform Apache 2.0 ile self-host (Docker Compose / K8s). 6.9k commit.
-
-### mag123c/toktrack
-https://github.com/mag123c/toktrack  
-Rust: 9 AI CLI için token/maliyet; simd-json+rayon (~3 GiB/s, cache'li 0.04 sn); Claude Code'un 30 günlük silmesine karşı değişmez günlük cache; 5 sekmeli TUI; tahmin '~', bilinmeyen '?'. MIT, 188★. Performans ve saklama referansı.
-
-- **performance** (10): simd-json + rayon, ~3 GiB/s; soğuk 1.0 sn, cache'li 0.04 sn — ölçülmüş çıta
-- **architecture** (8): Kalıcı günlük cache (~/.toktrack/cache), girdiler değişmez; Claude Code'un 30 günde sildiği oturumların maliyet geçmişini korur — SAKLAMA çözümü
-- **accuracy** (7): Tahmini '~', bilinmeyen '?' işaretli — provenance
-- **observability** (5): audit: kapsama ve korunan geçmişi gösterir
-- **cross_provider** (8): 9 CLI
-- **community** (6): 188★
-
-### maciek-roboblog/claude-code-usage-monitor
-https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor  
-Terminal panosu: progress bar, burn rate, limite varış tahmini, P90 analiziyle limit tespiti, plan otomatik geçişi (custom_max). Provenance etiketleme: official / local_estimate / experimental / unknown. Claude Code statusline rate_limits taze ise 'live source of truth'. --once/--compact/--write-state makine okunur çıktı. pip/uv; Windows tzdata.
-
-- **data_collection** (7): JSONL + opsiyonel OAuth usage API + taze statusline rate_limits 'canlı gerçek kaynak'
-- **analytics** (7): Burn rate, P90 limit tespiti, anlık/günlük/aylık görünüm
-- **accuracy** (9): Provenance etiketleri: official / local_estimate / experimental / unknown — sınıfının en iyisi
-- **prediction** (7): Limite varış süresi; '%95 güven' iddiası şüpheli ama var
-- **architecture** (7): --once/--compact/--write-state versiyonlu snapshot
-- **community** (9): 8.7k★
-
-### astroqore/vibe-bar
-https://github.com/AstroQore/vibe-bar  
-macOS 26+ native menü çubuğu (AGPL-3.0): resmî abonelik pencereleri + yerel ajan loglarından maliyet atıfı; sıfırlanma tahmini kota gözlemi, tüketim hızı, tamamlanmış döngüler ve çalışma saati kalıplarını harmanlar; nokta tahmin yerine karar (Learning/Enough/Watch/At risk/Surplus) + güven bandı. ~/.vibebar SQLite. MCP sunucusu Unix socket. Sandbox dışı, tarayıcı çerezi okur. §17–18 tahmin motoru için en güçlü referans.
-
-- **data_collection** (8): Resmî uçlar (abonelik pencereleri) + yerel ajan logları (maliyet atıfı) — hedeflediğimiz birleşim; ama tarayıcı çerezi ve yerel dil sunucusu sondajı
-- **analytics** (8): Kota + yerel maliyet, sıfırlanma döngüleri, çalışma saati kalıpları
-- **architecture** (7): ~/.vibebar: ayar, kota anlık görüntüleri, fiyat cache, SQLite olaylar, oturum indeksi; MCP sunucusu (Unix socket)
-- **accuracy** (7): Nokta tahmin değil karar + güven bandı
-- **prediction** (8): Kota gözlemi + tüketim hızı + tamamlanmış sıfırlanma döngüleri + çalışma saati → Learning/Enough/Watch/At risk/Surplus — görülen en gelişmiş tahmin
-- **privacy** (4): Bilerek sandbox dışı (çerez okumak için); telemetri yok
-- **community** (4): 19★ ama 1035 commit — tek kişi, çok aktif
-- **cross_provider** (8): 20+
 
 ### arize-ai/phoenix
 https://github.com/Arize-ai/phoenix  
 OpenInference/OTel tracing, LLM tabanlı değerlendirme, dataset versiyonlama, deney takibi, prompt yönetimi, PXI hata ayıklama ajanı. Self-host Docker/K8s/bulut. Elastic License 2.0 (kısmen patent korumalı) — lisans dikkat. Telemetri PHOENIX_TELEMETRY_ENABLED=false ile kapanıyor. 9.9k commit, 842 açık issue.
 
 - **architecture** (8): Elastic License 2.0 — yeniden kullanımda lisans dikkat
-
-### vscarpenter/tycho-cli
-https://github.com/vscarpenter/tycho-cli  
-Rust CLI (Claude/Codex/Pi/Xcode): token/maliyet/cache ekonomisi, 5s blok projeksiyonu, canlı pano. Gizlilik yapısal: mesaj içeriği deserialize bile edilmez. Sınırları dürüstçe belgeli. MIT, 1★. Gizlilik-tasarımla referansı.
-
-- **privacy** (10): İçerik YAPISAL olarak yakalanamaz — yalnız metadata tipleri deserialize edilir; ağ yok; salt okunur
-- **analytics** (8): Günlük/aylık, oturum, proje/model, cache isabet/tasarruf/kaldıraç, 5s blok projeksiyonu, 2 sn canlı
-- **accuracy** (8): Sınırlar dürüst: çıktı tokenı akış ortası anlık görüntü olabilir; fast mode ayırt edilemez; saklama ufku sonlu
-- **architecture** (8): Rust; JSON çıktısı belgeli ve kararlı API
-- **community** (0): 1★, 90 commit
 
 ### helicone/helicone
 https://github.com/Helicone/helicone  
@@ -343,44 +360,35 @@ https://github.com/Helicone/helicone
 - **analytics** (8): Anthropic prompt-cache önek analitiği: hangi önek isabet etti, istek başına USD tasarruf — cache analitiği referansı
 - **performance** (3): 6 bileşenli yığın kişisel yerel kullanım için ağır
 
-### ryoppippi/ccusage
-https://github.com/ryoppippi/ccusage  
-Yerel JSONL loglarından günlük/haftalık/aylık/oturum/5s-blok raporu ve API-eşdeğeri maliyet tahmini; cache oluşturma/okuma ayrı. Claude Code, Codex, OpenCode, Amp, Droid, Gemini CLI, Copilot CLI vb. 18 aracı tek CLI'dan okur. Statusline modu (beta). Kalan kotayı değil harcananı gösterir. npx ile kurulumsuz; global kurulumda statusline ~400 ms.
-
-- **data_collection** (7): Yerel JSONL, 18 araç; stdin statusline; resmî kota yok
-- **analytics** (8): Günlük/haftalık/aylık/oturum/5s blok; cache ayrı; maliyet
-- **accuracy** (5): Maliyet API-eşdeğeri tahmin, ama 'tahmin' vurgusu zayıf (prototipte $42 vs $168 farkı)
-- **prediction** (5): blocks --active: mevcut hızla blok sonu projeksiyonu (gözlendi)
-- **privacy** (8): Yerel, yükleme yok
-- **performance** (7): Global kurulumda statusline ~400 ms, npx 1.2 s (ölçüldü)
-- **community** (10): 18.4k★, 1812 commit
-- **cross_provider** (9): 18 araç
-
-### shanggqm/codexu
-https://github.com/shanggqm/codexU  
-Codex için macOS/Windows widget: resmî app-server uçları + yerel SQLite + rollout JSONL; 5s/7g %, token kırılımı, 180 günlük trend, proje sıralaması, görev panosu. 'Resmî yerel IPC' yaklaşımının en olgun örneği. MIT, 343★.
-
-- **data_collection** (9): Üç kaynak: ~/.codex/state_5.sqlite + rollout-*.jsonl + RESMÎ Codex app-server API (account/read, account/rateLimits/read, account/usage/read)
-- **analytics** (8): 5s/7g %, token in/cached/out, 180 gün trend, proje sıralaması, görev panosu, 'AI leadership' skoru
-- **accuracy** (7): Yalnız yüzde; mutlak kota API'de yok — belirtilmiş
-- **ux** (8): Swift/SwiftUI widget (macOS), Tauri (Windows)
-- **privacy** (8): Yalnız GitHub sürüm kontrolü dışarı
-- **community** (6): 343★, 290 commit
-
 ### openlit/openlit
 https://github.com/openlit/openlit  
 OpenTelemetry-native AI gözlemlenebilirlik: Python/TS/Go SDK'lar trace+metrik üretip HTTP OTLP ucuna gönderir. Özel/fine-tuned modeller için düzenlenebilir fiyat dosyasıyla maliyet takibi; GPU izleme; istisna panosu. ClickHouse + OTel Collector. Apache-2.0. 975 commit. 'Fiyat tablosu versiyonlu dosya' fikri estimator versiyonlama için ilgili.
 
 - **accuracy** (7): Düzenlenebilir fiyat dosyası = açık maliyet modeli
 
+### xiufengsun/tokentracker
+https://github.com/xiufengsun/TokenTracker  
+36 araç: hook (SessionEnd) + SQLite + JSONL + API karışık toplama; 30 dk kovalar; 13 sağlayıcı rate limit; git tabanlı proje atıfı; web/menubar/tray/widget/evcil hayvan. 'Sadece token sayısı ve zaman damgası' gizlilik sözü, DO_NOT_TRACK. MIT, 1.5k★.
+
+- **data_collection** (8): Claude/Codex/Gemini için SessionEnd HOOK (erken+ucuz), Cursor/Kiro/Copilot/Zed için SQLite, diğerleri JSONL — üç yolu birlikte kullanan tek araç
+- **analytics** (8): rev: context-health, kaynak kapsamı, çapraz cihaz
+- **architecture** (7): SQLite; web+menü çubuğu+tray+4 widget aynı backend
+- **accuracy** (7): rev: LWW dedup spesifikasyonu, doğrulama durumu kodda
+- **ux** (8): Web :7680, menubar, tray, widget'lar, masaüstü evcil hayvan
+- **extensibility** (8): 'Yeni sağlayıcı bir parser dosyası uzağında'
+- **privacy** (5): rev: bulut senkron/leaderboard ürünün parçası; telemetri hash'li ve opt-out (+)
+- **community** (7): 1.5k★
+- **cross_provider** (10): 36
+
 ### codezeno/claude-code-usage-monitor
 https://github.com/CodeZeno/Claude-Code-Usage-Monitor  
 REFERANS REPO #1. Windows taskbar widget (kullanım çubukları) + sağlayıcı başına tray ikonu + ayar paneli. Resmî sağlayıcı uçlarından yüzde ve geri sayım: Anthropic, ChatGPT/Codex, Google Antigravity, OpenCode, Cursor. Yerel şifreli token cache okur; token süresi dolmuşsa Claude CLI'a arka planda yenileme yaptırabiliyor; backoff — rotasyon yok. winget install CodeZeno.ClaudeCodeUsageMonitor. 132 commit.
 
 - **data_collection** (9): Resmî sağlayıcı uçları; şifreli token cache; CLI'a yenileme yaptırma; backoff, rotasyon yok
-- **architecture** (7): Taskbar widget + tray + ayar panosu; sağlayıcı adaptörleri
+- **architecture** (8): rev: kimlik keşif zinciri (CLI→Desktop OSCrypt→WSL), sağlayıcı tanımlayıcı, atomik persist
 - **extensibility** (7): 5 sağlayıcı adaptörü
 - **community** (6): 447★, 132 commit, winget
+- **accuracy** (7): rev: limits[] dizisi kullanılmıyor; 'claude -p .' ile token yenileme gerçek çağrı (kota harcar)
 
 ### onllm-dev/onwatch
 https://github.com/onllm-dev/onWatch  
@@ -392,20 +400,6 @@ Go daemon (~34 MB), SQLite, Material Design 3 pano (localhost:9211), Synthetic/Z
 - **performance** (8): <50 MB
 - **community** (7): 728★, v2.13.7, 456 commit
 
-### xiufengsun/tokentracker
-https://github.com/xiufengsun/TokenTracker  
-36 araç: hook (SessionEnd) + SQLite + JSONL + API karışık toplama; 30 dk kovalar; 13 sağlayıcı rate limit; git tabanlı proje atıfı; web/menubar/tray/widget/evcil hayvan. 'Sadece token sayısı ve zaman damgası' gizlilik sözü, DO_NOT_TRACK. MIT, 1.5k★.
-
-- **data_collection** (8): Claude/Codex/Gemini için SessionEnd HOOK (erken+ucuz), Cursor/Kiro/Copilot/Zed için SQLite, diğerleri JSONL — üç yolu birlikte kullanan tek araç
-- **analytics** (7): 30 dk UTC kova; model kırılımı; 13 sağlayıcı rate limit; git loglarıyla proje atıfı
-- **architecture** (7): SQLite; web+menü çubuğu+tray+4 widget aynı backend
-- **accuracy** (6): Grok kümülatif toplam sınırı belirtilmiş; 30 dk kova hassasiyet kaybettirir
-- **ux** (8): Web :7680, menubar, tray, widget'lar, masaüstü evcil hayvan
-- **extensibility** (8): 'Yeni sağlayıcı bir parser dosyası uzağında'
-- **privacy** (7): Yalnız sayı+zaman damgası; DO_NOT_TRACK; leaderboard opt-in; ama opsiyonel telemetri var
-- **community** (7): 1.5k★
-- **cross_provider** (10): 36
-
 ### astro-han/claude-pace
 https://github.com/Astro-Han/claude-pace  
 Bash+jq tek dosya statusline. Kota yalnızca stdin rate_limits'ten (≥2.1.80), ağ yok; yoksa '--'. 'Pace-aware': kullanım yüzdesi ile pencerede geçen süre yüzdesini kıyaslar (⇡10 = fazla harcıyorsun). Dürüst ve minimal; yalnızca CLI statusline'da. MIT, 229★.
@@ -416,8 +410,44 @@ Bash+jq tek dosya statusline. Kota yalnızca stdin rate_limits'ten (≥2.1.80), 
 - **prediction** (6): Pace = kullanım% − geçen süre%: basit, dürüst hız sinyali; ETA/güven yok
 - **privacy** (9): Ağ çağrısı yok
 - **performance** (8): Bash+jq tek dosya
-- **documentation** (7): Formül ve sürüm şartı yazılı
+- **documentation** (8): rev: docs/decisions kayıtları
 - **community** (5): 229★, Tem 2026 v0.9.4
+- **architecture** (7): rev: kota cache kaldırma kararı belgeli; iptal edilebilir script tasarımı
+
+### maciek-roboblog/claude-code-usage-monitor
+https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor  
+Terminal panosu: progress bar, burn rate, limite varış tahmini, P90 analiziyle limit tespiti, plan otomatik geçişi (custom_max). Provenance etiketleme: official / local_estimate / experimental / unknown. Claude Code statusline rate_limits taze ise 'live source of truth'. --once/--compact/--write-state makine okunur çıktı. pip/uv; Windows tzdata.
+
+- **data_collection** (7): JSONL + opsiyonel OAuth usage API + taze statusline rate_limits 'canlı gerçek kaynak'
+- **analytics** (7): Burn rate, P90 limit tespiti, anlık/günlük/aylık görünüm
+- **accuracy** (6): rev: 'limit' = geçmiş bloklarının P90'ı (Inferred), resmi yüzde yok
+- **prediction** (6): rev: P90 tahmini kota birimiyle ilişkisi kanıtsız
+- **architecture** (7): --once/--compact/--write-state versiyonlu snapshot
+- **community** (9): 8.7k★
+- **extensibility** (6): rev: atomik durum dosyası (yol arkadaşı yüzeyler)
+
+### luoyuctl/agenttrace
+https://github.com/luoyuctl/agenttrace  
+Rust TUI oturum denetçisi: 14 ajanın loglarından maliyet/token/gecikme/hata/sağlık; retry döngüsü ve asılı oturum tespiti; sıralama/arama; JSON/MD/HTML rapor. Eksik kanıtı 'Limited' diye işaretler. §14 oturum istihbaratı ve TUI yüzeyi için en yakın örnek. MIT, 130★.
+
+- **data_collection** (6): 14 ajan + genel JSON/JSONL; yollar belgelenmemiş
+- **analytics** (9): rev: teşhis modeli (döngü parmak izi, p95, context bütçesi) + dikkat merdiveni
+- **architecture** (7): Rust, yerel, JSON/MD/HTML rapor; 'Limited' yetenek seviyesi etiketi
+- **accuracy** (8): 'Eksik olay kanıtı asla tam trace gibi sunulmaz' — açık provenance
+- **ux** (7): TUI: sıralama (maliyet/süre/sağlık/anomali), arama, detay
+- **community** (5): 130★, 488 commit
+- **cross_provider** (8): 14 kaynak
+
+### abhishekray07/claude-meter
+https://github.com/abhishekray07/claude-meter  
+REFERANS REPO #2. Go. ANTHROPIC_BASE_URL ile Claude Code yerel proxy'ye yönlendirilir; ham istek/yanıt ~/.claude-meter/ altına JSONL yazılır. Anthropic rate-limit header'larından 5s/7g pencere, model-özel kullanım, token ve cache kırılımı, tahmin + güven, zaman serisi. localhost:7735 pano. 'alpha research tool', Linux/macOS, curl|bash kurulum, 35 commit.
+
+- **data_collection** (7): ANTHROPIC_BASE_URL proxy: rate-limit header'ları dahil her istek — en zengin sinyal, ama tüm trafiği araya alır, yolda kalırsa iş durur
+- **architecture** (8): RAW JSONL → normalizasyon → analiz → tahmin → görselleştirme katmanları
+- **accuracy** (8): Ham/normalize ayrımı; tahmin + güven
+- **privacy** (5): rev: storage/jsonl.go authorization/x-api-key başlıklarını temizliyor; gövdeler hâlâ ham
+- **performance** (5): Kritik yolda proxy
+- **community** (3): 93★, 35 commit, alpha
 
 ### janekbaraniewski/openusage
 https://github.com/janekbaraniewski/openusage  
@@ -432,29 +462,6 @@ Go TUI/CLI + opsiyonel daemon (SQLite): 36 sağlayıcıyı binary/env/SQLite/key
 - **performance** (6): Go, CGO gerekli
 - **community** (6): 187★, 555 commit
 - **cross_provider** (10): 36
-
-### luoyuctl/agenttrace
-https://github.com/luoyuctl/agenttrace  
-Rust TUI oturum denetçisi: 14 ajanın loglarından maliyet/token/gecikme/hata/sağlık; retry döngüsü ve asılı oturum tespiti; sıralama/arama; JSON/MD/HTML rapor. Eksik kanıtı 'Limited' diye işaretler. §14 oturum istihbaratı ve TUI yüzeyi için en yakın örnek. MIT, 130★.
-
-- **data_collection** (6): 14 ajan + genel JSON/JSONL; yollar belgelenmemiş
-- **analytics** (8): Maliyet, token (cache bileşenli), gecikme, hata, sağlık: uzun boşluk, asılı oturum, retry döngüsü, yavaş araç çağrısı
-- **architecture** (7): Rust, yerel, JSON/MD/HTML rapor; 'Limited' yetenek seviyesi etiketi
-- **accuracy** (8): 'Eksik olay kanıtı asla tam trace gibi sunulmaz' — açık provenance
-- **ux** (7): TUI: sıralama (maliyet/süre/sağlık/anomali), arama, detay
-- **community** (5): 130★, 488 commit
-- **cross_provider** (8): 14 kaynak
-
-### abhishekray07/claude-meter
-https://github.com/abhishekray07/claude-meter  
-REFERANS REPO #2. Go. ANTHROPIC_BASE_URL ile Claude Code yerel proxy'ye yönlendirilir; ham istek/yanıt ~/.claude-meter/ altına JSONL yazılır. Anthropic rate-limit header'larından 5s/7g pencere, model-özel kullanım, token ve cache kırılımı, tahmin + güven, zaman serisi. localhost:7735 pano. 'alpha research tool', Linux/macOS, curl|bash kurulum, 35 commit.
-
-- **data_collection** (7): ANTHROPIC_BASE_URL proxy: rate-limit header'ları dahil her istek — en zengin sinyal, ama tüm trafiği araya alır, yolda kalırsa iş durur
-- **architecture** (8): RAW JSONL → normalizasyon → analiz → tahmin → görselleştirme katmanları
-- **accuracy** (8): Ham/normalize ayrımı; tahmin + güven
-- **privacy** (4): Ham prompt/yanıt yakalar
-- **performance** (5): Kritik yolda proxy
-- **community** (3): 93★, 35 commit, alpha
 
 ### javis603/token-monitor
 https://github.com/Javis603/token-monitor  
@@ -471,6 +478,17 @@ Local-first Electron masaüstü: 35+ araçtan yerel dosya + bazı API limitleri;
 - **performance** (4): Electron — ağır; ölçüm yok
 - **community** (8): 2.0k★, 703 commit
 - **cross_provider** (10): 35+
+
+### tanisha-katara/cacheeconomics
+https://github.com/Tanisha-Katara/cacheeconomics  
+Prompt-cache ekonomisi: token kovası başına maliyet çarpanları (0.1×/1×/1.25×/2×), cache davranışını (expiry, rebuild, marker, model switch) dolara mutabık eder, etkiye göre düzeltme sıralar, TTL politika kıyası, CI doğrulama. Apache-2.0, 7★. Cache analitiği (§ cache impact) referansı.
+
+- **analytics** (9): Maliyet çarpanları: cache okuma 0.1×, girdi 1×, 5 dk yazma 1.25×, 1 sa yazma 2× (20× yayılım); cache sona erme/yeniden inşa/işaret yerleşimi/model geçişi kanıtı; etkiye göre sıralı düzeltme; TTL politika kıyası; CI doğrulama
+- **accuracy** (10): rev: Figure withheld/DRAFT/RECONCILED, ALIGNMENT_FLOOR, ölçülmüş TTL, karışık TTL bilinemez
+- **data_collection** (6): Transcript, LiteLLM log, istek gövdesi, proxy yakalama
+- **community** (2): 7★, 164 commit; KCG Consulting
+- **architecture** (7): rev: analyzer/allocator/adapters ayrımı, blocking_notes yapısal
+- **privacy** (8): rev: allow-list olay şeması, FORBIDDEN_KEYS, jenerik hata
 
 ### jens-duttke/usage-monitor-for-claude
 https://github.com/jens-duttke/usage-monitor-for-claude  
@@ -496,6 +514,17 @@ Claude Code'un yerleşik OpenTelemetry çıkışını (CLAUDE_CODE_ENABLE_TELEME
 - **performance** (3): Kişisel kullanım için 4 servis ağır
 - **community** (2): 11★, 2 commit
 
+### jarach-209/vibebill
+https://github.com/JARACH-209/VibeBill  
+Ajan loglarını git commit'lerine olasılıkla eşler, her commit'e güven işaretli maliyet yazar; token koruma yasası (toplam = atıflı + israf + ek yük + kapsam dışı); bilinmeyen modeli tahmin etmez. MIT, 4★. 'Güvenli atıf' kalıbının en açık örneği.
+
+- **accuracy** (10): rev: koruma yasası + güven katmanları + determinizm + doğrulanmış format gerçekleri
+- **analytics** (8): Commit/sürüm başına maliyet; git log'a maliyet sütunu; Markdown defter
+- **architecture** (8): rev: saf çekirdek, zod sınırları, manifest artımlı ingest, 3 bağımlılık
+- **community** (1): 4★, 32 commit
+- **privacy** (8): rev: içerik yok, yalnız dosya yolu; tek ağ çağrısı
+- **documentation** (8): rev: how-attribution-works + contracts.md
+
 ### traceloop/openllmetry
 https://github.com/traceloop/openllmetry  
 OpenTelemetry üzerine LLM enstrümantasyonu: 15+ sağlayıcı (OpenAI, Anthropic, Bedrock, Ollama…), vektör DB'ler, LangChain/LlamaIndex/LiteLLM/CrewAI; 20+ backend'e export (Datadog, Grafana, SigNoz, OTel Collector). v0.49.2+ enstrümantasyonlar tek başına telemetri toplamıyor. Apache 2.0. 1.4k commit. OTel semantik konvansiyonlarının (gen_ai.*) fiili referansı.
@@ -509,19 +538,6 @@ Vim tarzı powerline; 15+ segment: dizin, git, model, oturum/günlük kullanım,
 
 - **extensibility** (8): 15+ segment, marketplace, web konfigüratör
 - **performance** (5): npx/node başlangıç maliyeti
-
-### disler/claude-code-hooks-multi-agent-observability
-https://github.com/disler/claude-code-hooks-multi-agent-observability  
-Hook olaylarından çok ajanlı gözlemlenebilirlik: 12 olay tipi (SubagentStart/Stop, PreCompact, PostToolUseFailure dahil) → Bun sunucu → SQLite WAL → WebSocket → Vue zaman çizelgesi. §12 olay güdümlü tasarımın referans hattı. İçerik saklıyor (gizlilik eksi). 1.5k★, 16 commit.
-
-- **data_collection** (8): 12 hook olayı: PreToolUse/PostToolUse/PostToolUseFailure/PermissionRequest/Notification/UserPromptSubmit/SessionStart/End/SubagentStart/Stop/PreCompact/Stop — en geniş hook kapsamı
-- **analytics** (5): Zaman çizelgesi, nabız grafiği; token/maliyet odağı yok
-- **architecture** (8): hook → HTTP POST → Bun → SQLite (WAL) → WebSocket → Vue: temiz olay hattı
-- **accuracy** (7): Gözlenen olaylar; tahmin yok
-- **ux** (7): Gerçek zamanlı zaman çizelgesi, oturum kulvarları, transcript görüntüleyici
-- **extensibility** (6): session_id + source_app etiketleri; Python hook'ları
-- **privacy** (3): Prompt ve transcript içeriğini SQLite'a yazar
-- **community** (7): 1.5k★ ama 16 commit (eğitim deposu)
 
 ### sr-kai/claudeusagewin
 https://github.com/sr-kai/claudeusagewin  
@@ -553,6 +569,18 @@ Go + SQLite + gömülü React SPA. Üç veri yolu: hook alıcısı (Unix socket 
 - **architecture** (8): Go + SQLite + gömülü SPA
 - **community** (1): 6★
 
+### adididitagain/tokentab
+https://github.com/adididitagain/tokentab  
+SDK sarmalayıcıyla 'başarılı görev başına maliyet': görevler geçti/kaldı + eval assertion kalitesi; ≥30 görev ve %95 GA eşiğiyle karar. İçerik alanlarını girişte reddeder (~/.tokentab/state.json yalnız metadata). 127.0.0.1:3737 pano, CLI hesaplayıcı, GitHub Actions. Olgunluk düşük (2★) ama §14 verimlilik metriğinin tek gerçek uygulaması. MIT.
+
+- **data_collection** (6): SDK sarmalayıcı: gerçek yanıt token sayısı; ama uygulama kodu gerektirir, CLI ajanlar için değil
+- **analytics** (7): Başarılı görev başına maliyet; kalite = eval assertion'ları (exact/contains/regex/json-valid); deneme/süre
+- **accuracy** (8): ≥30 eşleşmiş görev ve %95 GA ±5 puan doğrulama eşiği — istatistiksel disiplin
+- **privacy** (9): prompt/response/messages/content/code alanları girişte REDDEDİLİR
+- **community** (1): 2★, 17 commit
+- **cross_provider** (6): OpenAI/Anthropic/Gemini + özel
+- **documentation** (7): rev: THREAT_MODEL.md
+
 ### yahav10/claude-code-dashboard
 https://github.com/yahav10/claude-code-dashboard  
 Vue 3 + TS + Vite + Pinia; Fastify 5 + better-sqlite3; ECharts; SSE/WS. KPI, günlük aktivite, maliyet trendi, model dağılımı, haftalık ısı haritası, oturum tarayıcı, 10 kurallı otomatik içgörü. Ağ korumasi: başlangıçta net.Socket.prototype.connect monkey-patch ile localhost dışı bağlantı engelleniyor. PII tespit/redaction. Salt okunur. npx claude-code-insights. 29 commit, 4 yıldız — fikirler güçlü, olgunluk düşük.
@@ -567,17 +595,6 @@ Minimalist WakaTime uyumlu backend (Go). Veri modeli: 'heartbeat' — editörde 
 
 - **architecture** (7): Heartbeat veri modeli; SQLite varsayılan
 - **privacy** (8): Dosya/proje adı dışlama ve karartma
-
-### adididitagain/tokentab
-https://github.com/adididitagain/tokentab  
-SDK sarmalayıcıyla 'başarılı görev başına maliyet': görevler geçti/kaldı + eval assertion kalitesi; ≥30 görev ve %95 GA eşiğiyle karar. İçerik alanlarını girişte reddeder (~/.tokentab/state.json yalnız metadata). 127.0.0.1:3737 pano, CLI hesaplayıcı, GitHub Actions. Olgunluk düşük (2★) ama §14 verimlilik metriğinin tek gerçek uygulaması. MIT.
-
-- **data_collection** (6): SDK sarmalayıcı: gerçek yanıt token sayısı; ama uygulama kodu gerektirir, CLI ajanlar için değil
-- **analytics** (7): Başarılı görev başına maliyet; kalite = eval assertion'ları (exact/contains/regex/json-valid); deneme/süre
-- **accuracy** (8): ≥30 eşleşmiş görev ve %95 GA ±5 puan doğrulama eşiği — istatistiksel disiplin
-- **privacy** (9): prompt/response/messages/content/code alanları girişte REDDEDİLİR
-- **community** (1): 2★, 17 commit
-- **cross_provider** (6): OpenAI/Anthropic/Gemini + özel
 
 ### nateherkai/token-dashboard
 https://github.com/nateherkai/token-dashboard  
@@ -623,24 +640,6 @@ caut: Rust CLI, 16 sağlayıcı, 5 toplama stratejisi (PTY ile CLI, tarayıcı �
 - **performance** (9): 3 MB, 10 ms açılış, 10 MB RAM
 - **community** (3): 82★; tek kişi
 
-### tanisha-katara/cacheeconomics
-https://github.com/Tanisha-Katara/cacheeconomics  
-Prompt-cache ekonomisi: token kovası başına maliyet çarpanları (0.1×/1×/1.25×/2×), cache davranışını (expiry, rebuild, marker, model switch) dolara mutabık eder, etkiye göre düzeltme sıralar, TTL politika kıyası, CI doğrulama. Apache-2.0, 7★. Cache analitiği (§ cache impact) referansı.
-
-- **analytics** (9): Maliyet çarpanları: cache okuma 0.1×, girdi 1×, 5 dk yazma 1.25×, 1 sa yazma 2× (20× yayılım); cache sona erme/yeniden inşa/işaret yerleşimi/model geçişi kanıtı; etkiye göre sıralı düzeltme; TTL politika kıyası; CI doğrulama
-- **accuracy** (8): 'Harcama iddiasını kanıta bağlar' — mutabakat
-- **data_collection** (6): Transcript, LiteLLM log, istek gövdesi, proxy yakalama
-- **community** (2): 7★, 164 commit; KCG Consulting
-
-### jarach-209/vibebill
-https://github.com/JARACH-209/VibeBill  
-Ajan loglarını git commit'lerine olasılıkla eşler, her commit'e güven işaretli maliyet yazar; token koruma yasası (toplam = atıflı + israf + ek yük + kapsam dışı); bilinmeyen modeli tahmin etmez. MIT, 4★. 'Güvenli atıf' kalıbının en açık örneği.
-
-- **accuracy** (9): Olasılıksal atıf (dosya/zaman/dal/oturum) + güven işareti ●◐○; 'bilinmeyen model asla tahmin edilmez → $—'; koruma yasası: toplam = atıflı + israf + ek yük + kapsam dışı
-- **analytics** (8): Commit/sürüm başına maliyet; git log'a maliyet sütunu; Markdown defter
-- **architecture** (6): TS; git notes (rebase'de yeniden senkron)
-- **community** (1): 4★, 32 commit
-
 ### technickai/claude_telemetry
 https://github.com/TechNickAI/claude_telemetry  
 'claudia' = Claude Code'u claude-agent-sdk üzerinden saran OTel sarmalayıcı; hook'larla span (agent.run → tool), token/maliyet/araç/süre metrikleri; 5+ backend. Yerleşik telemetriyi tamamlamaz, yerine geçer; prompt içeriğini dışarı loglar. MIT, 31★.
@@ -651,6 +650,19 @@ https://github.com/TechNickAI/claude_telemetry
 - **observability** (7): Amacı bu
 - **privacy** (4): Kullanıcı prompt'unu dış backend'lere loglar
 - **community** (3): 31★, 93 commit
+
+### disler/claude-code-hooks-multi-agent-observability
+https://github.com/disler/claude-code-hooks-multi-agent-observability  
+Hook olaylarından çok ajanlı gözlemlenebilirlik: 12 olay tipi (SubagentStart/Stop, PreCompact, PostToolUseFailure dahil) → Bun sunucu → SQLite WAL → WebSocket → Vue zaman çizelgesi. §12 olay güdümlü tasarımın referans hattı. İçerik saklıyor (gizlilik eksi). 1.5k★, 16 commit.
+
+- **data_collection** (8): 12 hook olayı: PreToolUse/PostToolUse/PostToolUseFailure/PermissionRequest/Notification/UserPromptSubmit/SessionStart/End/SubagentStart/Stop/PreCompact/Stop — en geniş hook kapsamı
+- **analytics** (4): rev: yalnız olay akışı + LLM özeti
+- **architecture** (6): rev: şema sürümü yok (PRAGMA ile göç), tema pazarı kapsam şişmesi
+- **accuracy** (7): Gözlenen olaylar; tahmin yok
+- **ux** (7): Gerçek zamanlı zaman çizelgesi, oturum kulvarları, transcript görüntüleyici
+- **extensibility** (6): session_id + source_app etiketleri; Python hook'ları
+- **privacy** (2): rev: payload + chat (tüm transkript) SQLite'ta, redaksiyon/saklama yok
+- **community** (7): 1.5k★ ama 16 commit (eğitim deposu)
 
 ### nikiforovall/ccdashboard
 https://github.com/NikiforovAll/ccdashboard  
@@ -676,15 +688,6 @@ Tauri 2 + React 18 + Rust + SQLite tam Claude Code GUI: oturum yönetimi, görse
 
 - **data_collection** (5): Maliyet yan özellik; asıl iş GUI
 - **performance** (5): Hazır exe yok, kaynaktan derleme
-
-### zcquant/claude-code-monitor
-https://github.com/zcquant/claude-code-monitor  
-Claude Code OTLP telemetrisini kendi alıcısıyla (HTTP/JSON + gRPC) alan Node uygulaması; token tipleri, model maliyeti, oturum süresi; daily-usage.json; :3000 pano; Prometheus export. Gömülü alıcının fizibilite kanıtı. MIT, 12★.
-
-- **data_collection** (8): KENDİ OTLP alıcısı (grpc-receiver.js + otlp-receiver.js, HTTP/JSON :4318) — harici collector yok; resmî telemetri
-- **architecture** (6): Node/Express; daily-usage.json günlük toplama; Prometheus :9464 export
-- **performance** (6): Tek Node süreci — Grafana yığınına göre hafif
-- **community** (1): 12★, tek commit
 
 ### ohugonnot/claude-code-statusline
 https://github.com/ohugonnot/claude-code-statusline  
@@ -731,6 +734,16 @@ Status bar'da kalan Cursor kotası: state.vscdb'den cursorAuth/accessToken okur,
 
 - **data_collection** (6): state.vscdb (OS başına yol belgeli) → token → cursor.com/api/usage, api2.cursor.sh GetCurrentPeriodUsage, /api/auth/stripe; ≥2 GiB DB'de sqlite3 yedeği
 - **documentation** (6): Uçlar ve yollar açıkça yazılı — Cursor adaptörü için doğrudan kaynak
+
+### zcquant/claude-code-monitor
+https://github.com/zcquant/claude-code-monitor  
+Claude Code OTLP telemetrisini kendi alıcısıyla (HTTP/JSON + gRPC) alan Node uygulaması; token tipleri, model maliyeti, oturum süresi; daily-usage.json; :3000 pano; Prometheus export. Gömülü alıcının fizibilite kanıtı. MIT, 12★.
+
+- **data_collection** (5): rev: protobuf işlenmiyor, logs/traces atılıyor, öznitelikler kayıp
+- **architecture** (4): rev: tek dosya sayaçlar; içerik türü kontrolsüz 200 OK
+- **performance** (6): Tek Node süreci — Grafana yığınına göre hafif
+- **community** (1): 12★, tek commit
+- **accuracy** (5): rev: session/user kırılımı yok
 
 ### gagar1n/vscode-claude-statusline
 https://github.com/gagar1n/vscode-claude-statusline  

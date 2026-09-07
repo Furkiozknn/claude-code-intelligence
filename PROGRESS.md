@@ -9,8 +9,12 @@ yazma** (araştırma araçları serbest).
 **Sınır:** GitHub'a yayınlama yok (`raporlar/ONAY-BEKLEYENLER.md`).
 **Dil:** Türkçe. Kaynak kod yorumları ASCII olabilir; kullanıcıya görünen
 metin düzgün Türkçe.
-**Kullanıcı durumu:** 7 Eylül sabahı işe gitti; "durma, onay isteme,
-döndüğümde her şeyi aktar" dedi. Döndüğünde `raporlar/`'a özet rapor yaz.
+**Kullanıcı durumu:** 7 Eylül işte; "durma, onay isteme, döndüğümde her
+şeyi aktar" dedi. Özet rapor: `D:\Claude Projeleri\raporlar\2026-09-07-
+claude-code-intelligence-ilerleme.md` (her büyük adımda güncelle).
+**Araç notu:** Bash heredoc ile Windows yolu (`\`) + backtick içeren metin
+yazma — parse patlıyor; böyle dosyalar için Write. Python konsolunda her
+çağrıda `export PYTHONIOENCODING=utf-8`.
 
 ---
 
@@ -20,11 +24,11 @@ döndüğümde her şeyi aktar" dedi. Döndüğünde `raporlar/`'a özet rapor y
 |---|---|---|---|
 | 0 | Kurulum | — | ✅ |
 | 1 | **Keşif** — ≥100 repo (hedef 150–300) | 2–4 | ✅ 232 repo |
-| 2 | **Puanlama** — 13 kriter/100, gerekçeli | 5 | ✅ 55 puanlı (Top-20 adaylarının tümü) |
+| 2 | **Puanlama** — 13 kriter/100, gerekçeli | 5 | ✅ 55 puanlı |
 | 3 | **Veri toplama analizi** | 6 | ✅ v1 + resmî doküman doğrulaması |
 | 4 | **Top 20** | 7 | ✅ `research/reports/top20.md` |
-| 5 | **Derin analiz** — Top 20 kaynak kod + 2 referans repo | 8–9 | 🔄 2/20 (iki referans repo bitti) |
-| 6 | **Sentez** — pattern / anti-pattern / çözülmemiş / rekabet | 38 | ⬜ |
+| 5 | **Derin analiz** — Top 20 kaynak kod + 2 referans repo | 8–9 | ✅ 20 not + `notes/03` semconv + batch-06 puan revizyonu |
+| 6 | **Sentez** — pattern / anti-pattern / çözülmemiş / rekabet | 38 | 🔄 başlıyor |
 | 7 | **Mimari** | 10–36, 39–40 | ⬜ |
 | 8 | **Ürün spesifikasyonu** | 22–23 | ⬜ |
 | 9 | **Öz-eleştiri** (18 soru) | 41 | ⬜ |
@@ -38,36 +42,31 @@ döndüğümde her şeyi aktar" dedi. Döndüğünde `raporlar/`'a özet rapor y
 - `depth`: shallow → fetched (README) → deep (kaynak). Puan yalnız fetched+.
 - `gaps` / `top N` / `report`. Konsol: `PYTHONIOENCODING=utf-8`.
 - Testler: `python -m unittest research/tools/test_catalog.py` (9 test).
+- Derin notlar: `research/notes/deep/<owner-repo>.md` (20 adet).
+- Puan revizyonu: `score_notes` içinde `rev:` öneki = kaynak okuması sonrası.
 
 ---
 
 ## Sıradaki işler (öncelik sırası)
 
-1. **Faz 5 devam** — Top-20'nin kalan 18'i, klonlar scratchpad'de
-   (`…/scratchpad/repos/`). Her biri için `research/notes/deep/<owner-repo>.md`
-   (§8 başlıkları + "alınmaya değer mi"). Sıra ve odak:
-   codeburn (parser sözleşmesi, act journal, grade) · ccusage (tekilleştirme,
-   blocks) · toktrack (değişmez günlük cache) · tycho (yapısal gizlilik) ·
-   Maciek (provenance etiketleri, --write-state şeması) · vibe-bar (forecast
-   verdict/güven bandı) · claude-pace (bash; resmî alanlar) · codexU
-   (app-server JSON-RPC) · ActivityWatch (bucket/event/heartbeat) · litellm
-   (fiyat JSON şeması) · openllmetry (gen_ai semconv) · disler (olay şeması)
-   · zcquant (OTLP JSON ayrıştırma) · agenttrace (sağlık formülü) ·
-   TokenTracker (parser sözleşmesi) · cacheeconomics (çarpanlar) · VibeBill
-   (eşleştirme skoru) · tokentab (etiketleme akışı).
-2. **Faz 5 doğrulama deneyleri** (nazikçe, kendi makinede):
-   a. OTLP alıcı kapalıyken Claude Code davranışı (küçük HTTP alıcı yaz,
-      kapat, `[3P telemetry]` logunu gözle).
-   b. `settings-reference` sayfası: `cleanupPeriodDays`, `modelPricing` şeması.
-   c. `/api/oauth/usage` istek limiti: `Retry-After` var mı (tek 429'u
-      gözlemek yeter; zorlamadan).
-3. **Faz 6 sentez** — `research/reports/sentez.md`: pattern'ler,
-   anti-pattern'ler, çözülmemiş problemler, MP §38 rekabet tablosu
-   (özellik × bizim / en iyi mevcut / neden daha iyi / nerede onlar daha iyi /
-   ne alınacak).
-4. **Faz 7 mimari** — `docs/ARCHITECTURE.md` + `DATA_MODEL.md` +
-   `EVENTS.md` + `COLLECTORS.md` + `PRIVACY.md` + `PLUGINS.md`; MP §10–36.
-5. Faz 8–9, sonra Stage 1.
+1. **Faz 6 sentez** — `research/reports/sentez.md`: (a) kalıp kataloğu
+   (20 nottaki "Platforma aktarılacaklar" birleştirilmiş, kaynağıyla),
+   (b) anti-kalıplar, (c) çözülmemiş problemler (kota birimi, alıcı kapalı
+   davranışı, hesap kimliği, sidechain/advisor çift sayımı, TTL karışımı),
+   (d) MP §38 rekabet tablosu (özellik × bizim / en iyi mevcut / neden daha
+   iyi / nerede onlar daha iyi / ne alınacak), (e) Top-20 karşılaştırma
+   matrisi (§8 boyutları × repo).
+2. **Faz 7 mimari** — `docs/ARCHITECTURE.md` + `DATA_MODEL.md` + `EVENTS.md`
+   + `COLLECTORS.md` + `PRIVACY.md` + `PLUGINS.md`; MP §10–36. Girdi:
+   `notes/03` eşleme tablosu, tycho zarf ilkesi, cacheeconomics Figure tipi,
+   codeburn sağlayıcı arayüzü, VibeBill koruma yasası, vibe-bar forecast.
+3. **Faz 8 ürün/UX** — yüzeyler (CLI/TUI/Web/tray/statusline), "Şu anda ne
+   yapmalıyım?" motoru spesifikasyonu, uyarı motoru.
+4. **Faz 9 öz-eleştiri** (18 soru) → mimariyi düzelt.
+5. **Doğrulama deneyleri (Aşama 1'de, kendi alıcımızla):** OTLP alıcı
+   kapalıyken davranış (`[3P telemetry]` debug satırları); `/api/oauth/usage`
+   429 başlığı (nazik); `modelPricing` şeması (statusline sayfası).
+6. Stage 1 implementasyon (Faz 10).
 
 ---
 
@@ -89,10 +88,6 @@ motorundan 5–10× verimli.
   düşüyordu (25 kayıt). Etkin derinlik = mevcut ∨ gelen; 9 testli
   `test_catalog.py` eklendi. (Kullanıcının ilkesi: hatayı düzeltme,
   sınıfını yok et.)
-- Sıralama (özet): litellm 70.7 · langfuse 69.7 · codeburn 69.3 ·
-  activitywatch 68.1 · opik/toktrack 67.2 · Maciek 66.9 · vibe-bar 66.8 ·
-  phoenix 66.4 · tycho 66.3 · helicone 66.1 · ccusage 65.7 · codexU 65.4 …
-  `research/reports/catalog.md`.
 
 ### 7 Eylül 2026 — Faz 3 · Veri toplama analizi ✅ (v1)
 `notes/01`: 11 yaklaşım × 8 boyut, özet matris, ön karar. Resmî
@@ -109,7 +104,7 @@ dokümanlarla doğrulandı (`notes/02`):
 - **Statusline:** `rate_limits.five_hour.used_percentage`/`resets_at`
   (epoch sn), yalnız Pro/Max ve ilk yanıttan sonra, pencere sıfırlanınca
   alan düşer; `cost.total_cost_usd` istemci tarafı, **`modelPricing`
-  ayarıyla değiştirilebilir**; `context_window.used_percentage` yalnız girdi.
+  yalnız managed kapsamda**; `context_window.used_percentage` yalnız girdi.
 - **Settings:** `env` bloğu OTel değişkenlerini taşıyabilir (kullanıcı
   seviyesi her projede).
 - **Rate-limit header'ları kaynak koddan kesinleşti** (`anthropic-
@@ -121,30 +116,61 @@ dokümanlarla doğrulandı (`notes/02`):
 "neden bu / neden daha yüksek puanlı X değil", runner-up'lar, anti-pattern
 vaka listesi, repo başına derin analiz planı.
 
-### 7 Eylül 2026 — Faz 5 · Derin analiz 🔄 (2/20)
-- **CodeZeno** (`notes/deep/CodeZeno-…md`): usage ucu → yalnız 404'te
-  Messages header yedeği ("429'da kota harcama" testli kural); kimlik
-  zinciri CLI → **Claude Desktop OSCrypt cache (DPAPI + AES-GCM)** → WSL;
-  `claude -p .` ile token yenileme (gerçek çağrı!); veri modeli yalnız
-  yüzde; atomik persist; `time_until_display_change`; tema/expression
-  motoru (v1 için fazla); `limits[]` dizisini kullanmıyor.
-- **claude-meter** (`notes/deep/abhishekray07-…md`): proxy tüm gövdeyi
-  tamponlar, kanal dolunca düşürür; `Record` şeması; `session_id` isteğin
-  `metadata.user_id`'sinden; günlük JSONL 0600; **kota birimi estimator'ı:
-  aday sayaçlar (raw / no_cache_read / io_only / weighted /
-  price_equivalent) × hesap genelinde kümülatif aralık × percentile bandı,
-  <3 nokta dürüstlüğü** — en değerli fikir; ham gövde varsayılan diskte
-  (Authorization header'ı da yazılıyor olabilir — doğrulanacak).
-- RAW→NORMALIZE→ANALYSIS→ESTIMATION→VISUALIZATION ilkesi **doğru, iki
-  düzeltmeyle**: ham veri kaynağa göre sınıflandırılmalı ve hassas olan
-  yazılmamalı; estimation çıktısı dağılım + sürüm olmalı.
+### 7 Eylül 2026 — Faz 5 · Derin analiz ✅ (20/20 not + puan revizyonu)
+Klonlar scratchpad'de (16 repo + semconv-genai); codeburn/ccusage/zcquant
+ilk klonlarda Windows checkout hatası → `core.longpaths` ile taze sığ klon;
+ccusage için ilk URL bir fork'a gitti (`cosmosality`), doğrusu
+`ryoppippi/ccusage`. ActivityWatch/openllmetry/litellm web + veri dosyasıyla
+incelendi. **En değerli bulgular:**
+- **tycho `SCHEMA.md`:** 49 810 kayıt üzerinden transcript gerçekliği —
+  aynı mesaj **7 kez** yazılabiliyor (dedup şart), `attribution*` alanları
+  transcript'te var, `cache_creation.ephemeral_5m/1h` her kayıtta, 1 saatlik
+  cache primi aylık varyansın 2/3'ü; ADR 0001 "içerik alanı olmayan zarf".
+- **ccusage Rust'a yeniden yazılmış** (19 adaptör crate); dedup kazanan =
+  max toplam token; **sidechain replay (#913)** ve **advisor iterasyonu**
+  yeni çift sayma sınıfları; tarihe göre fiyat tarifesi.
+- **VibeBill:** atıf skoru 0.6/0.25/0.15, güven katmanları, **koruma yasası**
+  (`toplam = atıflı + waste + overhead + out-of-scope`, `--strict` çıkış 3).
+- **vibe-bar:** üç adaylı harman tahmin (0.52/0.34/0.14 × güvenilirlik),
+  4 bileşenli güven skoru, belirsizlik bandı, uyarlanabilir hedef — ML yok.
+- **cacheeconomics:** `Figure{released, withheld_because, DRAFT|RECONCILED}`
+  — mutabakat kapısını geçmeyen rakam **basılmaz**; toplam en zayıf parçayı
+  miras alır; ölçülmüş TTL (5 dk: 300–420 sn; 1 sa: 56 dk).
+- **codeburn:** 46 sağlayıcı arayüzü (`SessionSource`, `probeRoots`),
+  **guard** hook'ları (fail-open, JSON karar), **act** günlüğü (yedek → hash
+  → uygula → geri al), realized-vs-estimated raporu, rıza parmak izi.
+  Eksi: `userMessage` yerel cache'te, UA taklidi.
+- **claude-pace:** hesap kimliği olmadan kota cache'lenemez → `--`.
+- **codexU:** pencereleri **süreye** göre sınıflandır, `authoritative` bayrağı.
+- **agenttrace:** teşhis modeli + deterministik "önce buna bak" merdiveni.
+- **toktrack:** `CACHE_VERSION` + geçmişi koruyarak yeniden hesap;
+  `retroactive_reconciliation` (Copilot geçmişi geri yazıyor).
+- **TokenTracker:** account/local kaynak kapsamı, LWW "yokluk ≠ silme".
+- **OTel GenAI semconv (`notes/03`):** `gen_ai.usage.cache_read/cache_write.
+  input_tokens`; `input_tokens` **cache dahil** (Anthropic'te hariç);
+  `token.type` yalnız input|output; `gen_ai.conversation.compacted`; tüm
+  alanlar `development`.
+- **Resmî belge ek okuması:** traces beta, `OTEL_LOG_TOOL_CONTENT`,
+  `tool_decision`/`permission_mode_changed`/`auth`/`mcp_server_connection`
+  olayları, kardinalite değişkenleri, `otelHeadersHelper`; alıcı kapalıyken
+  davranış **hâlâ belgesiz**; `modelPricing` yalnız managed; yerel transcript
+  saklama **30 gün** (`cleanupPeriodDays`), Desktop/Cowork muaf.
+- Doğrulama: claude-meter Authorization başlığını **temizliyor** (risk kapandı).
+- **Puan revizyonu (batch-06, 20 kayıt, `rev:` notlu):** yeni sıralama
+  codeburn 72.9 · ccusage 72.2 · litellm 71.7 · vibe-bar 70.1 · langfuse
+  69.7 · toktrack 68.4 · tycho 68.2 · activitywatch 68.1 · codexU 67.6;
+  düşenler: Maciek (accuracy 9→6: P90 "limit" Inferred), disler (privacy
+  3→2), zcquant (data 8→5). `research/reports/catalog.md` yenilendi.
 
 ---
 
 ## Bilinen riskler / açık sorular
 - `/api/oauth/usage` belgelenmemiş; şema değişebilir.
-- OTLP alıcısı kapalıyken Claude Code davranışı bilinmiyor (deney).
+- OTLP alıcısı kapalıyken Claude Code davranışı bilinmiyor (Aşama 1 deneyi).
 - Claude Desktop token cache'ini çözmek güçlü ve hassas — opt-in, salt
   okunur, asla diske yazılmaz; README'de açık anlatım.
-- Puanlar README'ye dayalı; kaynak kod okumaları puanları değiştirebilir
-  ("rev" notuyla).
+- **Tedarik zinciri:** üçüncü taraf repo klonu (`toktrack`) `.claude/skills`
+  taşıyınca bu oturuma **skill olarak enjekte oldu**; klonları her zaman
+  scratchpad'de tut, `.claude/` içeriğini çalıştırma; platform README'sinde
+  uyarı.
+- Katalogdaki dil/teknoloji etiketleri bayatlayabilir (ccusage: TS → Rust).

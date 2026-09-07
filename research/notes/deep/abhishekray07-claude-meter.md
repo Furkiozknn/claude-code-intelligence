@@ -141,3 +141,9 @@ Anthropic biçimi).
   percentile bandı; "price_equivalent" hipotezi dahil.
 - Ham/normalize ayrımı; günlük JSONL olay günlüğü; 0600.
 - Proxy yalnız Research Mode; Authorization header'ı asla diske.
+
+## Doğrulama (2026-09-07)
+`internal/storage/jsonl.go` `sanitizeHeaders`: `authorization`, `proxy-authorization`,
+`x-api-key` başlıkları **diske yazılmadan önce temizleniyor** (request + response).
+Önceki not'taki "Authorization diske yazılıyor olabilir" riski **kapandı**. Ham
+gövdeler (`Body []byte`) ise hâlâ olduğu gibi yazılıyor — içerik riski geçerli.

@@ -270,3 +270,77 @@ Claude Code'un yan etki olarak token yenilemesi bekleniyor (30 sn).
 kota tüketir. Desktop kaynağında yenileme denenmez (uygulama kendi
 yeniler). Bundled masaüstü CLI: `%APPDATA%\Claude\claude-code\<sürüm>\claude.exe`.
 Kullanıcımız Desktop agent mode'da — bu kaynak platform için zorunlu.
+
+## §A-ek · OTel belgesi yeniden okuma (2026-09-07, `monitoring-usage`)
+- **Alıcı erişilemezken davranış belgede yok**: yalnız `claude --debug` ile
+  `[3P telemetry]` hata satırları; tampon/yeniden deneme/veri kaybı garantisi
+  **yazılmamış** → deneyle ölçülecek (Faz 5 doğrulama #1 açık kalıyor).
+- Varsayılan aralıklar: `OTEL_METRIC_EXPORT_INTERVAL=60000`, `OTEL_LOGS_EXPORT_INTERVAL=5000`.
+- İçerik bayrakları (hepsi varsayılan kapalı): `OTEL_LOG_USER_PROMPTS`,
+  `OTEL_LOG_ASSISTANT_RESPONSES` (v2.1.193+, yoksa USER_PROMPTS'a düşer),
+  `OTEL_LOG_TOOL_DETAILS` (Bash komutları, MCP/skill adları, tool input),
+  `OTEL_LOG_TOOL_CONTENT` (span olaylarında araç girdi/çıktısı, 60 KB; **traces beta** gerektirir),
+  `OTEL_LOG_RAW_API_BODIES` (`1` = 60 KB satır içi, `file:<dir>` = kesilmemiş diske).
+- **Traces (beta)** var: span'ler; platform için OTLP `/v1/traces` de alınmalı.
+- Ek olaylar: `claude_code.assistant_response` (response_length, model, request_id,
+  message.uuid), `api_refusal` (attempt, server_fallback_hop, category),
+  `tool_decision` (decision accept|reject, tool_source builtin|mcp|sdk_host_builtin_mcp,
+  source config|hook|user_permanent|user_temporary|user_abort|user_reject),
+  `permission_mode_changed` (from_mode, to_mode, trigger), `auth` (action, success,
+  auth_method), `mcp_server_connection` (status, transport_type, duration_ms, error_code).
+- `tool_result` ek alanlar: `decision_type`, `decision_source`, `tool_input_size_bytes`,
+  `tool_result_size_bytes`, `mcp_server_scope`.
+- `session.count` `start_type` (fresh|resume|continue|agents_view);
+  `active_time.total` `type` (user|cli); `code_edit_tool.decision` (tool_name,
+  decision, source, language). `cost.usage`/`token.usage` özniteliklerine
+  `marketplace.name` eklendi.
+- Standart öznitelikler: `session.id`, `app.version`, `app.entrypoint`,
+  `organization.id`, `user.account_uuid`, `user.account_id`, `user.id`,
+  `user.email`, `terminal.type` + `OTEL_RESOURCE_ATTRIBUTES`.
+- **Kardinalite kontrolü:** `OTEL_METRICS_INCLUDE_SESSION_ID` (true),
+  `_INCLUDE_VERSION` (false), `_INCLUDE_ACCOUNT_UUID` (true), `_INCLUDE_ENTRYPOINT`
+  (false), `_INCLUDE_RESOURCE_ATTRIBUTES` (true).
+- `otelHeadersHelper` (settings.json): dinamik başlık üreten betik, 29 dk'da bir
+  yenilenir (`CLAUDE_CODE_OTEL_HEADERS_HELPER_DEBOUNCE_MS`), yalnız http/*.
+- `cost_usd` belgede **"Estimated cost in USD"** — resmi ifade; faturaya bağlayan
+  hiçbir cümle yok. §10 sınıflandırması: vendor-estimated doğrulandı.
+
+## §G-ek · `settings-reference` (2026-09-07)
+- `cleanupPeriodDays` — "Choose how many days Claude Code keeps transcripts
+  before deleting them" (varsayılan için `data-usage` sayfası; ayrıca
+  `desktopSessionCleanupPeriodDays` Claude Desktop/Cowork transcript'leri için,
+  kapsam User/Managed). → Platform transcript'i **kaynak** değil **geçici
+  besleme** saymalı; kalıcı özet cache (toktrack) şart.
+- `modelPricing` — "Report spend at your organization's contracted rates
+  instead of list price", **kapsam: Managed** (yalnız yönetilen ayar). Bireysel
+  kullanıcı `cost.total_cost_usd`'yi değiştiremez; `cost.usage`/`cost_usd`
+  liste fiyatıdır. Şema belgede bu sayfada yok (statusline sayfasında referans).
+- `statusLine` — "Run your own command to render a status line" (Any file).
+- `env` — "Set environment variables for every session and its subprocesses"
+  (Any file) → OTel değişkenleri buraya (§G).
+- `otelHeadersHelper` — "Generate rotating OpenTelemetry headers with your own
+  command" (Any file).
+- `includeCoAuthoredBy` deprecated → `attribution`.
+
+## §H · `data-usage` sayfası (2026-09-07) — saklama ve operasyonel telemetri
+- **Yerel transcript'ler** `~/.claude/projects/` altında **düz metin, varsayılan
+  30 gün** (oturum devam ettirme için); `cleanupPeriodDays` ile ayarlanır.
+  Claude Desktop/Cowork'te başlatılan veya son devam ettirilen oturumlar bu
+  sınırdan **varsayılan muaf** (`desktopSessionCleanupPeriodDays`).
+  → Platform: transcript 30 günlük kayan pencere; kalıcı özetler zorunlu;
+  Desktop oturumları için ayrı yaşam döngüsü.
+- Anthropic tarafı saklama: tüketici hesaplarında eğitim izni varsa 5 yıl,
+  yoksa 30 gün; ticari 30 gün; ZDR kurumsal.
+- **Operasyonel telemetri (Anthropic'e):** metrikler (`DISABLE_TELEMETRY=1`),
+  hata raporları (Pro/Max, v2.1.198+, doğrudan API; `DISABLE_ERROR_REPORTING=1`),
+  `/feedback` (`DISABLE_FEEDBACK_COMMAND=1`), oturum anketi
+  (`CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY=1`; OTel toplayıcıya yönlendirme
+  `CLAUDE_CODE_ENABLE_FEEDBACK_SURVEY_FOR_OTEL=1`); hepsi
+  `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` ile birden kapanır. Bedrock/
+  Vertex/Foundry'de varsayılan kapalı. `DO_NOT_TRACK` de tanınıyor.
+- Debug: `claude --debug` çıktısında `[3P telemetry]` = kullanıcının kendi
+  OTel dışa aktarımı; `[Anthropic telemetry]` = Anthropic'in kendi telemetrisi.
+- Anket transkript paylaşımı: bilinen anahtar desenleri redakte, kaynak kod
+  olduğu gibi; üçüncü taraf sağlayıcılarda `~/.claude/feedback-bundles/`.
+- WebFetch alan güvenlik kontrolü: yalnız hostname `api.anthropic.com`'a
+  gider (5 dk cache) — platformun kendi ağ envanterinde listelenmeli.

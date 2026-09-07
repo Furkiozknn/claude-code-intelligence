@@ -261,3 +261,12 @@ REDDEDİLDİ
    taşıyor mu? (Kurulum sihirbazı için.)
 9. **Yeni:** Statusline `rate_limits` alanlarının resmî doküman adları
    (`docs/en/statusline`).
+
+## §4-ek · Doğrulama durumu (2026-09-07)
+| # | Deney | Durum |
+|---|---|---|
+| 1 | OTLP alıcı kapalıyken Claude Code davranışı | **Açık** — belge sessiz; Aşama 1'de canlı deney |
+| 7 | claude-meter Authorization başlığı diske yazıyor mu | **Kapandı** — `sanitizeHeaders` temizliyor; gövdeler ham |
+| 8 | `settings-reference`: `cleanupPeriodDays`, `modelPricing` | notes/02 §G-ek'e bakınız |
+| 9 | `/api/oauth/usage` Retry-After | Kısmen — codeburn gövdede `retry_after` alanı okuyor (min 60 s); başlık adı doğrulanmadı; canlı deney nazikçe |
+| 10 | OTel GenAI semconv ile alan hizası | **Kapandı** — notes/03 |
