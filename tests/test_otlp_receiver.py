@@ -7,7 +7,7 @@ import pytest
 from cci.collectors.otlp import OtlpReceiver
 from cci.collectors.otlp_metrics import OtlpMetricMapper
 
-TS = "1757246400000000000"
+TS = "1788782400000000000"
 
 
 def kv(key, value):

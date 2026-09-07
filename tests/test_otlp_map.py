@@ -4,7 +4,7 @@ from cci.adapters.claude_code.models import display_name, model_ref, normalize_m
 from cci.collectors.otlp_map import OtlpLogMapper, any_value
 from cci.ingest import IngestGate, find_forbidden_key
 
-TS = "1757246400000000000"  # 2026-09-07T12:00:00Z
+TS = "1788782400000000000"  # 2026-09-07T12:00:00Z
 
 
 def kv(key, value):

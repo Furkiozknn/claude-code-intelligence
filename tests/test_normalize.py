@@ -131,7 +131,7 @@ def test_otel_and_transcript_merge_into_one_record():
     otel_doc = {"resourceLogs": [{"resource": {"attributes": [
         {"key": "session.id", "value": {"stringValue": "sess-1"}},
         {"key": "user.account_uuid", "value": {"stringValue": "acc"}}]},
-        "scopeLogs": [{"logRecords": [{"timeUnixNano": "1757246400000000000", "attributes": [
+        "scopeLogs": [{"logRecords": [{"timeUnixNano": "1788782400000000000", "attributes": [
             {"key": "event.name", "value": {"stringValue": "api_request"}},
             {"key": "model", "value": {"stringValue": "claude-opus-5"}},
             {"key": "request_id", "value": {"stringValue": "req_1"}},
