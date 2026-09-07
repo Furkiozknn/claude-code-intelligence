@@ -51,6 +51,11 @@ export) · `sdk-instrumentation` · `browser-scrape` · `os-monitor` ·
 **surfaces:**
 `cli` `tui` `web` `tray` `taskbar` `menubar` `widget` `desktop-app`
 `statusline` `vscode` `browser-ext` `daemon` `webhook` `library`
+— keşifte eklenenler: `hardware` (ESP32 ekran, WiFi saat) · `mobile` ·
+`gnome-shell` · `waybar` · `notch` (macOS çentik) · `mcp` (ajanın kendi
+kullanımını sorgulayabildiği MCP sunucusu) · `skill` (Codex/Claude skill
+olarak paketlenmiş pano) · `plugin` (Claude Code plugin) · `discord`
+(uzaktan kontrol; izleme değil)
 
 ## Puanlama rubriği (MP §5)
 
