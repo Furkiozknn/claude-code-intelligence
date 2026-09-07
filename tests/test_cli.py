@@ -62,6 +62,32 @@ def test_session_diagnostics_via_cli(workspace, capsys):
     assert code == EXIT_NO_DATA
 
 
+def test_quota_forecast_and_backtest_via_cli(workspace, capsys):
+    from datetime import UTC, datetime, timedelta
+    from cci.events import Envelope, SourceRef
+    from cci.store import EventStore
+    from tests.test_forecast import history
+    tmp, env = workspace
+    snaps, now = history(6)
+    shift = datetime.now(UTC) - now  # gecmisi simdiye tasi (mevcut dongu acik kalsin)
+    src = SourceRef(collector="quota", instance_id="usage_api", collector_version="0.0.1", schema_version=1)
+    with EventStore(tmp / "data" / "events.db") as store:
+        for s in snaps:
+            moved = s.model_copy(update={"fetched_at": s.fetched_at + shift,
+                                         "windows": tuple(w.model_copy(update={"resets_at": w.resets_at + shift}) for w in s.windows)})
+            store.append(Envelope(type="quota.snapshot", ts=moved.fetched_at, source=src, provider="anthropic",
+                                  account_key="acc", privacy_class="sensitive", payload=moved.model_dump(mode="json")))
+    code, out = run(["quota", "--forecast"], tmp, env, capsys)
+    assert code == EXIT_OK and "tahmin session_5h:" in out.out and "dongu" in out.out
+    code, out = run(["--json", "quota", "--backtest"], tmp, env, capsys)
+    doc = json.loads(out.out)
+    assert code == EXIT_OK and doc["backtest"]["session_5h"]["cycles"] == 6 and doc["backtest"]["session_5h"]["best"]
+    code, out = run(["snapshot"], tmp, env, capsys)
+    snap = json.loads((tmp / "data" / "state" / "latest.json").read_text(encoding="utf-8"))
+    w = [w for w in snap["quota"]["windows"] if w["kind"] == "session_5h"][0]
+    assert w["forecast"]["verdict"] in ("enough", "watch", "at_risk", "surplus") and w["forecast"]["badge"] == "~"
+
+
 def test_today_without_data_exits_4(tmp_path, capsys):
     code, out = run(["today"], tmp_path, {"CLAUDE_CONFIG_DIR": str(tmp_path / "none")}, capsys)
     assert code == EXIT_NO_DATA and "veri yok" in out.out

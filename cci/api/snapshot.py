@@ -37,9 +37,22 @@ def _badge(evidence: str) -> str:
             "predicted": "~", "inferred": "?"}.get(evidence, "?")
 
 
+def _forecast_block(f: Any) -> dict[str, Any]:
+    """QuotaForecast -> yuzey sozlugu (ogreniyorsa sayi yok)."""
+    block = {"verdict": f.verdict, "confidence": f.confidence, "confidence_score": round(f.confidence_score, 2),
+             "cycles_completed": f.cycles_completed, "badge": _badge("predicted"), "estimator": f.estimator.model_dump(),
+             "projected_at_reset": None, "run_out_at": f.run_out_at.isoformat() if f.run_out_at else None,
+             "target_remaining_pct": round(f.target_remaining_pct, 1), "value": _figure(f.value)}
+    if f.projected_at_reset is not None:
+        block["projected_at_reset"] = {"median_pct": float(f.projected_at_reset.median),
+                                       "lo_pct": float(f.projected_at_reset.band.lo), "hi_pct": float(f.projected_at_reset.band.hi)}
+    return block
+
+
 def build_snapshot(*, now: datetime, quota: QuotaSnapshot | None, today: DailySummary | None,
                    health: Mapping[str, Any] | None = None, attention: str = "ok",
-                   alerts: list[Mapping[str, Any]] | None = None) -> dict[str, Any]:
+                   alerts: list[Mapping[str, Any]] | None = None,
+                   forecasts: Mapping[str, Any] | None = None) -> dict[str, Any]:
     windows: list[dict[str, Any]] = []
     next_change = now + timedelta(seconds=DEFAULT_REFRESH_S)
     account_short: str | None = None
@@ -54,6 +67,7 @@ def build_snapshot(*, now: datetime, quota: QuotaSnapshot | None, today: DailySu
                 "badge": _badge("observed"), "resets_at": w.resets_at.isoformat() if w.resets_at else None,
                 "severity": w.severity, "authoritative": quota.authoritative, "stale": quota_age_s > 900,
                 "pace": None,
+                "forecast": _forecast_block(forecasts[w.kind]) if forecasts and w.kind in forecasts else None,
             }
             if pace is not None:
                 item["pace"] = {"stage": pace.stage, "delta_pct": round(pace.delta_pct, 1), "badge": _badge("derived"),

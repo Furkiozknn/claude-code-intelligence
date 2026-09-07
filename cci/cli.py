@@ -102,6 +102,10 @@ class Context:
     def snapshot_path(self) -> Path:
         return self.data_dir / "state" / "latest.json"
 
+    def pipe_backtest(self, kind: str, now: datetime) -> dict:
+        from cci.quota.forecast import backtest
+        return backtest(self.pipe.quota_history(), kind, now)  # type: ignore[arg-type]
+
     def close(self) -> None:
         if self._store is not None:
             self._store.close()
@@ -271,10 +275,22 @@ def cmd_quota(ctx: Context, args: argparse.Namespace) -> int:
             print("not: hesap kimligi (OTel user.account_uuid) yok -> snapshot saklanmadi, yalniz canli gosteriliyor")
     else:
         snap = latest_quota(ctx)
+    if args.backtest:
+        reports = {k: ctx.pipe_backtest(k, now) for k in ("session_5h", "weekly_all")}
+        ctx.out({"backtest": reports}, lambda: "\n".join(
+            f"{k}: dongu {r['cycles']} degerlendirme {r['evaluations']} en iyi {r['best']} "
+            + " ".join(f"{m}={v['mae']}" for m, v in r["methods"].items()) + f" bant-kapsama {r['blend_band_coverage']}"
+            for k, r in reports.items()))
+        return EXIT_OK
+    forecasts = ctx.pipe.forecasts(now) if args.forecast else {}
     ctx.out({"quota": snap.model_dump(mode="json") if snap else None,
              "pace": {w.kind: (compute_pace(w, now, allow_post_reset_grace=True).model_dump(mode="json") if compute_pace(w, now, allow_post_reset_grace=True) else None)
-                      for w in (snap.windows if snap else ())}},
-            lambda: "\n".join(quota_lines(snap, now)))
+                      for w in (snap.windows if snap else ())},
+             "forecast": {k: f.model_dump(mode="json") for k, f in forecasts.items()}},
+            lambda: "\n".join(quota_lines(snap, now) + [
+                f"  tahmin {k}: {f.verdict} ({f.confidence}, {f.cycles_completed} dongu) "
+                + (f"reset'te ~%{float(f.projected_at_reset.median):.0f} [{float(f.projected_at_reset.band.lo):.0f}-{float(f.projected_at_reset.band.hi):.0f}]"
+                   if f.projected_at_reset else f.value.render()) for k, f in forecasts.items()]))
     return EXIT_OK if snap is not None else EXIT_NO_DATA
 
 
@@ -326,7 +342,8 @@ def cmd_snapshot(ctx: Context, args: argparse.Namespace) -> int:
     today = next((d for d in days if d.day == today_local), None)
     health = {"adapter": ctx.adapter.health().model_dump(mode="json"), "store_events": ctx.store.count()}
     attention, _ = ctx.pipe.attention(now)
-    snap = build_snapshot(now=now, quota=latest_quota(ctx), today=today, health=health, attention=attention)
+    snap = build_snapshot(now=now, quota=latest_quota(ctx), today=today, health=health, attention=attention,
+                          forecasts=ctx.pipe.forecasts(now))
     path = Path(args.out) if args.out else ctx.snapshot_path()
     write_snapshot(path, snap)
     ctx.out({"written": str(path), "generated_at": snap["generated_at"]}, lambda: f"snapshot yazildi: {path}")
@@ -534,7 +551,7 @@ def cmd_run(ctx: Context, args: argparse.Namespace) -> int:
             now = datetime.now(UTC)
             attention, _ = ctx.pipe.attention(now)
             write_snapshot(ctx.snapshot_path(), build_snapshot(now=now, quota=latest_quota(ctx), today=today, health=health,
-                                                               attention=attention))
+                                                               attention=attention, forecasts=ctx.pipe.forecasts(now)))
             if args.once:
                 break
             time.sleep(args.interval)
@@ -567,7 +584,9 @@ def build_parser() -> argparse.ArgumentParser:
         s.set_defaults(fn=cmd_daily, today=today)
     s = sub.add_parser("sessions"); s.add_argument("--limit", type=int, default=20); s.add_argument("--strict", action="store_true"); s.set_defaults(fn=cmd_sessions)
     s = sub.add_parser("session", help="oturum teshisi"); s.add_argument("session_id"); s.set_defaults(fn=cmd_session)
-    s = sub.add_parser("quota"); s.add_argument("--poll", action="store_true", help="canli sorgu (kimlik dosyasi gerekir)"); s.set_defaults(fn=cmd_quota)
+    s = sub.add_parser("quota"); s.add_argument("--poll", action="store_true", help="canli sorgu (kimlik dosyasi gerekir)")
+    s.add_argument("--forecast", action="store_true", help="harman tahmin v2 (>=5 dongu)")
+    s.add_argument("--backtest", action="store_true", help="yontem karsilastirma (MAE, bant kapsama)"); s.set_defaults(fn=cmd_quota)
     sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
     s = sub.add_parser("snapshot"); s.add_argument("--out", default=None); s.set_defaults(fn=cmd_snapshot)
     sub.add_parser("statusline").set_defaults(fn=cmd_statusline)

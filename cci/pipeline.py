@@ -18,7 +18,10 @@ from cci.adapters.base import Cursor
 from cci.adapters.claude_code.adapter import ClaudeCodeAdapter
 from cci.analytics.diagnostics import SessionDiagnostics, diagnose_session, worst_attention
 from cci.analytics.summaries import DailySummary, SessionSummary, price_records, summarize_daily, summarize_sessions
+from cci.model.estimate import QuotaForecast
 from cci.model.figure import Figure
+from cci.model.quota import QuotaSnapshot
+from cci.quota.forecast import forecast
 from cci.collectors.transcript import COLLECTOR_NAME, COLLECTOR_VERSION, SCHEMA_VERSION, TranscriptCollector
 from cci.events.envelope import Envelope, SourceRef
 from cci.ingest.allowlist import IngestGate
@@ -116,6 +119,25 @@ class Pipeline:
 
     def sessions(self, *, since: datetime | None = None, until: datetime | None = None, strict: bool = False) -> list[SessionSummary]:
         return summarize_sessions(self.records(since=since, until=until), strict=strict)
+
+    # --- kota gecmisi (Stage 10) ----------------------------------------------
+    def quota_history(self, *, since: datetime | None = None) -> list[QuotaSnapshot]:
+        out: list[QuotaSnapshot] = []
+        for env in self.store.query(types=["quota.snapshot"], since=since):
+            try:
+                out.append(QuotaSnapshot.from_payload(env.payload))
+            except Exception:
+                self.dedup_counters["invalid_quota_payload"] += 1
+        return out
+
+    def forecasts(self, now: datetime, kinds: tuple[str, ...] = ("session_5h", "weekly_all")) -> dict[str, QuotaForecast]:
+        hist = self.quota_history()
+        out: dict[str, QuotaForecast] = {}
+        for kind in kinds:
+            f = forecast(hist, kind, now)  # type: ignore[arg-type]
+            if f is not None:
+                out[kind] = f
+        return out
 
     # --- teshis (Stage 8) ------------------------------------------------------
     DIAG_TYPES = ("tool.call", "usage.error", "session.compacted", "usage.request", "statusline.tick")
