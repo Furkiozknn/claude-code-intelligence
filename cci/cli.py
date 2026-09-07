@@ -24,8 +24,10 @@ from cci.adapters.claude_code.paths import credentials_path
 from cci.analytics.summaries import ConservationError
 from cci.api.http import ApiServer, load_or_create_token
 from cci.api.snapshot import build_snapshot, read_snapshot, write_snapshot
+from cci.alerts.engine import send_webhook
 from cci.collectors.otlp import OtlpReceiver
 from cci.collectors.quota import QuotaPoller
+from cci.config import load_config
 from cci.events.envelope import Envelope, SourceRef
 from cci.model.evidence import EvidenceClass
 from cci.model.ids import AccountRef
@@ -69,6 +71,7 @@ class Context:
         self.tz = local_tz()
         self.adapter = ClaudeCodeAdapter(env=self.env, home=self.home)
         self.table = PricingTable.load_bundled()
+        self.config = load_config(self.data_dir / "config.toml")
         self._store: EventStore | None = None
         self._pipe: Pipeline | None = None
 
@@ -294,6 +297,28 @@ def cmd_quota(ctx: Context, args: argparse.Namespace) -> int:
     return EXIT_OK if snap is not None else EXIT_NO_DATA
 
 
+def cmd_alerts(ctx: Context, args: argparse.Namespace) -> int:
+    now = datetime.now(UTC)
+    if args.history:
+        rows = [{"ts": e.ts.isoformat(), "type": e.type, **{k: e.payload.get(k) for k in ("rule_id", "severity", "basis", "message", "dedupe_key")}}
+                for e in ctx.store.query(types=["alert.raised", "alert.resolved"])]
+        ctx.out({"history": rows}, lambda: "\n".join(f"{r['ts'][:19]}  {r['type']:<14} {r.get('severity') or '':<8} {r.get('rule_id') or ''}  {r.get('message') or ''}" for r in rows) or "gecmis yok")
+        return EXIT_OK
+    raised, engine = ctx.pipe.evaluate_alerts(now, ctx.config.alerts, persist=not args.dry_run, now_local=datetime.now(ctx.tz))
+    if raised and ctx.config.alerts.webhook_url and not args.dry_run:
+        send_webhook(ctx.config.alerts.webhook_url, raised)
+    anomalies, base = ctx.pipe.anomalies(now)
+    active = engine.snapshot_alerts()
+    data = {"raised_now": [a.model_dump(mode="json") for a in raised], "active": active,
+            "suppressed": engine.suppressed, "anomalies": [a.model_dump(mode="json") for a in anomalies], "baseline": base.as_dict()}
+    ctx.out(data, lambda: "\n".join(
+        [f"yeni: {len(raised)}  aktif: {len(active)}  bastirilan: {len(engine.suppressed)}"] +
+        [f"  [{a['severity']}] {a['rule_id']} ({a['basis']}): {a['message']}" for a in active] +
+        [f"  anomali [{a.severity}] {a.kind}: {a.message}" for a in anomalies] +
+        [f"  taban: {n}" for n in base.notes]))
+    return EXIT_OK
+
+
 def cmd_doctor(ctx: Context, args: argparse.Namespace) -> int:
     health = ctx.adapter.health()
     probes: list[ProbeRoot] = list(ctx.adapter.probe_roots())
@@ -342,8 +367,9 @@ def cmd_snapshot(ctx: Context, args: argparse.Namespace) -> int:
     today = next((d for d in days if d.day == today_local), None)
     health = {"adapter": ctx.adapter.health().model_dump(mode="json"), "store_events": ctx.store.count()}
     attention, _ = ctx.pipe.attention(now)
+    engine = ctx.pipe.alert_engine(ctx.config.alerts)
     snap = build_snapshot(now=now, quota=latest_quota(ctx), today=today, health=health, attention=attention,
-                          forecasts=ctx.pipe.forecasts(now))
+                          forecasts=ctx.pipe.forecasts(now), alerts=engine.snapshot_alerts())
     path = Path(args.out) if args.out else ctx.snapshot_path()
     write_snapshot(path, snap)
     ctx.out({"written": str(path), "generated_at": snap["generated_at"]}, lambda: f"snapshot yazildi: {path}")
@@ -533,6 +559,8 @@ def cmd_run(ctx: Context, args: argparse.Namespace) -> int:
     if not args.no_quota and creds is not None and creds.exists():
         poller = QuotaPoller(creds, account=ctx.account())
     next_quota = 0.0
+    engine = ctx.pipe.alert_engine(ctx.config.alerts)
+    down_since: dict[str, float] = {}
     print(f"ccid: OTLP {receiver.endpoint}  veri {ctx.data_dir}  aralik {args.interval}s  kota {'acik' if poller else 'kapali'}", file=sys.stderr)
     try:
         while True:
@@ -550,8 +578,22 @@ def cmd_run(ctx: Context, args: argparse.Namespace) -> int:
                       "scan": {"written": report.written, "rejected": report.rejected}}
             now = datetime.now(UTC)
             attention, _ = ctx.pipe.attention(now)
+            # toplayici sagligi -> collector.down kurali icin sure takibi
+            adapter_health = ctx.adapter.health()
+            mono = time.monotonic()
+            if adapter_health.status == "down":
+                down_since.setdefault("transcript", mono)
+            else:
+                down_since.pop("transcript", None)
+            coll = {name: {"status": "down", "down_since_s": mono - since, "error_class": adapter_health.error_class}
+                    for name, since in down_since.items()}
+            raised, engine = ctx.pipe.evaluate_alerts(now, ctx.config.alerts, engine=engine, collector_health=coll,
+                                                      now_local=datetime.now(ctx.tz))
+            if raised and ctx.config.alerts.webhook_url:
+                send_webhook(ctx.config.alerts.webhook_url, raised)
             write_snapshot(ctx.snapshot_path(), build_snapshot(now=now, quota=latest_quota(ctx), today=today, health=health,
-                                                               attention=attention, forecasts=ctx.pipe.forecasts(now)))
+                                                               attention=attention, forecasts=ctx.pipe.forecasts(now),
+                                                               alerts=engine.snapshot_alerts()))
             if args.once:
                 break
             time.sleep(args.interval)
@@ -588,6 +630,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--forecast", action="store_true", help="harman tahmin v2 (>=5 dongu)")
     s.add_argument("--backtest", action="store_true", help="yontem karsilastirma (MAE, bant kapsama)"); s.set_defaults(fn=cmd_quota)
     sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
+    s = sub.add_parser("alerts", help="uyarilari degerlendir/goster"); s.add_argument("--history", action="store_true")
+    s.add_argument("--dry-run", action="store_true", help="olay yazma, sadece goster"); s.set_defaults(fn=cmd_alerts)
     s = sub.add_parser("snapshot"); s.add_argument("--out", default=None); s.set_defaults(fn=cmd_snapshot)
     sub.add_parser("statusline").set_defaults(fn=cmd_statusline)
     s = sub.add_parser("setup"); s.add_argument("what"); s.add_argument("--write", action="store_true")

@@ -88,6 +88,37 @@ def test_quota_forecast_and_backtest_via_cli(workspace, capsys):
     assert w["forecast"]["verdict"] in ("enough", "watch", "at_risk", "surplus") and w["forecast"]["badge"] == "~"
 
 
+def test_alerts_cli_raises_persists_and_shows_history(workspace, capsys):
+    from datetime import UTC, datetime, timedelta
+    from cci.adapters.claude_code.quota_map import parse_usage_response
+    from cci.events import Envelope, SourceRef
+    from cci.model import AccountRef
+    from cci.store import EventStore
+    tmp, env = workspace
+    run(["scan"], tmp, env, capsys)
+    now = datetime.now(UTC)
+    body = {"five_hour": {"utilization": 93, "resets_at": (now + timedelta(hours=2)).isoformat()},
+            "seven_day": {"utilization": 40, "resets_at": (now + timedelta(days=3)).isoformat()}}
+    snap, _ = parse_usage_response(body, account=AccountRef(provider="anthropic", account_key="acc"), fetched_at=now)
+    src = SourceRef(collector="quota", instance_id="usage_api", collector_version="0.0.1", schema_version=1)
+    with EventStore(tmp / "data" / "events.db") as store:
+        store.append(Envelope(type="quota.snapshot", ts=now, source=src, provider="anthropic", account_key="acc",
+                              privacy_class="sensitive", payload=snap.model_dump(mode="json")))
+    # %93 ve reset'e 2 sa: esik (critical) + pace (warning) -> 2 uyari
+    code, out = run(["alerts", "--dry-run"], tmp, env, capsys)
+    assert code == EXIT_OK and "quota.threshold" in out.out and "quota.pace" in out.out and "yeni: 2" in out.out
+    code, out = run(["--json", "alerts"], tmp, env, capsys)
+    doc = json.loads(out.out)
+    assert code == EXIT_OK and doc["raised_now"][0]["rule_id"] == "quota.threshold" and doc["baseline"]["records"] == 2
+    code, out = run(["alerts"], tmp, env, capsys)  # cooldown: yeni yok, aktif 2
+    assert "yeni: 0" in out.out and "aktif: 2" in out.out
+    code, out = run(["alerts", "--history"], tmp, env, capsys)
+    assert "alert.raised" in out.out
+    code, out = run(["snapshot"], tmp, env, capsys)
+    snapd = json.loads((tmp / "data" / "state" / "latest.json").read_text(encoding="utf-8"))
+    assert snapd["alerts"][0]["rule_id"] == "quota.threshold" and snapd["alerts"][0]["severity"] == "critical"
+
+
 def test_today_without_data_exits_4(tmp_path, capsys):
     code, out = run(["today"], tmp_path, {"CLAUDE_CONFIG_DIR": str(tmp_path / "none")}, capsys)
     assert code == EXIT_NO_DATA and "veri yok" in out.out

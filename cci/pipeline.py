@@ -10,13 +10,17 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import datetime, tzinfo
+from datetime import datetime, timedelta, tzinfo
 from pathlib import Path
 from typing import Iterable
 
 from cci.adapters.base import Cursor
 from cci.adapters.claude_code.adapter import ClaudeCodeAdapter
+from cci.alerts.engine import AlertEngine, AlertInputs
+from cci.analytics.anomaly import Anomaly, Baseline, detect
 from cci.analytics.diagnostics import SessionDiagnostics, diagnose_session, worst_attention
+from cci.config import AlertConfig
+from cci.model.alert import Alert
 from cci.analytics.summaries import DailySummary, SessionSummary, price_records, summarize_daily, summarize_sessions
 from cci.model.estimate import QuotaForecast
 from cci.model.figure import Figure
@@ -138,6 +142,37 @@ class Pipeline:
             if f is not None:
                 out[kind] = f
         return out
+
+    # --- anomali + uyari (Stage 11-12) ---------------------------------------------
+    def anomalies(self, now: datetime) -> tuple[list[Anomaly], Baseline]:
+        records = self.records()
+        sessions = summarize_sessions(records)
+        costs = {s.session_id: s.totals.cost.value for s in sessions if s.totals.cost.released and s.totals.cost.value is not None}
+        events = list(self.store.query(types=["usage.error", "provider.schema_change"], since=now - timedelta(days=1)))
+        return detect(records, events, now, session_costs=costs)
+
+    def alert_engine(self, cfg: AlertConfig) -> AlertEngine:
+        engine = AlertEngine(cfg)
+        engine.load_state(self.store.query(types=["alert.raised", "alert.resolved"]))
+        return engine
+
+    def evaluate_alerts(self, now: datetime, cfg: AlertConfig, *, engine: AlertEngine | None = None,
+                        collector_health: dict | None = None, persist: bool = True, now_local: datetime | None = None
+                        ) -> tuple[list[Alert], AlertEngine]:
+        engine = engine or self.alert_engine(cfg)
+        quota = None
+        for q in self.quota_history():
+            quota = q
+        attention, diags = self.attention(now)
+        anomalies, _ = self.anomalies(now)
+        inputs = AlertInputs(quota=quota, forecasts=self.forecasts(now), diagnostics=diags, anomalies=anomalies,
+                             collector_health=collector_health or {})
+        raised, envelopes = engine.run(inputs, now, now_local=now_local)
+        if persist:
+            for env in envelopes:
+                if self.gate.check(env).accepted:
+                    self.store.append(env)
+        return raised, engine
 
     # --- teshis (Stage 8) ------------------------------------------------------
     DIAG_TYPES = ("tool.call", "usage.error", "session.compacted", "usage.request", "statusline.tick")
