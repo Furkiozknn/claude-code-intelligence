@@ -22,6 +22,7 @@ from cci.adapters.base import ProbeRoot
 from cci.adapters.claude_code.adapter import ClaudeCodeAdapter
 from cci.adapters.claude_code.paths import credentials_path
 from cci.analytics.summaries import ConservationError
+from cci.api.http import ApiServer, load_or_create_token
 from cci.api.snapshot import build_snapshot, read_snapshot, write_snapshot
 from cci.collectors.otlp import OtlpReceiver
 from cci.collectors.quota import QuotaPoller
@@ -36,6 +37,7 @@ from cci.store.sqlite import EventStore
 
 EXIT_OK, EXIT_USAGE, EXIT_CONSERVATION, EXIT_NO_DATA, EXIT_NO_CREDENTIALS = 0, 2, 3, 4, 5
 DEFAULT_OTLP_PORT = 4318
+DEFAULT_API_PORT = 4319
 
 
 def default_data_dir() -> Path:
@@ -372,12 +374,46 @@ def otlp_env_block(port: int) -> dict[str, str]:
     return {k: v.format(port=port) for k, v in OTLP_ENV.items()}
 
 
+def _write_settings(settings: Path, mutate: Callable[[dict[str, Any]], None]) -> tuple[Path | None, dict[str, Any]] | None:
+    """settings.json'i yedekle, `mutate` uygula, atomik yaz. Gecersiz JSON -> None (dokunma)."""
+    doc: dict[str, Any] = {}
+    backup: Path | None = None
+    if settings.exists():
+        try:
+            doc = json.loads(settings.read_text(encoding="utf-8"))
+        except ValueError:
+            return None
+        backup = settings.with_name(f"{settings.name}.bak-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}")
+        shutil.copy2(settings, backup)
+    else:
+        settings.parent.mkdir(parents=True, exist_ok=True)
+    mutate(doc)
+    tmp = settings.with_name(settings.name + ".tmp")
+    tmp.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    os.replace(tmp, settings)
+    return backup, doc
+
+
 def cmd_setup(ctx: Context, args: argparse.Namespace) -> int:
+    settings = Path(args.settings) if args.settings else (ctx.home / ".claude" / "settings.json")
+    if args.what == "statusline":
+        cmd = statusline_command()
+        if not args.write:
+            ctx.out({"settings": str(settings), "statusLine": {"type": "command", "command": cmd}, "written": False},
+                    lambda: f"{settings} icine yazilacak (uygulamak icin --write):\n  statusLine: {cmd}")
+            return EXIT_OK
+        res = _write_settings(settings, lambda doc: doc.__setitem__("statusLine", {"type": "command", "command": cmd}))
+        if res is None:
+            print(f"{settings} gecerli JSON degil; dokunulmadi", file=sys.stderr)
+            return EXIT_USAGE
+        backup, _ = res
+        ctx.out({"settings": str(settings), "backup": str(backup) if backup else None, "written": True},
+                lambda: f"yazildi: {settings}" + (f" (yedek: {backup})" if backup else ""))
+        return EXIT_OK
     if args.what != "otlp":
-        print("desteklenen: setup otlp", file=sys.stderr)
+        print("desteklenen: setup otlp | setup statusline", file=sys.stderr)
         return EXIT_USAGE
     block = otlp_env_block(args.port)
-    settings = Path(args.settings) if args.settings else (ctx.home / ".claude" / "settings.json")
     if not args.write:
         ctx.out({"settings": str(settings), "env": block, "written": False},
                 lambda: f"{settings} icine yazilacak env blogu (uygulamak icin --write):\n" +
@@ -406,9 +442,75 @@ def cmd_setup(ctx: Context, args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def api_data_provider(ctx: Context) -> Callable[[str, str | None], Any]:
+    """API icin istek basina salt okunur depo: daemon'un yazar baglantisiyla thread paylasmaz."""
+    from cci.pipeline import Pipeline as _P
+
+    def provider(name: str, ident: str | None) -> Any:
+        if not (ctx.data_dir / "events.db").exists():
+            return None
+        with EventStore(ctx.data_dir / "events.db", read_only=True) as store:
+            pipe = _P(store, ctx.table, ctx.tz, account=None)
+            now = datetime.now(UTC)
+            if name == "today":
+                today_local = datetime.now(ctx.tz).date()
+                return [d.model_dump(mode="json") for d in pipe.daily() if d.day == today_local]
+            if name == "sessions":
+                sessions = sorted(pipe.sessions(), key=lambda s: s.last_at, reverse=True)[:50]
+                return [{**s.model_dump(mode="json"), "attention": pipe.diagnose(s.session_id, cost=s.totals.cost).attention} for s in sessions]
+            if name == "session" and ident:
+                for s in pipe.sessions():
+                    if s.session_id == ident or s.session_id.startswith(ident):
+                        return {"session": s.model_dump(mode="json"), "diagnostics": pipe.diagnose(s.session_id, cost=s.totals.cost).model_dump(mode="json")}
+                return None
+            if name == "quota":
+                last = None
+                for env in store.query(types=["quota.snapshot"]):
+                    last = env.payload
+                return {"quota": last, "now": now.isoformat()}
+            if name == "doctor":
+                return {"store": store.stats(), "pricing": ctx.table.version, "adapter": ctx.adapter.health().model_dump(mode="json")}
+        return None
+
+    return provider
+
+
+def start_api(ctx: Context, port: int) -> ApiServer:
+    token = load_or_create_token(ctx.data_dir / "api_token")
+    return ApiServer(snapshot_path=ctx.snapshot_path(), token=token, data=api_data_provider(ctx), port=port).start()
+
+
+def cmd_serve(ctx: Context, args: argparse.Namespace) -> int:
+    api = start_api(ctx, args.port)
+    print(f"cci pano: {api.url}", file=sys.stderr)
+    if args.once:
+        api.stop()
+        return EXIT_OK
+    try:
+        while True:
+            time.sleep(3600)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        api.stop()
+    return EXIT_OK
+
+
+def cmd_widget(ctx: Context, args: argparse.Namespace) -> int:
+    from cci.surfaces.widget import run_widget, widget_lines
+    if args.print:
+        print("\n".join(widget_lines(read_snapshot(ctx.snapshot_path()), detailed=args.detailed)))
+        return EXIT_OK
+    run_widget(ctx.snapshot_path(), always_on_top=not args.no_top)  # pragma: no cover - GUI
+    return EXIT_OK
+
+
 def cmd_run(ctx: Context, args: argparse.Namespace) -> int:
-    """Daemon dongusu: OTLP alici + periyodik transcript taramasi + (opsiyonel) kota + snapshot."""
+    """Daemon dongusu: OTLP alici + API + periyodik transcript taramasi + (opsiyonel) kota + snapshot."""
     receiver = OtlpReceiver(lambda env: ctx.store.append(env), port=args.otlp_port, gate=ctx.pipe.gate).start()
+    api = start_api(ctx, args.api_port) if not args.no_api else None
+    if api is not None:
+        print(f"cci pano: {api.url}", file=sys.stderr)
     poller = None
     creds = ctx.credentials()
     if not args.no_quota and creds is not None and creds.exists():
@@ -440,7 +542,14 @@ def cmd_run(ctx: Context, args: argparse.Namespace) -> int:
         pass
     finally:
         receiver.stop()
+        if api is not None:
+            api.stop()
     return EXIT_OK
+
+
+def statusline_command() -> str:
+    """Claude Code'un calistiracagi komut: bu yorumlayici ile `cci statusline` (PATH bagimsiz)."""
+    return f'"{sys.executable}" -m cci.cli statusline'
 
 
 # ------------------------------------------------------------------ giris
@@ -466,7 +575,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--settings", default=None); s.add_argument("--port", type=int, default=DEFAULT_OTLP_PORT); s.set_defaults(fn=cmd_setup)
     s = sub.add_parser("run", help="daemon dongusu"); s.add_argument("--once", action="store_true")
     s.add_argument("--interval", type=float, default=60.0); s.add_argument("--otlp-port", type=int, default=DEFAULT_OTLP_PORT)
+    s.add_argument("--api-port", type=int, default=DEFAULT_API_PORT); s.add_argument("--no-api", action="store_true")
     s.add_argument("--no-quota", action="store_true"); s.set_defaults(fn=cmd_run)
+    s = sub.add_parser("serve", help="yalniz API + pano"); s.add_argument("--port", type=int, default=DEFAULT_API_PORT)
+    s.add_argument("--once", action="store_true"); s.set_defaults(fn=cmd_serve)
+    s = sub.add_parser("widget", help="masaustu widget (tkinter)"); s.add_argument("--print", action="store_true")
+    s.add_argument("--detailed", action="store_true"); s.add_argument("--no-top", action="store_true"); s.set_defaults(fn=cmd_widget)
     return p
 
 
