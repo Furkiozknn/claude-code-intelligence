@@ -606,6 +606,50 @@ def cmd_run(ctx: Context, args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_research(ctx: Context, args: argparse.Namespace) -> int:
+    """Research Mode (docs/RESEARCH_MODE.md): ayri dizin; cekirdege yalniz gozlem (kota basliklari) ve ozet parametre gecer."""
+    from cci.research import ResearchProxy, estimate_unit
+    rdir = ctx.data_dir / "research"
+    if args.what == "proxy":
+        def sink(snap):
+            store_quota(ctx, snap)
+        proxy = ResearchProxy(research_dir=rdir, upstream=args.upstream, port=args.port, capture_bodies=args.capture_bodies,
+                              quota_sink=sink, account=ctx.account()).start()
+        print(f"research proxy: {proxy.base_url}  ->  {args.upstream}\n"
+              f"Claude Code icin: ANTHROPIC_BASE_URL={proxy.base_url}  (govde yakalama: {'ACIK' if args.capture_bodies else 'kapali'})\n"
+              f"meta: {rdir / 'requests.jsonl'}", file=sys.stderr)
+        if args.once:
+            proxy.stop()
+            return EXIT_OK
+        try:
+            while True:
+                time.sleep(3600)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            proxy.stop()
+        return EXIT_OK
+    if args.what == "unit-estimator":
+        res = estimate_unit(ctx.pipe.quota_history(), ctx.pipe.records(), args.kind, table=ctx.table)
+        ctx.out(res, lambda: "\n".join(
+            [f"kota birimi estimator {res['version']} ({res['kind']}): {res['n_intervals']} aralik"
+             + ("  [ogreniyor: <3 aralik]" if res["learning"] else f"  en tutarli: {res['most_consistent']}")] +
+            [f"  {name:<17} n={c['n']:<3} cv={c['cv']}  cap p50={c['implied_cap']['p50']} [{c['implied_cap']['p10']}–{c['implied_cap']['p90']}]"
+             + (f"  min/med/max={c['implied_cap']['min']}/{c['implied_cap']['median']}/{c['implied_cap']['max']}" if res["learning"] else "")
+             for name, c in res["candidates"].items()]))
+        return EXIT_OK
+    if args.what == "purge":
+        if not args.yes:
+            print(f"silinecek: {rdir} (onay icin --yes)", file=sys.stderr)
+            return EXIT_USAGE
+        if rdir.exists():
+            shutil.rmtree(rdir)
+        ctx.out({"purged": str(rdir)}, lambda: f"silindi: {rdir}")
+        return EXIT_OK
+    print("desteklenen: research proxy | unit-estimator | purge", file=sys.stderr)
+    return EXIT_USAGE
+
+
 def statusline_command() -> str:
     """Claude Code'un calistiracagi komut: bu yorumlayici ile `cci statusline` (PATH bagimsiz)."""
     return f'"{sys.executable}" -m cci.cli statusline'
@@ -642,6 +686,10 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--no-quota", action="store_true"); s.set_defaults(fn=cmd_run)
     s = sub.add_parser("serve", help="yalniz API + pano"); s.add_argument("--port", type=int, default=DEFAULT_API_PORT)
     s.add_argument("--once", action="store_true"); s.set_defaults(fn=cmd_serve)
+    s = sub.add_parser("research", help="arastirma modu (ayri dizin)"); s.add_argument("what")
+    s.add_argument("--port", type=int, default=4320); s.add_argument("--upstream", default="https://api.anthropic.com")
+    s.add_argument("--capture-bodies", action="store_true"); s.add_argument("--once", action="store_true")
+    s.add_argument("--kind", default="session_5h"); s.add_argument("--yes", action="store_true"); s.set_defaults(fn=cmd_research)
     s = sub.add_parser("widget", help="masaustu widget (tkinter)"); s.add_argument("--print", action="store_true")
     s.add_argument("--detailed", action="store_true"); s.add_argument("--no-top", action="store_true"); s.set_defaults(fn=cmd_widget)
     return p

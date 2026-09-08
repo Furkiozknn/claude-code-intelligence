@@ -119,6 +119,22 @@ def test_alerts_cli_raises_persists_and_shows_history(workspace, capsys):
     assert snapd["alerts"][0]["rule_id"] == "quota.threshold" and snapd["alerts"][0]["severity"] == "critical"
 
 
+def test_research_cli_proxy_once_estimator_and_purge(workspace, capsys):
+    from cci.cli import EXIT_USAGE
+    tmp, env = workspace
+    code, out = run(["research", "proxy", "--once", "--port", "0", "--upstream", "http://127.0.0.1:1"], tmp, env, capsys)
+    assert code == EXIT_OK and "ANTHROPIC_BASE_URL=http://127.0.0.1:" in out.err and (tmp / "data" / "research").is_dir()
+    run(["scan"], tmp, env, capsys)
+    code, out = run(["research", "unit-estimator"], tmp, env, capsys)
+    assert code == EXIT_OK and "0 aralik" in out.out and "ogreniyor" in out.out
+    code, out = run(["--json", "research", "unit-estimator"], tmp, env, capsys)
+    assert json.loads(out.out)["learning"] is True
+    code, out = run(["research", "purge"], tmp, env, capsys)
+    assert code == EXIT_USAGE and (tmp / "data" / "research").is_dir()
+    code, out = run(["research", "purge", "--yes"], tmp, env, capsys)
+    assert code == EXIT_OK and not (tmp / "data" / "research").exists()
+
+
 def test_today_without_data_exits_4(tmp_path, capsys):
     code, out = run(["today"], tmp_path, {"CLAUDE_CONFIG_DIR": str(tmp_path / "none")}, capsys)
     assert code == EXIT_NO_DATA and "veri yok" in out.out
