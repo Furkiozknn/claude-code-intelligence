@@ -6,7 +6,7 @@ fazın sıradaki parçasını yap, (3) bulguları gerekçelendirerek kaydet,
 yazma** (araştırma araçları serbest).
 
 **Kapsam:** `D:\Repolar\claude-code-intelligence`.
-**Sınır:** GitHub'a yayınlama yok (`raporlar/ONAY-BEKLEYENLER.md`).
+**Yayın:** ✅ 8 Eylül 2026 — <https://github.com/Furkiozknn/claude-code-intelligence> (public, kullanıcı onayı ile).
 **Dil:** Türkçe. Kaynak kod yorumları ASCII olabilir; kullanıcıya görünen
 metin düzgün Türkçe.
 **Kullanıcı durumu:** 7 Eylül işte; "durma, onay isteme, döndüğümde her
@@ -49,22 +49,23 @@ yazma — parse patlıyor; böyle dosyalar için Write. Python konsolunda her
 
 ## Sıradaki işler (öncelik sırası)
 
-Planlanan işlerin tamamı bitti (Faz 0–11, Stage 1–16). Kalanlar yalnızca
-**kullanıcı onayı ya da canlı ortam** gerektiren maddeler:
+**Proje tamamlandı.** Faz 0–11, Stage 1–16, canlı doğrulama ve yayın bitti.
 
-1. **Canlı OTLP doğrulaması** — `cci setup otlp --write` → Claude Code yeniden
-   başlat → `cci run`. Bu, hesap kimliğini (`user.account_uuid`) getirir ve kota
-   snapshot saklamayı açar. Şu an OTLP kapalı olduğu için kota geçmişi yok,
-   dolayısıyla tahmin/backtest gerçek veriyle henüz sınanmadı.
-2. **U2 deneyi** — OTLP alıcı kapalıyken Claude Code davranışı (belgede yok).
-3. **`cci quota --poll`** gerçek uçla (nazik, tek istek).
-4. **Protobuf çözücü** — `opentelemetry-proto` bağımlılığı; şu an alıcı
-   `http/json` istiyor ve protobuf'a dürüstçe 415 dönüyor.
-5. **GitHub'a yayın** — `raporlar/ONAY-BEKLEYENLER.md`, onay bekliyor.
+Kapanışta yapılanlar (8 Eylül 2026):
+1. ✅ **OTLP açıldı** — `settings.json` env bloğu (yedekli); canlı doğrulandı:
+   3 istek → 44 olay, `user.account_uuid` geldi, kota snapshot'ları saklanıyor.
+2. ✅ **U2 kapandı** — alıcı kapalıyken takılma/yavaşlama yok (`notes/02` §I).
+3. ✅ **`cci quota --poll`** gerçek uçla çalıştı; Fable haftalık %100 tespit edildi.
+4. ✅ **GitHub'a yayın** — public, MIT.
 
-Sonraki sürüm fikirleri (gerekmedikçe yapılmayacak): Gemini/Copilot adaptörleri,
-JSON-RPC eklenti taşıması, 100 k+ olayda günlük özet cache'i (bkz. `pipeline.py`
-`ponytail:` notu), realized-vs-estimated öneri raporu.
+Yapılmayanlar (gerekmiyor, gerekirse buradan başlanır): protobuf çözücü
+(`http/json` yazıldığı için gereksiz; alıcı 415 döndürüyor), Gemini/Copilot
+adaptörleri, JSON-RPC eklenti taşıması, 100 k+ olayda günlük özet cache'i
+(`pipeline.py` `ponytail:` notu), realized-vs-estimated öneri raporu.
+
+**Sürekli toplama için:** `cci run` arka planda çalışmalı (Görev Zamanlayıcı'ya
+bağlanabilir). Çalışmadığı sürece OTLP olayları kaybolur — transcript okuması
+yine de geçmişi yakalar.
 
 ---
 
@@ -164,7 +165,7 @@ incelendi. **En değerli bulgular:**
 
 ## Bilinen riskler / açık sorular
 - `/api/oauth/usage` belgelenmemiş; şema değişebilir.
-- OTLP alıcısı kapalıyken Claude Code davranışı bilinmiyor (Aşama 1 deneyi).
+- ~~OTLP alıcısı kapalıyken davranış~~ — **8 Eylül 2026 ölçüldü:** takılma/yavaşlama yok, olaylar sessizce kayboluyor (`notes/02` §I).
 - Claude Desktop token cache'ini çözmek güçlü ve hassas — opt-in, salt
   okunur, asla diske yazılmaz; README'de açık anlatım.
 - **Tedarik zinciri:** üçüncü taraf repo klonu (`toktrack`) `.claude/skills`

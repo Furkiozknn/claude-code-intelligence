@@ -344,3 +344,26 @@ Kullanıcımız Desktop agent mode'da — bu kaynak platform için zorunlu.
   olduğu gibi; üçüncü taraf sağlayıcılarda `~/.claude/feedback-bundles/`.
 - WebFetch alan güvenlik kontrolü: yalnız hostname `api.anthropic.com`'a
   gider (5 dk cache) — platformun kendi ağ envanterinde listelenmeli.
+
+## §I · U2 DENEYİ — alıcı kapalıyken davranış (8 Eylül 2026, ölçüldü)
+
+Belgede yazmayan soru canlı deneyle kapandı. Kurulum: `settings.json` env bloğu
+açık (`OTEL_EXPORTER_OTLP_PROTOCOL=http/json`, uç `127.0.0.1:4318`), aynı prompt
+Haiku 4.5 ile iki kez çalıştırıldı.
+
+| Durum | Süre |
+|---|---|
+| Alıcı **kapalı** (port boş) | 11,5 sn |
+| Alıcı **açık** (`cci run`) | 9,1 sn |
+
+**Sonuç:** Claude Code alıcı kapalıyken **takılmıyor, yavaşlamıyor**; olaylar
+sessizce kayboluyor. Fark ölçüm gürültüsü içinde (tek örnek, aynı prompt
+farklı yanıt uzunluğu). Yani telemetriyi açmak, toplayıcı çalışmasa bile
+kullanıcı deneyimini bozmuyor — ama veri kaybı oluyor, sürekli toplama için
+`cci run` arka planda çalışmalı.
+
+**Alıcı açıkken doğrulanan akış** (3 istek → 44 olay kabul): `usage.request`,
+`mcp.connection` (34 adet — MCP sunucu bağlantıları), `prompt.submitted`,
+`prompt.responded`, `session.started`, `session.active_time`,
+`usage.metric_delta`. `user.account_uuid` geldi → hesap kimliği çözüldü ve
+kota snapshot'ları saklanmaya başladı.
