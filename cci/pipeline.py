@@ -8,35 +8,31 @@
 
 from __future__ import annotations
 
-import json
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, tzinfo
 from pathlib import Path
-from typing import Iterable
 
 from cci.adapters.base import Cursor
 from cci.adapters.claude_code.adapter import ClaudeCodeAdapter
 from cci.alerts.engine import AlertEngine, AlertInputs
 from cci.analytics.anomaly import Anomaly, Baseline, detect
 from cci.analytics.diagnostics import SessionDiagnostics, diagnose_session, worst_attention
+from cci.analytics.summaries import DailySummary, SessionSummary, price_records, summarize_daily, summarize_sessions
+from cci.collectors.transcript import TranscriptCollector
 from cci.config import AlertConfig
-from cci.model.alert import Alert
-from cci.analytics.summaries import (SUMMARY_VERSION, DailySummary, SessionSummary, price_records, summarize_daily,
-                                     summarize_sessions)
-from cci.model.estimate import QuotaForecast
-from cci.model.figure import Figure
-from cci.model.quota import QuotaSnapshot
-from cci.quota.forecast import forecast
-from cci.collectors.transcript import COLLECTOR_NAME, COLLECTOR_VERSION, SCHEMA_VERSION, TranscriptCollector
 from cci.events.envelope import Envelope, SourceRef
 from cci.ingest.allowlist import IngestGate
+from cci.model.alert import Alert
+from cci.model.estimate import QuotaForecast
 from cci.model.evidence import EvidenceClass
+from cci.model.figure import Figure
 from cci.model.ids import AccountRef
+from cci.model.quota import QuotaSnapshot
 from cci.model.usage import UsageRecord
 from cci.normalize.dedup import Deduper
-from cci.normalize.transcript import normalize_transcript_batch
 from cci.pricing.table import PricingTable
+from cci.quota.forecast import forecast
 from cci.store.cursors import load_cursors, save_cursors
 from cci.store.sqlite import EventStore
 
@@ -80,8 +76,8 @@ class Pipeline:
         return self.store.append(env)
 
     def ingest_adapter(self, adapter) -> IngestReport:
-        """Genel adaptor yolu (Stage 15): collect -> normalize -> kapi -> depo.
-        Claude Code icin `ingest_transcripts` kullanilir (kendi normalize'i var)."""
+        """Tek toplama yolu: discover -> collect -> normalize -> kapi -> depo (tum saglayicilar)."""
+        adapter.account = self.account  # hesap kimligi yalniz OTel'den gelir; adaptore pipeline enjekte eder
         cursors = load_cursors(self.cursors_path) if self.cursors_path else {}
         report = IngestReport()
         for instance in adapter.discover():
@@ -93,10 +89,13 @@ class Pipeline:
             for rec in adapter.normalize(batch):
                 report.records += 1
                 env = record_envelope(rec)
-                if self.gate.check(env).accepted:
+                decision = self.gate.check(env)
+                if decision.accepted:
                     envelopes.append(env)
                 else:
                     report.rejected += 1
+                    report.counters[decision.reason] += 1
+            report.counters.update(getattr(adapter, "normalize_counters", {}))
             written, dup = self.store.append_many(envelopes)
             report.written += written
             report.duplicates += dup
@@ -106,33 +105,8 @@ class Pipeline:
         return report
 
     def ingest_transcripts(self, adapter: ClaudeCodeAdapter, collector: TranscriptCollector | None = None) -> IngestReport:
-        collector = collector or TranscriptCollector()
-        cursors = load_cursors(self.cursors_path) if self.cursors_path else {}
-        report = IngestReport()
-        for instance in adapter.discover():
-            report.instances += 1
-            batch = collector.collect(instance, cursors.get(instance.instance_id, Cursor()))
-            report.raw_items += len(batch.items)
-            report.skipped_lines += batch.skipped
-            records, counters = normalize_transcript_batch(batch, self.account)
-            report.counters.update(counters)
-            report.records += len(records)
-            envelopes = []
-            for rec in records:
-                env = record_envelope(rec)
-                decision = self.gate.check(env)
-                if decision.accepted:
-                    envelopes.append(env)
-                else:
-                    report.rejected += 1
-                    report.counters[decision.reason] += 1
-            written, dup = self.store.append_many(envelopes)
-            report.written += written
-            report.duplicates += dup
-            cursors[instance.instance_id] = batch.next_cursor
-        if self.cursors_path:
-            save_cursors(self.cursors_path, cursors)
-        return report
+        """Geriye uyum adi; `ingest_adapter` ile ayni yol."""
+        return self.ingest_adapter(adapter)
 
     # --- turetim -------------------------------------------------------------
     def records(self, *, since: datetime | None = None, until: datetime | None = None) -> list[UsageRecord]:

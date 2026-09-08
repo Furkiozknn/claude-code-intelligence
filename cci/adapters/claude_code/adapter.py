@@ -9,6 +9,7 @@ adaptorun varligini ve yollarini `doctor`'da gostermeli).
 from __future__ import annotations
 
 import os
+from collections import Counter
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, Mapping
@@ -32,6 +33,8 @@ class ClaudeCodeAdapter(ProviderAdapter):
         self._env = dict(os.environ if env is None else env)
         self._home = home if home is not None else Path.home()
         self._last_success: datetime | None = None
+        self.account = None            # Pipeline enjekte eder (hesap kimligi yalniz OTel'den gelir)
+        self.normalize_counters: Counter = Counter()
 
     # --- kesif -----------------------------------------------------------
     def roots(self) -> tuple[Path, ...]:
@@ -66,12 +69,16 @@ class ClaudeCodeAdapter(ProviderAdapter):
             retroactive_reconciliation=False,
         )
 
-    # --- toplama (Stage 3'te dolacak) -------------------------------------
+    # --- toplama ------------------------------------------------------------
     def collect(self, instance: SourceInstance, cursor: Cursor) -> RawBatch:
-        return RawBatch(instance=instance, items=(), complete=True, next_cursor=cursor)
+        from cci.collectors.transcript import TranscriptCollector
+        return TranscriptCollector().collect(instance, cursor)
 
     def normalize(self, batch: RawBatch) -> tuple[Any, ...]:
-        return ()
+        from cci.normalize.transcript import normalize_transcript_batch
+        records, counters = normalize_transcript_batch(batch, self.account)
+        self.normalize_counters = counters
+        return tuple(records)
 
     # --- saglik ------------------------------------------------------------
     def health(self) -> Health:
