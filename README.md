@@ -27,15 +27,23 @@ alıcı (3), SQLite olay deposu (4), normalizasyon + dedup/birleştirme (5), fiy
 tablosu + özetler (6), pace v1 + boru hattı + snapshot + CLI (7).
 
 ```
-uv sync && uv run pytest              # testler
-uv run cci scan                       # transcript'leri artımlı tara (~/.claude/projects)
-uv run cci today | daily | sessions   # özetler (--json, --strict: koruma yasası ihlali → çıkış 3)
-uv run cci doctor                     # "bu sayılara güvenebilir miyim"
-uv run cci setup otlp [--write]       # settings.json env bloğu (yedekli); sonra Claude Code'u yeniden başlat
-uv run cci run [--once]               # daemon: OTLP alıcı (127.0.0.1:4318) + tarama + kota + snapshot
-uv run cci statusline                 # snapshot'tan tek satır (statusLine komutu olarak)
-uv run python -m cci.model.schema     # JSON şemaları → docs/schema/
+uv sync && uv run pytest                    # 234 test
+uv run cci scan                             # Claude Code + Codex transcript'lerini artımlı tara
+uv run cci today | daily | sessions         # özetler (--json, --strict → koruma yasası ihlalinde çıkış 3)
+uv run cci session <id>                     # oturum teşhisi (döngü, araç p95, context, sağlık)
+uv run cci quota [--poll|--forecast|--backtest]
+uv run cci advise [--apply|--undo <id>]     # "şu anda ne yapmalıyım" + geri alınabilir eylem
+uv run cci alerts [--history]               # uyarı motoru (cooldown, sessiz saat, webhook)
+uv run cci doctor                           # "bu sayılara güvenebilir miyim"
+uv run cci setup otlp|statusline [--write]  # settings.json'a yedekli yazım
+uv run cci run [--once]                     # daemon: OTLP 4318 + API 4319 + tarama + kota + uyarı + snapshot
+uv run cci serve | tui | widget | statusline
+uv run cci research proxy|unit-estimator|purge
+uv run python benchmarks/bench.py           # → benchmarks/RESULTS.md
 ```
+
+Stage 1–16 tamamlandı. Ölçülen performans ve tutmayan iki hedefin gerekçesi:
+`docs/ARCHITECTURE.md` §11.
 
 | Çıktı | Nerede |
 |---|---|

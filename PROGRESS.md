@@ -32,8 +32,8 @@ yazma — parse patlıyor; böyle dosyalar için Write. Python konsolunda her
 | 7 | **Mimari** | 10–36, 39–40 | ✅ 8 belge (`docs/`) + README + CONTRIBUTING; Faz 9 eleştirisiyle revize edilecek |
 | 8 | **Ürün spesifikasyonu** | 22–23 | ✅ `docs/PRODUCT.md` (ürün, UX, dashboard, CLI, TUI, uyarı, tray/statusline) |
 | 9 | **Öz-eleştiri** (18 soru) | 41 | ✅ `docs/SELF_CRITIQUE.md`; 12 revizyon (R-1…R-12) belgelere işlendi |
-| 10 | **İmplementasyon** Stage 1–16 | 42 | 🔄 Stage 1 ✅ model · 2 ✅ adaptör sözleşmesi · 3 ✅ toplayıcılar (zarf+ingest kapısı, transcript, kota poller, OTLP JSON alıcı+metrik) · 4 ✅ SQLite olay deposu · 5 ✅ normalizasyon+dedup/birleştirme · 6 ✅ fiyat tablosu + günlük/oturum özetleri (koruma yasası) · 7 ✅ pace v1 + boru hattı + snapshot dosyası + `cci` CLI (scan/today/daily/sessions/quota/doctor/snapshot/statusline/setup otlp/run) · 8 ✅ oturum teşhisi (araç p95/timeout, döngü parmak izi, retry, compaction, context riski, sağlık skoru, dikkat merdiveni; `cci session <id>`, snapshot `attention`) · 9 ✅ loopback API + token + pano (CSP), `serve`, `setup statusline`, widget · 10 ✅ harman tahmin v2 + backtest (`quota --forecast/--backtest`) · 11 ✅ anomali (kişisel taban, oran, retry/429 fırtınası, şema değişimi) · 12 ✅ uyarı motoru (kurallar, cooldown/yükselme, fırtına sınırı, sessiz saat, loopback webhook, olay olarak kalıcı; `cci alerts`) · 13 ✅ Research Mode (akış koruyan proxy, rate-limit başlıkları → kota, kota birimi estimator'ı, `cci research proxy|unit-estimator|purge`) · 14 🔄 öneri motoru + act günlüğü |
-| 11 | **Benchmark → eleştiri → iyileştirme** | 43 | ⬜ |
+| 10 | **İmplementasyon** Stage 1–16 | 42 | ✅ **16/16.** 1 model · 2 adaptör sözleşmesi · 3 toplayıcılar (zarf+ingest kapısı, transcript, kota poller, OTLP alıcı) · 4 SQLite olay deposu · 5 normalizasyon+dedup · 6 fiyat+özetler (koruma yasası) · 7 pace v1 + boru hattı + snapshot + CLI · 8 oturum teşhisi · 9 loopback API + pano + widget · 10 harman tahmin v2 + backtest · 11 anomali · 12 uyarı motoru · 13 Research Mode · 14 öneri merdiveni + act günlüğü · 15 Codex adaptörü · 16 TUI |
+| 11 | **Benchmark → eleştiri → iyileştirme** | 43 | ✅ `benchmarks/RESULTS.md`; iki hedef tutmadı, ölçüm ve gerekçe `docs/ARCHITECTURE.md` §11'de; günlük özet cache'i denenip doğruluk riski nedeniyle kaldırıldı |
 
 ---
 
@@ -49,24 +49,22 @@ yazma — parse patlıyor; böyle dosyalar için Write. Python konsolunda her
 
 ## Sıradaki işler (öncelik sırası)
 
-1. **Stage 8 oturum teşhisi** — `cci/analytics/diagnostics.py`: OTLP `tool.call`/
-   `usage.error`/`session.compacted` olaylarından retry oranı, araç p95/timeout,
-   döngü parmak izi (araç adı + girdi boyutu + hata türü tekrarı), compaction
-   sayısı, sağlık skoru, **dikkat merdiveni**; `cci sessions` ve snapshot
-   `attention` alanı. Test: sentetik olay dizileri.
-2. **Stage 9 yüzeyler** — loopback HTTP API (`/api/v1/snapshot`, `/health`) +
-   WS; tray (prototipten `widget.py` mirası); statusline betiği kurulumu
-   (`cci setup statusline`); web sayfası (statik, CSP).
-3. **Stage 10 harman tahmin v2 + backtest** — `quota_snapshots` serisi
-   üzerinde MAE; `learning` kapısı (R-7).
-4. **Stage 11–12 anomali + uyarı** (kişisel taban, cooldown, kanallar).
-5. **Stage 13 Research Mode** (proxy başlık temizleme, kota birimi estimator'ı).
-6. **Stage 14 öneri motoru + act günlüğü**; **15** diğer adaptörler (Codex,
-   Gemini, Copilot) + JSON-RPC; **16** TUI/paketleme.
-7. **Canlı doğrulama (kullanıcı makinesinde, onayla):** `cci setup otlp --write`
-   → Claude Code yeniden başlat → `cci run` ile gerçek OTLP akışı; alıcı kapalı
-   deneyi (U2); protobuf çözücü (`opentelemetry-proto`) ekleme; `cci quota --poll`
-   gerçek uçla (nazik).
+Planlanan işlerin tamamı bitti (Faz 0–11, Stage 1–16). Kalanlar yalnızca
+**kullanıcı onayı ya da canlı ortam** gerektiren maddeler:
+
+1. **Canlı OTLP doğrulaması** — `cci setup otlp --write` → Claude Code yeniden
+   başlat → `cci run`. Bu, hesap kimliğini (`user.account_uuid`) getirir ve kota
+   snapshot saklamayı açar. Şu an OTLP kapalı olduğu için kota geçmişi yok,
+   dolayısıyla tahmin/backtest gerçek veriyle henüz sınanmadı.
+2. **U2 deneyi** — OTLP alıcı kapalıyken Claude Code davranışı (belgede yok).
+3. **`cci quota --poll`** gerçek uçla (nazik, tek istek).
+4. **Protobuf çözücü** — `opentelemetry-proto` bağımlılığı; şu an alıcı
+   `http/json` istiyor ve protobuf'a dürüstçe 415 dönüyor.
+5. **GitHub'a yayın** — `raporlar/ONAY-BEKLEYENLER.md`, onay bekliyor.
+
+Sonraki sürüm fikirleri (gerekmedikçe yapılmayacak): Gemini/Copilot adaptörleri,
+JSON-RPC eklenti taşıması, 100 k+ olayda günlük özet cache'i (bkz. `pipeline.py`
+`ponytail:` notu), realized-vs-estimated öneri raporu.
 
 ---
 
