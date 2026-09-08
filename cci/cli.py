@@ -170,11 +170,21 @@ def quota_lines(snap: QuotaSnapshot | None, now: datetime) -> list[str]:
 # ------------------------------------------------------------------ komutlar
 def cmd_scan(ctx: Context, args: argparse.Namespace) -> int:
     report = ctx.pipe.ingest_transcripts(ctx.adapter)
+    extra = {}
+    if not args.claude_only:
+        from cci.adapters.codex import CodexAdapter
+        cx = CodexAdapter(env=ctx.env, home=ctx.home)
+        if cx.discover():
+            r = ctx.pipe.ingest_adapter(cx)
+            extra["codex"] = {"instances": r.instances, "records": r.records, "written": r.written}
+            for f in ("instances", "raw_items", "records", "written", "duplicates", "rejected", "skipped_lines"):
+                setattr(report, f, getattr(report, f) + getattr(r, f))
     data = {"instances": report.instances, "raw_items": report.raw_items, "records": report.records,
             "written": report.written, "duplicates": report.duplicates, "rejected": report.rejected,
-            "skipped_lines": report.skipped_lines, "counters": dict(report.counters)}
+            "skipped_lines": report.skipped_lines, "counters": dict(report.counters), "providers": extra}
     ctx.out(data, lambda: f"tarandi: {report.instances} kaynak, {report.raw_items} kayit, {report.written} yeni olay, "
-                          f"{report.duplicates} tekrar, {report.rejected} red, {report.skipped_lines} bozuk satir")
+                          f"{report.duplicates} tekrar, {report.rejected} red, {report.skipped_lines} bozuk satir"
+                          + (f"  (codex: {extra['codex']['written']})" if extra else ""))
     return EXIT_OK
 
 
@@ -701,7 +711,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true")
     p.add_argument("--version", action="version", version=f"cci {__version__}")
     sub = p.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("scan", help="transcript'leri artimli tara").set_defaults(fn=cmd_scan)
+    s = sub.add_parser("scan", help="transcript'leri artimli tara (Claude Code + Codex)")
+    s.add_argument("--claude-only", action="store_true"); s.set_defaults(fn=cmd_scan)
     for name, today in (("today", True), ("daily", False)):
         s = sub.add_parser(name, help="gunluk ozet")
         s.add_argument("--days", type=int, default=0)

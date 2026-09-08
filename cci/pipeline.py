@@ -76,6 +76,32 @@ class Pipeline:
         """OTLP alicisi ve diger toplayicilar icin ortak yazma noktasi (kapidan gecmis zarf)."""
         return self.store.append(env)
 
+    def ingest_adapter(self, adapter) -> IngestReport:
+        """Genel adaptor yolu (Stage 15): collect -> normalize -> kapi -> depo.
+        Claude Code icin `ingest_transcripts` kullanilir (kendi normalize'i var)."""
+        cursors = load_cursors(self.cursors_path) if self.cursors_path else {}
+        report = IngestReport()
+        for instance in adapter.discover():
+            report.instances += 1
+            batch = adapter.collect(instance, cursors.get(instance.instance_id, Cursor()))
+            report.raw_items += len(batch.items)
+            report.skipped_lines += batch.skipped
+            envelopes = []
+            for rec in adapter.normalize(batch):
+                report.records += 1
+                env = record_envelope(rec)
+                if self.gate.check(env).accepted:
+                    envelopes.append(env)
+                else:
+                    report.rejected += 1
+            written, dup = self.store.append_many(envelopes)
+            report.written += written
+            report.duplicates += dup
+            cursors[instance.instance_id] = batch.next_cursor
+        if self.cursors_path:
+            save_cursors(self.cursors_path, cursors)
+        return report
+
     def ingest_transcripts(self, adapter: ClaudeCodeAdapter, collector: TranscriptCollector | None = None) -> IngestReport:
         collector = collector or TranscriptCollector()
         cursors = load_cursors(self.cursors_path) if self.cursors_path else {}
