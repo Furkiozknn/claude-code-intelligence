@@ -132,15 +132,25 @@ forecast errors (backtest MAE), dashboard latency (API p95), memory, CPU.
 Anlamsal kanaryalar (R-11, `PROVIDERS.md` §6) burada raporlanır.
 
 ## 11. Performans bütçeleri (MP §33)
-| Ölçüt | Hedef |
-|---|---|
-| Boşta CPU (daemon) | < %1 |
-| Bellek (daemon) | < 150 MB |
-| Statusline betiği | ≤ 50 ms (snapshot okuma) |
-| OTLP ingest | ≥ 2 000 olay/sn (loopback) |
-| Transcript ilk tarama | ≤ 60 sn / 500 MB; sonrası artımlı (mtime+manifest) |
-| Sorgu p95 (günlük rapor) | < 200 ms |
-| Snapshot yazımı | ≤ 5 ms, atomik |
+| Ölçüt | Hedef | **Ölçülen (2026-09-07, `benchmarks/bench.py`)** |
+|---|---|---|
+| Boşta CPU (daemon) | < %1 | ölçülmedi |
+| Bellek (daemon) | < 150 MB | ölçülmedi |
+| Statusline betiği | ≤ 50 ms (snapshot okuma) | testte doğrulandı |
+| OTLP eşleme | ≥ 2 000 olay/sn | **7 800 olay/sn** ✅ |
+| SQLite yazma (idempotent) | — | **8 400 olay/sn** |
+| Transcript tarama + normalize + yazma | ≤ 60 sn / 500 MB | **2,0 MB/sn** ⇒ 500 MB ≈ 4 dk ❌ |
+| Günlük rapor (replay + dedup + fiyat) | < 200 ms | **3 500 olay/sn** ⇒ 17 k olayda 5 sn ❌ |
+| Depo boyutu | — | **2,4 KB/olay** (30 gün saklama ile ~sınırlı) |
+| Snapshot yazımı | ≤ 5 ms, atomik | testte doğrulandı |
+
+Son iki hedef tutmuyor; darboğaz her iki durumda da pydantic doğrulaması. Bilinçli
+karar (`cci/pipeline.py` içinde `ponytail:` notu): kalıcı günlük özet cache'i
+denendi ve **kaldırıldı**, çünkü geç gelen transcript satırı kapanmış bir günü
+değiştirebiliyor ve bayat cache riski ölçülen kazancın önündeydi. Süreç içi
+memoization eklendi (tek komutta `daily`/`attention`/`forecasts`/`alerts`
+tek replay paylaşır). 100 k olayın üstünde çözüm: gün bazlı olay sayacı mührüyle
+cache, ya da normalize katmanının Rust'a taşınması (`docs/ARCHITECTURE.md` §6).
 
 ## 12. Depo yapısı (MP §39)
 ```

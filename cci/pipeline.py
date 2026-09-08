@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import json
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, tzinfo
@@ -21,7 +22,8 @@ from cci.analytics.anomaly import Anomaly, Baseline, detect
 from cci.analytics.diagnostics import SessionDiagnostics, diagnose_session, worst_attention
 from cci.config import AlertConfig
 from cci.model.alert import Alert
-from cci.analytics.summaries import DailySummary, SessionSummary, price_records, summarize_daily, summarize_sessions
+from cci.analytics.summaries import (SUMMARY_VERSION, DailySummary, SessionSummary, price_records, summarize_daily,
+                                     summarize_sessions)
 from cci.model.estimate import QuotaForecast
 from cci.model.figure import Figure
 from cci.model.quota import QuotaSnapshot
@@ -57,7 +59,8 @@ def record_envelope(rec: UsageRecord) -> Envelope:
         collector_version=rec.collector.version, schema_version=rec.collector.schema_version),
         provider=rec.provider, account_key=rec.account.account_key if rec.account else None,
         session_id=rec.session.session_id, privacy_class="sensitive" if rec.workspace else "internal",
-        evidence_class=EvidenceClass.OBSERVED, payload=rec.model_dump(mode="json"))
+        # exclude_none: bos alanlar (attribution/flags/timing coguldur) olay basina ~3 KB tasarruf
+        evidence_class=EvidenceClass.OBSERVED, payload=rec.model_dump(mode="json", exclude_none=True))
 
 
 class Pipeline:
@@ -133,6 +136,11 @@ class Pipeline:
 
     # --- turetim -------------------------------------------------------------
     def records(self, *, since: datetime | None = None, until: datetime | None = None) -> list[UsageRecord]:
+        # Sure ici memo: tek komutta daily/attention/forecasts/alerts hepsi records() cagirir.
+        # Anahtar = (aralik, olay sayisi); yeni olay gelince dogal olarak gecersizlesir.
+        key = (since, until, self.store.count("usage.request"))
+        if getattr(self, "_records_key", None) == key:
+            return self._records_cache
         deduper = Deduper()
         for env in self.store.query(types=["usage.request"], since=since, until=until):
             try:
@@ -142,9 +150,15 @@ class Pipeline:
                 continue
             deduper.add(rec)
         self.dedup_counters.update(deduper.counters)
-        return price_records(deduper.records(), self.table)
+        out = price_records(deduper.records(), self.table)
+        self._records_key, self._records_cache = key, out
+        return out
 
     def daily(self, *, since: datetime | None = None, until: datetime | None = None, strict: bool = False) -> list[DailySummary]:
+        # ponytail: her cagride olaylardan replay (~3.500 olay/s). Kalici gunluk ozet cache'i denendi ve
+        # kaldirildi: gec gelen transcript satiri kapanmis gunu degistirebiliyor, bayat cache riski
+        # olculen kazancin onunde. Gercek darbogaz pydantic dogrulamasi; 100k+ olayda yavaslarsa
+        # cozum gun bazli olay sayaci muhru (SQL GROUP BY) ile cache, oncesinde degil.
         return summarize_daily(self.records(since=since, until=until), self.tz, pricing_version=self.table.version, strict=strict)
 
     def sessions(self, *, since: datetime | None = None, until: datetime | None = None, strict: bool = False) -> list[SessionSummary]:

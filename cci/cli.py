@@ -588,6 +588,15 @@ def cmd_serve(ctx: Context, args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_tui(ctx: Context, args: argparse.Namespace) -> int:
+    from cci.surfaces.tui import render, run_tui
+    if args.once:
+        print(render(read_snapshot(ctx.snapshot_path())))
+        return EXIT_OK
+    run_tui(ctx.snapshot_path(), interval=args.interval)  # pragma: no cover - dongu
+    return EXIT_OK
+
+
 def cmd_widget(ctx: Context, args: argparse.Namespace) -> int:
     from cci.surfaces.widget import run_widget, widget_lines
     if args.print:
@@ -743,6 +752,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--port", type=int, default=4320); s.add_argument("--upstream", default="https://api.anthropic.com")
     s.add_argument("--capture-bodies", action="store_true"); s.add_argument("--once", action="store_true")
     s.add_argument("--kind", default="session_5h"); s.add_argument("--yes", action="store_true"); s.set_defaults(fn=cmd_research)
+    s = sub.add_parser("tui", help="terminal panosu"); s.add_argument("--once", action="store_true")
+    s.add_argument("--interval", type=float, default=2.0); s.set_defaults(fn=cmd_tui)
     s = sub.add_parser("widget", help="masaustu widget (tkinter)"); s.add_argument("--print", action="store_true")
     s.add_argument("--detailed", action="store_true"); s.add_argument("--no-top", action="store_true"); s.set_defaults(fn=cmd_widget)
     return p

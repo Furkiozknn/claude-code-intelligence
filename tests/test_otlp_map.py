@@ -58,12 +58,12 @@ def test_api_request_maps_to_usage_record_with_vendor_cost_and_account():
     assert e.type == "usage.request" and e.account_key == "acc-uuid-1" and e.session_id == "sess-1"
     p = e.payload
     assert p["dedup_key"] == "anthropic:req:req_9"
-    assert p["tokens"]["input"] == 120 and p["tokens"]["input_total"] == 1320 and p["tokens"]["cache_write_5m"] is None
+    # exclude_none: bos alanlar payload'a yazilmaz (depo boyutu)
+    assert p["tokens"]["input"] == 120 and p["tokens"]["input_total"] == 1320 and "cache_write_5m" not in p["tokens"]
     assert p["cost"]["vendor_usd"]["evidence_class"] == "vendor_estimated"
     assert p["cost"]["vendor_usd"]["value"] == "12300000"  # micros*1000 nanoUSD
     assert p["cost"]["usd"]["released"] is False
-    assert p["attribution"] == {"query_source": "subagent", "agent": "Explore", "skill": "commit", "plugin": None,
-                                "mcp_server": None, "mcp_tool": None, "marketplace": None, "speed": "fast",
+    assert p["attribution"] == {"query_source": "subagent", "agent": "Explore", "skill": "commit", "speed": "fast",
                                 "effort": "high"}
     assert p["model"] == {"id": "claude-opus-5", "display": "Opus 5", "family": "opus", "unknown": False}
     assert "GIZLI" not in json.dumps(p)
@@ -116,4 +116,4 @@ def test_missing_account_uuid_gives_no_account_key():
                              "scopeLogs": [{"logRecords": [record("api_request", model="claude-opus-5",
                                                                   input_tokens=1, output_tokens=1, request_id="r")]}]}]}
     e = OtlpLogMapper().map_request(doc)[0]
-    assert e.account_key is None and e.payload["account"] is None and e.payload["session"]["session_id"] == "s"
+    assert e.account_key is None and "account" not in e.payload and e.payload["session"]["session_id"] == "s"

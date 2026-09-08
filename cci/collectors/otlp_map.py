@@ -213,7 +213,7 @@ class OtlpLogMapper:
                            collector_version=COLLECTOR_VERSION, schema_version=SCHEMA_VERSION)
         if etype == "usage.request":
             record = usage_record(merged, resource, ts, account)
-            payload = record.model_dump(mode="json")
+            payload = record.model_dump(mode="json", exclude_none=True)
         else:
             payload = {}
             for src, dst in SIMPLE_FIELDS[etype]:
