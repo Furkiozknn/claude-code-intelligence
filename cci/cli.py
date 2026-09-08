@@ -319,6 +319,45 @@ def cmd_alerts(ctx: Context, args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_advise(ctx: Context, args: argparse.Namespace) -> int:
+    from cci.act import apply_file_change, list_records, undo
+    from cci.advisor import advise
+    now = datetime.now(UTC)
+    if args.undo:
+        try:
+            rec = undo(ctx.data_dir, args.undo, force=args.force)
+        except (KeyError, RuntimeError) as exc:
+            print(str(exc), file=sys.stderr)
+            return EXIT_USAGE
+        ctx.out(rec, lambda: f"geri alindi: {rec['path']}")
+        return EXIT_OK
+    if args.history:
+        recs = list_records(ctx.data_dir)
+        ctx.out({"act": recs}, lambda: "\n".join(f"{r['at'][:19]}  {r['id'][:8]}  {r['kind']:<12} {r.get('description') or r.get('of', '')}" for r in recs) or "act gunlugu bos")
+        return EXIT_OK
+    _, diags = ctx.pipe.attention(now)
+    anomalies, _ = ctx.pipe.anomalies(now)
+    recs = advise(now=now, quota=latest_quota(ctx), forecasts=ctx.pipe.forecasts(now), diagnostics=diags,
+                  anomalies=anomalies, telemetry_enabled=ctx.env.get("CLAUDE_CODE_ENABLE_TELEMETRY") == "1")
+    if args.apply:
+        applied = []
+        for r in recs:
+            if r.action.plan_hash == "setup-otlp":
+                settings = ctx.home / ".claude" / "settings.json"
+                doc = json.loads(settings.read_text(encoding="utf-8")) if settings.exists() else {}
+                doc["env"] = {**(doc.get("env") or {}), **otlp_env_block(DEFAULT_OTLP_PORT)}
+                applied.append(apply_file_change(ctx.data_dir, settings, json.dumps(doc, ensure_ascii=False, indent=2) + "\n",
+                                                 "OTLP env blogu (cci advise --apply)"))
+        ctx.out({"applied": applied}, lambda: "\n".join(f"uygulandi {a['id'][:8]}: {a['description']} — geri al: cci advise --undo {a['id'][:8]}" for a in applied) or "uygulanacak geri alinabilir eylem yok")
+        return EXIT_OK
+    ctx.out({"recommendations": [r.model_dump(mode="json") for r in recs]},
+            lambda: "\n".join(f"[{i + 1}] {r.title}\n    kanit: " + ", ".join(f"{e.metric}={e.value}({e.evidence_class})" for e in r.why)
+                              + f"\n    eylem: {r.action.summary} ({'geri alinabilir' if r.action.reversible else 'kalici'})"
+                              + ("\n    uygula: cci advise --apply" if r.action.plan_hash else "")
+                              for i, r in enumerate(recs)))
+    return EXIT_OK
+
+
 def cmd_doctor(ctx: Context, args: argparse.Namespace) -> int:
     health = ctx.adapter.health()
     probes: list[ProbeRoot] = list(ctx.adapter.probe_roots())
@@ -674,6 +713,9 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--forecast", action="store_true", help="harman tahmin v2 (>=5 dongu)")
     s.add_argument("--backtest", action="store_true", help="yontem karsilastirma (MAE, bant kapsama)"); s.set_defaults(fn=cmd_quota)
     sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
+    s = sub.add_parser("advise", help="su anda ne yapmaliyim"); s.add_argument("--apply", action="store_true")
+    s.add_argument("--undo", default=None); s.add_argument("--force", action="store_true")
+    s.add_argument("--history", action="store_true"); s.set_defaults(fn=cmd_advise)
     s = sub.add_parser("alerts", help="uyarilari degerlendir/goster"); s.add_argument("--history", action="store_true")
     s.add_argument("--dry-run", action="store_true", help="olay yazma, sadece goster"); s.set_defaults(fn=cmd_alerts)
     s = sub.add_parser("snapshot"); s.add_argument("--out", default=None); s.set_defaults(fn=cmd_snapshot)
