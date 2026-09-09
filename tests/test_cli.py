@@ -1,3 +1,4 @@
+import sys
 import json
 from datetime import UTC, datetime
 
@@ -251,3 +252,67 @@ def test_help_her_alt_komutta_cokmuyor(komut, capsys):
     except SystemExit as e:  # kok komuttaki gibi tasirsa da kabul
         assert e.code == 0
     assert "usage:" in capsys.readouterr().out
+
+
+# --- kod sayfasi cikti akisini dusurmemeli ---------------------------------
+#
+# `cci doctor` Turkce bir Windows'ta hicbir sey basmadan oluyordu: konsol
+# cp1254, rapordaki onay isareti U+2713 o tabloda yok, print() coktu. Bir
+# teshis komutunun basamadigi tek bir simge yuzunden hicbir teshis vermemesi
+# en kotu basarisizlik sekli - kullanici araci bozuk saniyor.
+#
+# Test tek bir karakteri degil davranisi kilitliyor: dar bir kod sayfasina
+# baglanmis bir akis, cevirisi olmayan bir karakterle karsilastiginda
+# programi dusurmemeli.
+
+def _cp1254_akis():
+    import io as _io
+
+    return _io.TextIOWrapper(_io.BytesIO(), encoding="cp1254", errors="strict", newline="")
+
+
+def test_dar_kod_sayfasi_once_gercekten_cokuyor():
+    """Testin anlamli oldugunu once kanitla: sertlestirme olmadan bu coker."""
+    akis = _cp1254_akis()
+    with pytest.raises(UnicodeEncodeError):
+        akis.write("✓ config dir")
+        akis.flush()
+
+
+def test_harden_stdio_dar_kod_sayfasinda_cokmuyor(monkeypatch):
+    from cci.cli import harden_stdio
+
+    akis = _cp1254_akis()
+    monkeypatch.setattr("sys.stdout", akis)
+    monkeypatch.setattr("sys.stderr", akis)
+    harden_stdio()
+    print("✓ config dir")          # cokmemeli
+    sys.stdout.flush()
+    assert akis.encoding.lower() == "utf-8"
+
+
+def test_harden_stdio_yeniden_yapilandirilamayan_akisi_yutuyor(monkeypatch):
+    """Yakalanmis/sahte bir akis reconfigure tasimaz; bu bir hata degil."""
+    class Sahte:
+        def write(self, s): return len(s)
+        def flush(self): pass
+
+    from cci.cli import harden_stdio
+
+    monkeypatch.setattr("sys.stdout", Sahte())
+    monkeypatch.setattr("sys.stderr", Sahte())
+    harden_stdio()                      # istisna atmamali
+
+
+def test_main_cikti_akisini_sertlestiriyor(monkeypatch, tmp_path):
+    """main() sertlestirmeyi GERCEKTEN cagirmali.
+
+    Ilk surumde test yalnizca harden_stdio()'yu dogrudan cagiriyordu, yani
+    birisi main()'deki cagriyi silse takim yesil kalirdi ve hata sessizce
+    geri gelirdi. Bu test bagi kilitler.
+    """
+    akis = _cp1254_akis()
+    monkeypatch.setattr("sys.stdout", akis)
+    monkeypatch.setattr("sys.stderr", akis)
+    main(["--data-dir", str(tmp_path / "d"), "today"], env={}, home=tmp_path)
+    assert akis.encoding.lower() == "utf-8"

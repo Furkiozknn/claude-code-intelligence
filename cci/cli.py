@@ -759,7 +759,32 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+def harden_stdio() -> None:
+    """Cikti akislarini kod sayfasi yuzunden cokmeyecek hale getir.
+
+    `cci doctor` Turkce bir Windows'ta hicbir sey basmadan oluyordu:
+
+        UnicodeEncodeError: 'charmap' codec can't encode character '\\u2713'
+
+    Konsolun kod sayfasi cp1254 ve rapordaki onay isareti (U+2713) o
+    tabloda yok. Tek bir karakter icin bir kaciniklik yazmak sorunu
+    kapatmaz - AYNI hata her yeni glif icin geri gelir, ve bu araci
+    kullanan makine tam da Turkce Windows. O yuzden duzeltme akisin
+    kendisinde: UTF-8'e gec, cevirisi olmayan bir karakter cikarsa
+    programi dusurme, yerine koy.
+
+    `errors="replace"` bilerek: bir teshis komutu, basamadigi tek bir
+    simge yuzunden hicbir teshis vermemektense o simgeyi kaybetmeli.
+    """
+    for akis in (sys.stdout, sys.stderr):
+        try:
+            akis.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
+        except (AttributeError, ValueError, OSError):
+            pass  # yeniden yapilandirilamayan akis (yakalanmis, boru, test) oldugu gibi kalir
+
+
 def main(argv: list[str] | None = None, *, env: dict[str, str] | None = None, home: Path | None = None) -> int:
+    harden_stdio()
     parser = build_parser()
     try:
         args = parser.parse_args(argv)
