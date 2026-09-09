@@ -180,6 +180,10 @@ def test_dedup_result_is_independent_of_arrival_order():
         assert r.dedup_key == "anthropic:req:req_1" and r.tokens.output == 300, order
         assert r.cost.vendor_usd is not None and r.cost.vendor_usd.render() == "$0.05", order
         assert r.tokens.cache_write_5m == 60 and r.session.is_sidechain is False, order
+        # Kazananin KIMLIGI de sabit olmali: summarize_daily (gun, provider, source.instance_id)
+        # ile gruplar. Token sayilari esitken kazanan gelis sirasina kalirsa ayni gun iki
+        # satira bolunur (transcript satiri + OTel satiri) ve koruma yasasi 1 gun beklerken 2 bulur.
+        assert (r.source.instance_id, r.ts) == ("claude-config:x", datetime(2026, 9, 7, 12, 0, tzinfo=UTC)), order
         assert d.counters["sidechain_replay_dropped"] == 1, order
 
 
