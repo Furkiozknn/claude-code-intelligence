@@ -19,8 +19,13 @@ jobs:
       - name: Sync (locked)
         run: uv sync --locked --all-extras
 
+      # Not `-q`. With it, pytest printed the progress dots and no summary
+      # line, so the log carried no "N passed" for anything downstream to
+      # read - and otomasyon/sayi-denetim.js compares the README's claimed
+      # test count against exactly that line. A run whose count cannot be
+      # read is a run that cannot catch the count drifting.
       - name: Run tests
-        run: uv run pytest -q
+        run: uv run pytest
 
   # The unit tests import cci.cli directly. This job runs the INSTALLED `cci`
   # binary, because both bugs found on 9 September 2026 were invisible to the
