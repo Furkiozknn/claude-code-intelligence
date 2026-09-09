@@ -1,4 +1,4 @@
-# Claude Code Intelligence Platform
+![claude-code-intelligence — token nereye gitti, ne tuttu, kota ne zaman bitiyor](assets/banner.svg)
 
 > Çalışma adı: `claude-code-intelligence` (CLI `cci`, daemon `ccid` — geçici).
 > Ad ürün kararıyla değişebilir.
@@ -10,7 +10,15 @@ veriye dayalı cevap veren** yerel-öncelikli bir istihbarat/kontrol katmanı.
 
 Bu bir usage monitor, token sayacı, kota görüntüleyici, pano, CLI aracı
 veya taskbar widget'ı **değildir** — bunların birleşiminden büyük bir sistem
-hedefleniyor. Araştırma ve mimari bitmeden platform kodu yazılmadı.
+hedefleniyor.
+
+![cci daily komutunun gerçek çıktısı: gün başına istek, token ve tahmini maliyet, model kırılımıyla](assets/terminal.svg)
+
+<sub>Gerçek çıktı, elle yazılmış bir örnek değil: `python scripts/gorsel-uret.py`
+bu görseli `cci daily`'yi çalıştırıp üretir. Dikkat edilecek iki işaret —
+maliyetin yanındaki **≈** rakamın liste fiyatından türetilmiş bir tahmin
+olduğunu söyler, **`[withheld]`** ise satıcının kendi maliyetini vermediği
+yerde uydurulmadığını. Bu depoda tahmin, ölçümün yerine geçmez.</sub>
 
 ## Yöntem ve durum
 
@@ -18,7 +26,7 @@ hedefleniyor. Araştırma ve mimari bitmeden platform kodu yazılmadı.
 Research → Discover → Score → Deep Analyze → Extract → Synthesize
         → Design → Critique → Implement → Benchmark → Improve
    ✅        ✅        ✅         ✅           ✅          ✅
-                                            → ✅ Design (Faz 7–9) → 🔄 Implement (Stage 1–5 ✅, 6–7 🔄)
+                                            → ✅ Design (Faz 7–9) → ✅ Implement (Stage 1–16)
 ```
 
 **Kod durumu:** `cci/` paketi — model (Stage 1), adaptör sözleşmesi (2),
@@ -27,7 +35,7 @@ alıcı (3), SQLite olay deposu (4), normalizasyon + dedup/birleştirme (5), fiy
 tablosu + özetler (6), pace v1 + boru hattı + snapshot + CLI (7).
 
 ```
-uv sync && uv run pytest                    # 234 test
+uv sync && uv run pytest                    # 256 test
 uv run cci scan                             # Claude Code + Codex transcript'lerini artımlı tara
 uv run cci today | daily | sessions         # özetler (--json, --strict → koruma yasası ihlalinde çıkış 3)
 uv run cci session <id>                     # oturum teşhisi (döngü, araç p95, context, sağlık)
@@ -77,7 +85,8 @@ Stage 1–16 tamamlandı. Ölçülen performans ve tutmayan iki hedefin gerekçe
 
 ## Önceki çalışmayla ilişki
 
-`D:\Repolar\claude-quota-monitor` bu platformun prototipidir; öğrenilenler
+[`claude-quota-monitor`](https://github.com/Furkiozknn/claude-quota-monitor)
+(arşivli) bu platformun prototipidir; öğrenilenler
 `research/notes/00-seed-from-claude-quota-monitor.md` içinde. Platform onu
 **kapsayacak**, ona bağımlı olmayacak.
 
