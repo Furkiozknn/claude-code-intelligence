@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Sync (locked)
+        run: uv sync --locked --all-extras
+
+      - name: Run tests
+        run: uv run pytest -q
+
+  # The unit tests import cci.cli directly. This job runs the INSTALLED `cci`
+  # binary, because both bugs found on 9 September 2026 were invisible to the
+  # unit tests and only appeared when a person typed the command:
+  #
+  #   cci --help    -> ValueError: unsupported format character 'O'
+  #   cci doctor    -> UnicodeEncodeError: '✓' in a cp1254 console
+  #
+  # Neither is reachable from a test that never spawns a process with a real
+  # stdout attached, so this job spawns one.
+  cli-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install the package itself
+        run: uv sync --locked
+
+      # `--help` is the first thing anyone types. argparse formats every help
+      # string through `%`, so one unescaped `%` in one flag's help takes the
+      # whole command down - and only that subcommand's, which is why every
+      # subparser is walked rather than just the root.
+      - name: Every --help must exit 0
+        run: |
+          set -e
+          uv run cci --help > /dev/null
+          for cmd in $(uv run python -c "
+          import argparse
+          from cci.cli import build_parser
+          for a in build_parser()._actions:
+              if isinstance(a, argparse._SubParsersAction):
+                  print(' '.join(sorted(a.choices)))
+                  break
+          "); do
+            uv run cci "$cmd" --help > /dev/null || { echo "cci $cmd --help failed"; exit 1; }
+          done
+          echo "all subcommand help strings format"
+
+      # A terminal whose code page cannot represent the report's glyphs must
+      # cost you a glyph, not the report. LANG=C gives Python an ASCII stdout,
+      # which is stricter than the cp1254 console this actually broke on.
+      - name: doctor must survive an ASCII-only stdout
+        env:
+          LANG: C
+          LC_ALL: C
+          PYTHONIOENCODING: ""
+        run: |
+          set -e
+          uv run cci doctor > doctor.txt
+          test -s doctor.txt || { echo "doctor produced no output"; exit 1; }
+          grep -q "cci " doctor.txt || { echo "doctor output does not look like a report"; exit 1; }
+          echo "doctor ran with an ASCII-only stdout"
+
+      # Exit codes are a contract: `cci today --strict` is meant to be usable
+      # as a gate, and a gate whose exit code drifts is a gate that stopped
+      # gating. EXIT_NO_DATA is 4 (cci/cli.py:40) - asserting the exact code,
+      # not merely "non-zero", because 4 drifting to 2 would still be non-zero
+      # and would still break every caller that branches on it.
+      - name: Empty store exits EXIT_NO_DATA (4), not 0 and not something else
+        run: |
+          set +e
+          uv run cci --data-dir "$RUNNER_TEMP/empty" today > /dev/null 2>&1
+          code=$?
+          set -e
+          test "$code" -eq 4 || { echo "expected EXIT_NO_DATA=4, got $code"; exit 1; }
+          echo "empty store exits 4"
