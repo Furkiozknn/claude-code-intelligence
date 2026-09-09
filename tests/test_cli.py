@@ -201,3 +201,53 @@ def test_run_once_starts_receiver_scans_and_writes_snapshot(workspace, capsys):
     assert code == EXIT_OK and "ccid: OTLP http://127.0.0.1:" in out.err
     snap = json.loads((tmp / "data" / "state" / "latest.json").read_text(encoding="utf-8"))
     assert snap["today"]["requests"] == 2 and snap["health"]["scan"]["written"] == 2 and snap["health"]["otlp"] == {}
+
+
+# --- --help her alt komut icin calismali -----------------------------------
+#
+# `cci --help` her kullanicida ValueError ile cokuyordu: argparse her help
+# metnini `metin % params` ile bicimlendiriyor, ve `--data-dir`'in yardimi
+# "varsayilan: %LOCALAPPDATA%/cci" diyordu. Python `%L`'yi eski usul uzunluk
+# belirteci sanip bir sonraki karaktere ('O') doniyor ve
+# "unsupported format character 'O'" atiyordu. Yani programin ilk ogrendigi
+# komut, hicbir testi olmadigi icin, yayinda kirikti.
+#
+# Tek bir '%' kacirmak yeter, o yuzden test tek bir metni degil BUTUN alt
+# komutlarin yardimini geziyor.
+
+def _alt_komutlar():
+    import argparse
+
+    from cci.cli import build_parser
+
+    parser = build_parser()
+    for action in parser._actions:
+        if isinstance(action, argparse._SubParsersAction):
+            return sorted(action.choices)
+    return []
+
+
+def test_help_kok_komutta_cokmuyor(capsys):
+    try:
+        main(["--help"], env={}, home=None)
+    except SystemExit as e:
+        assert e.code == 0
+    assert "usage: cci" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("komut", _alt_komutlar())
+def test_help_her_alt_komutta_cokmuyor(komut, capsys):
+    """Her alt komutun yardimi bicimlendirilebilmeli.
+
+    Kacirilmis bir '%' yalnizca o alt komutun yardimini dusurur, digerleri
+    calismaya devam eder - bu yuzden kok komuta bakmak yetmez.
+
+    Alt komut yardimi SystemExit'i cagirana kadar tasimiyor (kok komut
+    tasiyor), o yuzden burada beklenen sey cikis kodu degil: yardimin
+    bicimlendirilebilmesi ve basilmasi.
+    """
+    try:
+        main([komut, "--help"], env={}, home=None)
+    except SystemExit as e:  # kok komuttaki gibi tasirsa da kabul
+        assert e.code == 0
+    assert "usage:" in capsys.readouterr().out

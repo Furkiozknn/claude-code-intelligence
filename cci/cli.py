@@ -716,7 +716,7 @@ def statusline_command() -> str:
 # ------------------------------------------------------------------ giris
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="cci", description="Claude Code Intelligence Platform")
-    p.add_argument("--data-dir", default=None, help="veri dizini (varsayilan: %LOCALAPPDATA%/cci ya da ~/.cci)")
+    p.add_argument("--data-dir", default=None, help="veri dizini (varsayilan: %%LOCALAPPDATA%%/cci ya da ~/.cci)")
     p.add_argument("--json", action="store_true")
     p.add_argument("--version", action="version", version=f"cci {__version__}")
     sub = p.add_subparsers(dest="cmd", required=True)
