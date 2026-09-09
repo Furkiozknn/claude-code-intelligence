@@ -1,13 +1,16 @@
 import json
+import random
 from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from cci.adapters.claude_code import ClaudeCodeAdapter
 from cci.adapters.claude_code.quota_map import parse_usage_response
+from cci.analytics.summaries import price_records, summarize_daily, summarize_sessions
 from cci.api import build_snapshot, write_snapshot
 from cci.api.snapshot import read_snapshot
 from cci.collectors.otlp_map import OtlpLogMapper
-from cci.model import AccountRef
+from cci.model import AccountRef, UsageRecord
+from cci.normalize import Deduper
 from cci.pipeline import Pipeline
 from cci.pricing import PricingTable
 from cci.store import EventStore
@@ -101,6 +104,51 @@ def test_end_to_end_transcript_and_otlp_merge_then_summaries_and_snapshot(tmp_pa
     assert "gizli" not in text and "D:/" not in text and ACC.account_key not in text
     assert not list(path.parent.glob("*.tmp"))
     assert back["next_display_change_at"] > back["generated_at"]
+    store.close()
+
+
+def test_derived_summaries_are_stable_under_arrival_order(tmp_path):
+    """SINIF KORUMASI: dedup -> birlestir -> fiyat -> ozet zincirinde hicbir sey
+    olaylarin GELIS SIRASINA bagli olmamali.
+
+    Depodan okuma `ORDER BY ts, event_id`; iki kaynak (transcript + OTel) ayni
+    istegi ayni ana yazdiginda sira tamamen ULID'in 80 bit rastgele parcasina
+    kalir. Tek alan degil, turetilmis tablonun TAMAMI karsilastirilir: zincirin
+    herhangi bir yerine sirayla degisen bir karar sizarsa bu test yakalar.
+    """
+    root = tmp_path / ".claude"
+    layout(root, [assistant("msg_1", "req_1", 10), assistant("msg_1", "req_1", 40),
+                  assistant("msg_2", "req_2", 20), assistant("msg_1", "req_replay", 999, sidechain=True)])
+    adapter = ClaudeCodeAdapter(env={"CLAUDE_CONFIG_DIR": str(root)}, home=tmp_path)
+    store = EventStore(tmp_path / "cci" / "events.db")
+    pipe = Pipeline(store, PricingTable.load_bundled(), IST, cursors_path=tmp_path / "cci" / "cursors.json", account=ACC)
+    pipe.ingest_transcripts(adapter)
+    for env in (otel_request("req_1", 40, 12345), otel_request("req_2", 20, 6789)):
+        assert pipe.sink(env)
+
+    # depodaki ham olaylar (JSON gidis-donusu dahil: gercek zincir)
+    table = PricingTable.load_bundled()
+    recs = [UsageRecord.from_payload(e.payload) for e in store.query(types=["usage.request"])]
+    assert len(recs) == 6  # 4 transcript + 2 OTel
+
+    baseline = None
+    for seed in range(40):
+        shuffled = recs[:]
+        random.Random(seed).shuffle(shuffled)
+        deduper = Deduper()
+        for r in shuffled:
+            deduper.add(r)
+        priced = price_records(deduper.records(), table)
+        got = ([d.model_dump(mode="json") for d in summarize_daily(priced, IST)],
+               [s.model_dump(mode="json") for s in summarize_sessions(priced)],
+               deduper.counters["sidechain_replay_dropped"])
+        assert baseline is None or got == baseline, f"sira {seed} farkli sonuc verdi"
+        baseline = got
+
+    days, sessions, dropped = baseline
+    assert len(days) == 1 and days[0]["totals"]["requests"] == 2 and days[0]["conservation"]["ok"]
+    assert len(sessions) == 1 and sessions[0]["totals"]["requests"] == 2
+    assert dropped == 1
     store.close()
 
 
