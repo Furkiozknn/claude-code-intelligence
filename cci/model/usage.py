@@ -187,11 +187,21 @@ class UsageRecord(CciModel):
 
     def prefer_over(self, other: "UsageRecord") -> bool:
         """Ayni dedup anahtarinda kazanan kurali (ccusage): sidechain olmayan
-        kazanir; sonra daha buyuk toplam token; esitlikte `speed` alani olan
-        (yeni sema)."""
+        kazanir; sonra daha buyuk toplam token; sonra `speed` alani olan (yeni
+        sema); tam esitlikte `source.instance_id` (bkz. asagi).
+
+        Son adim keyfi ama ZORUNLU: iki kaynak (transcript + OTel) ayni istegi
+        ayni token sayisiyla bildirdiginde kural buraya kadar berabere kalir.
+        Karar gelis sirasina birakilirsa sonuc rastgele olur: olaylar depodan
+        `ORDER BY ts, event_id` ile gelir, ayni ms'de uretilen ULID'lerin sirasi
+        ise 80 bit rastgeledir. Kazanan kendi `source.instance_id`'sini tasir ve
+        `summarize_daily` gunu bu alana gore gruplar -> ayni gun iki satira
+        bolunurdu (Deduper.add sozlesmesi: sonuc gelis sirasindan bagimsiz)."""
         if self.session.is_sidechain != other.session.is_sidechain:
             return other.session.is_sidechain
         mine, theirs = self.tokens.billable_total, other.tokens.billable_total
         if mine != theirs:
             return mine > theirs
-        return self.attribution.speed is not None and other.attribution.speed is None
+        if (self.attribution.speed is None) != (other.attribution.speed is None):
+            return self.attribution.speed is not None
+        return self.source.instance_id < other.source.instance_id
