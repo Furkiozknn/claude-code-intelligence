@@ -14,6 +14,20 @@ hedefleniyor.
 
 ![cci daily komutunun gerçek çıktısı: gün başına istek, token ve tahmini maliyet, model kırılımıyla](assets/terminal.svg)
 
+## Hızlı başlangıç
+
+Yerel-öncelikli pano: Claude Code transcript'lerini tarar, bir anlık görüntü
+üretir ve tarayıcıda gösterir.
+
+```
+uv sync
+uv run cci scan
+uv run cci snapshot
+uv run cci serve
+```
+
+![cci pano ekran görüntüsü: gerçek taranmış verilerle Kota, Dikkat, Bugün, Uyarılar ve Sağlık bölümleri](assets/pano-ekran-goruntusu.png)
+
 <sub>Gerçek çıktı, elle yazılmış bir örnek değil: `python scripts/gorsel-uret.py`
 bu görseli `cci daily`'yi çalıştırıp üretir. Dikkat edilecek iki işaret —
 maliyetin yanındaki **≈** rakamın liste fiyatından türetilmiş bir tahmin
