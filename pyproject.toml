@@ -1,8 +1,32 @@
 [project]
-name = "cci"
+name = "claude-code-intelligence"
 version = "0.0.1"
 description = "Claude Code Intelligence Platform - cekirdek (Stage 1: veri modeli)"
+readme = "README.md"
 requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Furki Ozkan" }]
+keywords = [
+    "claude-code",
+    "observability",
+    "telemetry",
+    "cost",
+    "analytics",
+    "local-first",
+    "cli",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Monitoring",
+    "Topic :: Utilities",
+]
 dependencies = [
     "pydantic>=2.7,<3",
     "tzdata>=2026.3",
