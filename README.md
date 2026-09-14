@@ -14,6 +14,12 @@ hedefleniyor.
 
 ![cci daily komutunun gerçek çıktısı: gün başına istek, token ve tahmini maliyet, model kırılımıyla](assets/terminal.svg)
 
+<sub>Gerçek çıktı, elle yazılmış bir örnek değil: `python scripts/gorsel-uret.py`
+bu görseli `cci daily`'yi çalıştırıp üretir. Dikkat edilecek iki işaret —
+maliyetin yanındaki **≈** rakamın liste fiyatından türetilmiş bir tahmin
+olduğunu söyler, **`[withheld]`** ise satıcının kendi maliyetini vermediği
+yerde uydurulmadığını. Bu depoda tahmin, ölçümün yerine geçmez.</sub>
+
 ## Hızlı başlangıç
 
 Yerel-öncelikli pano: Claude Code transcript'lerini tarar, bir anlık görüntü
@@ -28,11 +34,8 @@ uv run cci serve
 
 ![cci pano ekran görüntüsü: gerçek taranmış verilerle Kota, Dikkat, Bugün, Uyarılar ve Sağlık bölümleri](assets/pano-ekran-goruntusu.png)
 
-<sub>Gerçek çıktı, elle yazılmış bir örnek değil: `python scripts/gorsel-uret.py`
-bu görseli `cci daily`'yi çalıştırıp üretir. Dikkat edilecek iki işaret —
-maliyetin yanındaki **≈** rakamın liste fiyatından türetilmiş bir tahmin
-olduğunu söyler, **`[withheld]`** ise satıcının kendi maliyetini vermediği
-yerde uydurulmadığını. Bu depoda tahmin, ölçümün yerine geçmez.</sub>
+<sub>Panonun kendisi, yukarıdaki dört komut çalıştırıldıktan sonra. Gösterdiği
+her sayı taranmış gerçek transcript'lerden geliyor.</sub>
 
 ## Yöntem ve durum
 
@@ -49,7 +52,7 @@ alıcı (3), SQLite olay deposu (4), normalizasyon + dedup/birleştirme (5), fiy
 tablosu + özetler (6), pace v1 + boru hattı + snapshot + CLI (7).
 
 ```
-uv sync && uv run pytest                    # 256 test
+uv sync && uv run pytest                    # 259 test
 uv run cci scan                             # Claude Code + Codex transcript'lerini artımlı tara
 uv run cci today | daily | sessions         # özetler (--json, --strict → koruma yasası ihlalinde çıkış 3)
 uv run cci session <id>                     # oturum teşhisi (döngü, araç p95, context, sağlık)
