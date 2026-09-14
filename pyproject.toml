@@ -4,7 +4,7 @@ version = "0.0.1"
 description = "Claude Code Intelligence Platform - cekirdek (Stage 1: veri modeli)"
 requires-python = ">=3.12"
 dependencies = [
-    "pydantic>=2.7,<3",
+    "pydantic>=2.13.5,<3",
     "tzdata>=2026.3",
 ]
 
