@@ -1,7 +1,7 @@
 [project]
 name = "claude-code-intelligence"
 version = "0.0.1"
-description = "Claude Code Intelligence Platform - cekirdek (Stage 1: veri modeli)"
+description = "Local-first usage intelligence for Claude Code: where the tokens went, what it cost, when the quota resets."
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
@@ -17,7 +17,7 @@ keywords = [
     "cli",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
