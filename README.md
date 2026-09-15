@@ -49,7 +49,7 @@ alıcı (3), SQLite olay deposu (4), normalizasyon + dedup/birleştirme (5), fiy
 tablosu + özetler (6), pace v1 + boru hattı + snapshot + CLI (7).
 
 ```
-uv sync && uv run pytest                    # 259 test
+uv sync && uv run pytest                    # 261 test
 uv run cci scan                             # Claude Code + Codex transcript'lerini artımlı tara
 uv run cci today | daily | sessions         # özetler (--json, --strict → koruma yasası ihlalinde çıkış 3)
 uv run cci session <id>                     # oturum teşhisi (döngü, araç p95, context, sağlık)
