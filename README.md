@@ -1,8 +1,5 @@
 ![claude-code-intelligence — token nereye gitti, ne tuttu, kota ne zaman bitiyor](assets/banner.svg)
 
-> Çalışma adı: `claude-code-intelligence` (CLI `cci`, daemon `ccid` — geçici).
-> Ad ürün kararıyla değişebilir.
-
 AI coding agent kullanımını (önce Claude Code, mimari olarak diğer
 sağlayıcılar) **gözlemleyen, normalize eden, analiz eden, ölçen, tahmin
 eden, anomali tespit eden, uyaran ve "şu anda ne yapmalıyım?" sorusuna
@@ -73,7 +70,7 @@ Stage 1–16 tamamlandı. Ölçülen performans ve tutmayan iki hedefin gerekçe
 | Çıktı | Nerede |
 |---|---|
 | Görev tanımı (kullanıcı) | `docs/MASTER_PROMPT.md` |
-| Fazlar, günlük, sıradaki işler | `PROGRESS.md` |
+| Aşamalar ve kabul ölçütleri | `docs/IMPLEMENTATION_PLAN.md` |
 | Araştırma veri seti (232 repo, 13 kriter/100) | `research/catalog.jsonl`, `research/reports/catalog.md`, `research/tools/catalog.py` |
 | Veri toplama yaklaşımları + resmî kaynak doğrulaması | `research/notes/01-*.md`, `02-resmi-kaynaklar.md`, `03-otel-genai-semconv.md` |
 | Top 20 ve derin analizler (20 repo, kaynak kod düzeyi) | `research/reports/top20.md`, `research/notes/deep/*.md` |
