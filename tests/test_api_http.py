@@ -1,9 +1,12 @@
+import base64
+import hashlib
 import http.client
 import json
+from html.parser import HTMLParser
 
 import pytest
 
-from cci.api.http import CSP, ApiServer, load_or_create_token
+from cci.api.http import CSP, DASHBOARD_CSS, DASHBOARD_JS, ApiServer, load_or_create_token
 from cci.api.snapshot import write_snapshot
 from cci.cli import EXIT_OK, main, statusline_command
 from cci.surfaces import widget_lines
@@ -72,8 +75,13 @@ def test_api_requires_token(api):
     assert get(server, "/api/v1/snapshot", token="yanlis")[0] == 401
     status, body, _ = get(server, "/api/v1/snapshot", token=token)
     assert status == 200 and json.loads(body)["attention"] == "ok"
+    # `?token=` ARTIK KABUL EDILMIYOR. Sorgu dizesindeki bir token tarayici
+    # gecmisine, Referer basligina ve onunde bir sey varsa erisim gunlugune
+    # dusuyordu; pano token'i fragment'ten okuyup baslikla gonderiyor.
     status, body, _ = get(server, f"/api/v1/snapshot?token={token}")
-    assert status == 200 and server.unauthorized == 2
+    assert status == 401 and server.unauthorized == 3
+    # Operatore basilan adreste de sorgu dizesi yok.
+    assert "?token=" not in server.url and f"#token={token}" in server.url
 
 
 def test_data_routes_and_error_hiding(api):
@@ -125,3 +133,74 @@ def test_widget_lines_and_cli_print(tmp_path, capsys):
     assert widget_lines(None) == ["cci --", "snapshot yok"]
     code = main(["--data-dir", str(tmp_path / "d"), "widget", "--print"], env={}, home=tmp_path)
     assert code == EXIT_OK and "cci --" in capsys.readouterr().out
+
+
+class _Inline(HTMLParser):
+    """Sunulan sayfayi gercekten ayristirip satir ici bloklari toplar."""
+
+    def __init__(self):
+        super().__init__()
+        self.tags = []
+        self.ids = []
+        self.blocks = {"style": [], "script": []}
+        self._current = None
+
+    def handle_starttag(self, tag, attrs):
+        self.tags.append(tag)
+        found = dict(attrs)
+        if "id" in found:
+            self.ids.append(found["id"])
+        if tag in self.blocks:
+            self._current = tag
+
+    def handle_endtag(self, tag):
+        if tag == self._current:
+            self._current = None
+
+    def handle_data(self, data):
+        if self._current:
+            self.blocks[self._current].append(data)
+
+
+def _sha256_source(text):
+    return "'sha256-" + base64.b64encode(hashlib.sha256(text.encode("utf-8")).digest()).decode("ascii") + "'"
+
+
+def test_dashboard_builds_dom_nodes_instead_of_innerhtml(api):
+    """Pano HTML'i string birlestirme ile kurmaz.
+
+    Panodaki her dinamik deger (`w.model`, `x.message`, `m.display`, `Figure`
+    metinleri) taranmis transcript'lerden gelir - baska bir programin yazdigi
+    metindir. Bunlar innerHTML ile birlestirilirken bir transcript'e yazilan
+    `<img src=x onerror=...>` panoda calisiyordu, ve panonun API token'i ayni
+    origin'de duruyordu. Tek satirlik nobetci: innerHTML geri gelirse test kizarir.
+    """
+    server, _ = api
+    _, body, _ = get(server, "/")
+    page = body.decode("utf-8")
+    assert "innerHTML" not in page
+    assert "outerHTML" not in page and "insertAdjacentHTML" not in page
+    assert "document.write" not in page
+
+
+def test_dashboard_still_renders_and_csp_drops_unsafe_inline(api):
+    """Sayfa hala ayristirilabilir ve CSP karma ile daralmis durumda."""
+    server, _ = api
+    status, body, headers = get(server, "/")
+    assert status == 200
+
+    parser = _Inline()
+    parser.feed(body.decode("utf-8"))
+    # Panonun taskiyicilari yerinde: bunlar olmadan JS sessizce hicbir sey cizmez.
+    for needed in ("gen", "qmeta", "quota", "att", "today", "alerts", "health"):
+        assert needed in parser.ids, needed
+    assert parser.tags.count("script") == 1 and parser.tags.count("style") == 1
+
+    # CSP artik 'unsafe-inline' vermiyor; sayfadaki tek script ve tek style
+    # bloguna KARMA ile izin veriyor. Karmalar sunulan metnin uzerinden
+    # hesaplanir - elle yazilmis bir karma sessizce eskir ve pano bos acilir.
+    csp = headers["Content-Security-Policy"]
+    assert csp == CSP and "'unsafe-inline'" not in csp and "'unsafe-eval'" not in csp
+    assert _sha256_source("".join(parser.blocks["script"])) in csp
+    assert _sha256_source("".join(parser.blocks["style"])) in csp
+    assert _sha256_source(DASHBOARD_JS) in csp and _sha256_source(DASHBOARD_CSS) in csp
