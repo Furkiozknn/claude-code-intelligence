@@ -1,7 +1,8 @@
 """Stage 9 - loopback HTTP API + statik web panosu (docs/PRODUCT.md §3, PRIVACY §5).
 
-- Yalniz 127.0.0.1; her API istegi `X-CCI-Token` basligi ya da `?token=` ister
-  (token dosyasi `api_token`, 0600, ilk baslatmada uretilir).
+- Yalniz 127.0.0.1; her API istegi `X-CCI-Token` basligini ister (token dosyasi
+  `api_token`, 0600, ilk baslatmada uretilir). Token URL SORGU DIZESINE
+  konmaz; pano onu adres fragment'inden okur (bkz. `ApiServer.url`).
 - `GET /`            -> satir ici HTML/JS pano (CDN yok, CSP: default-src 'none')
 - `GET /health`      -> token gerektirmez; yalniz {"status":"ok"}
 - `GET /api/v1/snapshot|today|sessions|session/<id>|quota|doctor`
@@ -11,6 +12,8 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import secrets
 import threading
@@ -23,8 +26,19 @@ from urllib.parse import parse_qs, urlparse
 from cci import __version__
 from cci.api.snapshot import read_snapshot
 
-CSP = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src data:"
 DataFn = Callable[[str, str | None], Any]   # (kaynak adi, kimlik) -> JSON'lanabilir nesne | None
+
+
+def _csp_hash(source: str) -> str:
+    """CSP3 `'sha256-...'` kaynak ifadesi - satir ici <style>/<script> icin.
+
+    Sayfa degismez bir sabit oldugu icin karma da sabittir; hash ile
+    'unsafe-inline' kaldirilabiliyor, yani bir yerden enjekte edilen ikinci
+    bir <script> artik calismiyor. Karma metnin uzerinden ANINDA hesaplanir,
+    elle yazilmaz: elle yazilan bir karma sessizce eskir ve pano bos acilir.
+    """
+    digest = hashlib.sha256(source.encode("utf-8")).digest()
+    return "'sha256-" + base64.b64encode(digest).decode("ascii") + "'"
 
 
 def load_or_create_token(path: Path) -> str:
@@ -46,9 +60,7 @@ def load_or_create_token(path: Path) -> str:
     return tok
 
 
-DASHBOARD_HTML = """<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>cci</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
+DASHBOARD_CSS = """
 :root{color-scheme:light dark;font-family:system-ui,sans-serif;--ok:#2e7d32;--warn:#ef6c00;--crit:#c62828;--muted:#777}
 body{margin:0;padding:1rem;max-width:960px;margin-inline:auto}
 h1{font-size:1.1rem;margin:.2rem 0 1rem}
@@ -60,36 +72,134 @@ section{border:1px solid #8884;border-radius:8px;padding:.8rem 1rem;margin-botto
 table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:.2rem .4rem;border-bottom:1px solid #8883;font-size:.9rem}
 .badge{font-family:monospace}
 .att-ok{color:var(--ok)}.att-warning,.att-cost,.att-latency,.att-loops{color:var(--warn)}.att-critical,.att-failures,.att-context{color:var(--crit)}
-</style></head><body>
-<h1>CLAUDE CODE INTELLIGENCE <span id="gen" class="muted"></span></h1>
-<section><b>Kota</b> <span id="qmeta" class="muted"></span><div id="quota"></div></section>
-<section><b>Dikkat</b>: <span id="att"></span></section>
-<section><b>Bugün</b><div id="today" class="muted">veri yok</div></section>
-<section><b>Uyarılar</b><div id="alerts" class="muted">yok</div></section>
-<section><b>Sağlık</b><pre id="health" class="muted"></pre></section>
-<script>
-const token=new URLSearchParams(location.search).get('token')||'';
-const badge={observed:'●',derived:'◐',vendor_estimated:'≈',estimated:'≈',predicted:'~',inferred:'?'};
+"""
+
+# Panodaki HER dinamik deger taranmis transcript'lerden gelir - yani baska bir
+# programin yazdigi metindir. Bu metin daha once innerHTML ile birlestiriliyordu:
+# bir model adi, bir uyari mesaji ya da bir Figure metni icine yazilan
+# "<img src=x onerror=...>" panoda CALISIYORDU ve panonun API token'i ayni
+# origin'de duruyordu. Bu yuzden asagida tek bir innerHTML yok: her deger
+# textContent ile metin dugumu olarak yazilir, yapinin tamami createElement ile
+# kurulur. Bu kural bozulursa CSP ikinci savunma hattidir (bkz. CSP sabiti).
+DASHBOARD_JS = """
+// Token adres FRAGMENT'inden gelir, sorgu dizesinden degil. Fragment sunucuya
+// hicbir zaman gonderilmez: erisim gunlugune de, Referer basligina da dusmez.
+// Okunur okunmaz sessionStorage'a alinip replaceState ile adres cubugundan
+// silinir, boylece gecmis girdisinde ve paylasilan bir ekran goruntusunde de
+// kalmaz. Yenilemede sessionStorage'daki kopya kullanilir.
+function readToken(){
+  let t='';
+  try{t=sessionStorage.getItem('cci_token')||''}catch(e){}
+  const fromHash=new URLSearchParams(location.hash.replace(/^#/,'')).get('token');
+  if(fromHash){
+    t=fromHash;
+    try{sessionStorage.setItem('cci_token',t)}catch(e){}
+    history.replaceState(null,'',location.pathname);
+  }
+  return t;
+}
+const token=readToken();
+const badge={observed:'\\u25cf',derived:'\\u25d0',vendor_estimated:'\\u2248',estimated:'\\u2248',predicted:'~',inferred:'?'};
 function fig(f){return f?(f.text+(f.released?'':' ('+(f.withheld_because||'')+')')):'-'}
+
+function el(tag,cls,text){
+  const n=document.createElement(tag);
+  if(cls)n.className=cls;
+  if(text!==undefined&&text!==null)n.textContent=String(text);
+  return n;
+}
+function txt(s){return document.createTextNode(String(s))}
+function fill(id,nodes){document.getElementById(id).replaceChildren(...nodes)}
+// Sinif adi da veriden geliyor. Metin dugumu olmadigi icin kacisi ayrica
+// yapilir: harf/rakam disindaki her sey atilir ki veri yeni bir secici -
+// ya da bir tirnak kacisi - uyduramasin.
+function slug(v){return String(v).replace(/[^a-z0-9_-]/gi,'')}
+
+function quotaRow(w){
+  const pct=w.utilization_pct==null?null:w.utilization_pct;
+  const cls=pct>=90?'crit':pct>=70?'warn':'';
+  const row=el('div');
+  row.append(txt(w.kind+(w.model?' ['+w.model+']':'')+' '));
+  row.append(el('b',null,pct==null?'--':pct+'%'+(w.badge||'')));
+  if(w.pace)row.append(txt(' '+(w.pace.delta_pct>0?'\\u21e1':'\\u21e3')+Math.abs(w.pace.delta_pct)+'%\\u25d0 '+w.pace.stage+(w.pace.eta_s?(' ~'+Math.round(w.pace.eta_s/60)+' dk'):'')));
+  if(w.stale)row.append(el('span','muted',' (eski)'));
+  const bar=el('div',cls?'bar '+cls:'bar');
+  const meter=el('i');
+  // CSSOM uzerinden, style= ozniteligi ile degil: oznitelik yazmak CSP'nin
+  // style-src karmasina takilirdi, bu atama takilmaz.
+  meter.style.width=(Number(pct)||0)+'%';
+  bar.append(meter);
+  row.append(bar);
+  return row;
+}
+
+function row(cells,tag){
+  const tr=el('tr');
+  for(const c of cells)tr.append(el(tag||'td',null,c));
+  return tr;
+}
+function todayNodes(t){
+  const head=el('table');
+  head.append(row(['istek','token','maliyet','sat\\u0131c\\u0131'],'th'));
+  head.append(row([t.requests,t.tokens.input_total.toLocaleString()+' / '+t.tokens.output.toLocaleString(),fig(t.cost)+'\\u2248',fig(t.vendor_cost)]));
+  const models=el('table');
+  for(const m of (t.models||[]))models.append(row([m.display,m.requests,fig(m.cost)]));
+  const nodes=[head,models];
+  if(!t.conservation_ok)nodes.push(el('b','att-critical','koruma yasas\\u0131 ihlali'));
+  return nodes;
+}
+
+function alertNode(x){
+  const d=el('div');
+  d.append(el('b',null,x.severity));
+  d.append(txt(' '+x.rule_id+': '+x.message));
+  return d;
+}
+
 async function load(){
   const r=await fetch('/api/v1/snapshot',{headers:{'X-CCI-Token':token}});
   if(!r.ok){document.getElementById('att').textContent='yetkisiz ('+r.status+')';return}
   const s=await r.json();
-  document.getElementById('gen').textContent=' · '+s.generated_at;
-  const q=s.quota||{};document.getElementById('qmeta').textContent=q.placeholder?q.placeholder:('kaynak '+q.source+' · '+Math.round(q.age_s||0)+' sn önce'+(q.authoritative===false?' · authoritative=false!':''));
-  document.getElementById('quota').innerHTML=(q.windows||[]).map(w=>{
-    const pct=w.utilization_pct==null?null:w.utilization_pct;const cls=pct>=90?'crit':pct>=70?'warn':'';
-    const pace=w.pace?(' '+(w.pace.delta_pct>0?'⇡':'⇣')+Math.abs(w.pace.delta_pct)+'%◐ '+w.pace.stage+(w.pace.eta_s?(' ~'+Math.round(w.pace.eta_s/60)+' dk'):'')):'';
-    return '<div>'+w.kind+(w.model?' ['+w.model+']':'')+' <b>'+(pct==null?'--':pct+'%'+w.badge)+'</b>'+pace+(w.stale?' <span class=muted>(eski)</span>':'')+'<div class="bar '+cls+'"><i style="width:'+(pct||0)+'%"></i></div></div>'}).join('')||'<span class=muted>--</span>';
-  const a=s.attention||'ok';document.getElementById('att').innerHTML='<span class="att-'+a+'">'+a+'</span>';
-  if(s.today){const t=s.today;document.getElementById('today').innerHTML='<table><tr><th>istek</th><th>token</th><th>maliyet</th><th>satıcı</th></tr><tr><td>'+t.requests+'</td><td>'+t.tokens.input_total.toLocaleString()+' / '+t.tokens.output.toLocaleString()+'</td><td>'+fig(t.cost)+'≈</td><td>'+fig(t.vendor_cost)+'</td></tr></table>'+
-    '<table>'+(t.models||[]).map(m=>'<tr><td>'+m.display+'</td><td>'+m.requests+'</td><td>'+fig(m.cost)+'</td></tr>').join('')+'</table>'+(t.conservation_ok?'':'<b class=att-critical>koruma yasası ihlali</b>')}
-  document.getElementById('alerts').innerHTML=(s.alerts||[]).map(x=>'<div><b>'+x.severity+'</b> '+x.rule_id+': '+x.message+'</div>').join('')||'yok';
+  document.getElementById('gen').textContent=' \\u00b7 '+s.generated_at;
+  const q=s.quota||{};
+  document.getElementById('qmeta').textContent=q.placeholder?q.placeholder:('kaynak '+q.source+' \\u00b7 '+Math.round(q.age_s||0)+' sn \\u00f6nce'+(q.authoritative===false?' \\u00b7 authoritative=false!':''));
+  const windows=(q.windows||[]).map(quotaRow);
+  fill('quota',windows.length?windows:[el('span','muted','--')]);
+  const a=s.attention||'ok';
+  fill('att',[el('span','att-'+slug(a),a)]);
+  if(s.today)fill('today',todayNodes(s.today));
+  const alerts=(s.alerts||[]).map(alertNode);
+  fill('alerts',alerts.length?alerts:[txt('yok')]);
   document.getElementById('health').textContent=JSON.stringify(s.health||{},null,1);
-  const next=new Date(s.next_display_change_at)-Date.now();setTimeout(load,Math.min(Math.max(next,5000),60000));
+  const next=new Date(s.next_display_change_at)-Date.now();
+  setTimeout(load,Math.min(Math.max(next,5000),60000));
 }
 load();
-</script></body></html>"""
+"""
+
+DASHBOARD_HTML = (
+    '<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>cci</title>\n'
+    '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
+    "<style>" + DASHBOARD_CSS + "</style></head><body>\n"
+    '<h1>CLAUDE CODE INTELLIGENCE <span id="gen" class="muted"></span></h1>\n'
+    '<section><b>Kota</b> <span id="qmeta" class="muted"></span><div id="quota"></div></section>\n'
+    '<section><b>Dikkat</b>: <span id="att"></span></section>\n'
+    '<section><b>Bugün</b><div id="today" class="muted">veri yok</div></section>\n'
+    '<section><b>Uyarılar</b><div id="alerts" class="muted">yok</div></section>\n'
+    '<section><b>Sağlık</b><pre id="health" class="muted"></pre></section>\n'
+    "<script>" + DASHBOARD_JS + "</script></body></html>"
+)
+
+# 'unsafe-inline' yerine karma. Eskiden script-src 'unsafe-inline' idi, yani
+# sayfaya bir sekilde giren HER satir ici script calisirdi - panonun DOM'u
+# taranmis transcript'lerden geliyorken bu, XSS icin ikinci savunma hattinin
+# hic olmamasi demekti. Karma yalniz asagidaki iki sabit bloga izin verir.
+CSP = (
+    "default-src 'none'; "
+    f"script-src {_csp_hash(DASHBOARD_JS)}; "
+    f"style-src {_csp_hash(DASHBOARD_CSS)}; "
+    "connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'"
+)
 
 
 class ApiServer:
@@ -112,8 +222,15 @@ class ApiServer:
 
     @property
     def url(self) -> str:
+        """Operatore basilan adres. Token FRAGMENT'te, sorgu dizesinde degil.
+
+        `?token=...` tarayici gecmisine, Referer basligina ve onunde bir sey
+        varsa erisim gunlugune dusuyordu - loopback'te bile bu, token'i disari
+        sizdiran uc ayri yoldur. Fragment sunucuya hic gonderilmez; pano onu
+        okur okumaz adres cubugundan da siler (readToken).
+        """
         h, p = self.address
-        return f"http://{h}:{p}/?token={self.token}"
+        return f"http://{h}:{p}/#token={self.token}"
 
     def start(self) -> "ApiServer":
         self._thread = threading.Thread(target=self._server.serve_forever, name="cci-api", daemon=True)
@@ -130,10 +247,13 @@ class ApiServer:
             return 200, {"status": "ok", "version": __version__}, "application/json"
         if path == "/":
             return 200, DASHBOARD_HTML, "text/html; charset=utf-8"
-        supplied = token_header or (query.get("token") or [None])[0]
+        # Yalniz baslik. `?token=` kabul edildigi surece token bir URL'de
+        # tasinabiliyordu, ve URL'ler gecmise, Referer'a ve gunluklere yazilir.
+        # `query` imzada kaliyor: yol/sorgu ayristirmasi cagiranin isi degil.
+        supplied = token_header
         if not supplied or not secrets.compare_digest(str(supplied), self.token):
             self.unauthorized += 1
-            return 401, {"error": "token gerekli (X-CCI-Token ya da ?token=)"}, "application/json"
+            return 401, {"error": "token gerekli (X-CCI-Token basligi)"}, "application/json"
         self.requests += 1
         if path == "/api/v1/snapshot":
             snap = read_snapshot(self.snapshot_path)
