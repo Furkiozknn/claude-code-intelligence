@@ -49,8 +49,9 @@ alıcı (3), SQLite olay deposu (4), normalizasyon + dedup/birleştirme (5), fiy
 tablosu + özetler (6), pace v1 + boru hattı + snapshot + CLI (7).
 
 ```
-uv sync && uv run pytest                    # 261 test
-uv run cci scan                             # Claude Code + Codex transcript'lerini artımlı tara
+uv sync && uv run pytest                    # 273 test
+uv run cci providers                        # ulaşılabilen adaptörler + yüklenemeyenin nedeni
+uv run cci scan                             # kayıtlı her adaptörden artımlı tara
 uv run cci today | daily | sessions         # özetler (--json, --strict → koruma yasası ihlalinde çıkış 3)
 uv run cci session <id>                     # oturum teşhisi (döngü, araç p95, context, sağlık)
 uv run cci quota [--poll|--forecast|--backtest]
@@ -65,7 +66,10 @@ uv run python benchmarks/bench.py           # → benchmarks/RESULTS.md
 ```
 
 Stage 1–16 tamamlandı. Ölçülen performans ve tutmayan iki hedefin gerekçesi:
-`docs/ARCHITECTURE.md` §11.
+`docs/ARCHITECTURE.md` §11. Stage 15'in kapsam dışı kalan kısmı:
+`docs/IMPLEMENTATION_PLAN.md` §Stage 15 notu — dört adaptör planlanmıştı, ikisi
+var (Claude Code, Codex); geri kalanı için gereken şey kod değil, doğrulanmış
+fixture.
 
 | Çıktı | Nerede |
 |---|---|
@@ -134,6 +138,35 @@ Bir kapı bunu koruyor: `python3 arac/sozlesme-belgeli.py` — `cci/adapters/`
 altındaki her genel sembolün bir docstring'i olduğunu kontrol ediyor. Deponun
 geri kalanı için böyle bir zorunluluk yok; kapı bilerek yalnızca dışarıya açık
 yüzeyi kapsıyor.
+
+**Ama belgelenmiş bir uzatma noktası, ona takılamıyorsa kapalıdır.** Sözleşme
+belgeliydi ve sözleşme testi vardı; kayıt defteri de vardı — ve `register()`
+deponun tamamında yalnızca bir testten çağrılıyordu. Ürünün hiçbir yeri kayıt
+defterini okumuyor, her çağrı yeri somut sınıfı adıyla içe aktarıyordu. Yani
+`EXTENDING.md`'yi harfiyen izleyip bir adaptör yazan kişi, hiçbir zaman
+çağrılmayacak bir nesne elde ediyordu.
+
+Artık bir giriş noktası grubu var ve birinci taraf iki adaptör de aynı yoldan
+geçiyor:
+
+```toml
+[project.entry-points."cci.adapters"]
+my_tool = "cci_adapter_my_tool:build"
+```
+
+```
+uv run cci providers            # hangi adaptör ulaşılabiliyor, ulaşamayanın nedeni ne
+uv run cci providers --strict   # bir eklenti yüklenemediyse çıkış 3
+```
+
+Sözleşme testi bunu ispat edemezdi: gördüğü adaptörler aynı dosyada, aynı
+elden yazılmıştır. `tests/test_adapter_plugins.py` adaptörü paket sınırının
+**dışına** koyuyor — geçici dizin, kendi `.dist-info` meta verisi, yani
+`pip install`in ürettiğinin aynısı — ve `cci scan`ın onun kaydını gerçekten
+olay deposuna yazdığını gösteriyor. Negatif kontrol de orada: meta veri
+kaldırılınca hiçbir şey bulunmuyor, yani testi geçiren şey modülün
+`sys.path`te olması değil, giriş noktasının kendisi. Patlayan bir eklenti
+kendini devre dışı bırakıyor, çekirdeği değil.
 
 
 ## Bu ekosistemden başka projeler

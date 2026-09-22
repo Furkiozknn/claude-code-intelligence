@@ -35,12 +35,13 @@
     "telemetry",
     "token-usage"
   ],
-  "summary": "Where the tokens went, what it cost, and when the limit resets. Every number carries an evidence class - observed, derived, estimated - and one that fails the reconciliation gate is not printed at all. No prompt, response or file content is defined in any type, so a privacy review is a grep. Local-first. 261 tests.",
+  "summary": "Where the tokens went, what it cost, and when the limit resets. Every number carries an evidence class - observed, derived, estimated - and one that fails the reconciliation gate is not printed at all. No prompt, response or file content is defined in any type, so a privacy review is a grep. Local-first. 273 tests.",
   "key_features": [
     "Where the tokens went, what it cost, and when the limit resets",
     "Every number carries an evidence class - observed, derived or estimated - and one that fails the reconciliation gate is not printed at all",
     "No prompt, response or file content is defined in any type, so a privacy review is a grep",
-    "Local-first: an OTLP receiver and transcript parser that never phone home"
+    "Local-first: an OTLP receiver and transcript parser that never phone home",
+    "Provider-agnostic in practice, not only on paper: a third-party adapter is a pip-installable package with one `cci.adapters` entry point, `cci providers` says which ones are reachable and why one is not, and CI installs an example package and fails if the product cannot see it"
   ],
   "media": {
     "hero": "assets/banner.svg",
@@ -51,9 +52,9 @@
     "videos": []
   },
   "tests": {
-    "count": 261,
-    "source": "`261 passed`",
-    "measured": "2026-09-15"
+    "count": 273,
+    "source": "`273 passed`",
+    "measured": "2026-09-22"
   },
   "ci": {
     "workflows": [
