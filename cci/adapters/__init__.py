@@ -1,9 +1,11 @@
 """Saglayici adaptorleri (docs/PROVIDERS.md)."""
 
-from .base import (Capabilities, FileCursor, Cursor, Health, ProbeRoot, ProviderAdapter,
-                   RawBatch, RawItem, Registry, assert_contract, registry)
+from .base import (ENTRY_POINT_GROUP, Capabilities, FileCursor, Cursor, Health, LoadFailure,
+                   ProbeRoot, ProviderAdapter, RawBatch, RawItem, Registry, assert_contract,
+                   builtin_registry, registry)
 
 __all__ = [
-    "Capabilities", "FileCursor", "Cursor", "Health", "ProbeRoot", "ProviderAdapter",
-    "RawBatch", "RawItem", "Registry", "assert_contract", "registry",
+    "ENTRY_POINT_GROUP", "Capabilities", "FileCursor", "Cursor", "Health", "LoadFailure",
+    "ProbeRoot", "ProviderAdapter", "RawBatch", "RawItem", "Registry", "assert_contract",
+    "builtin_registry", "registry",
 ]
