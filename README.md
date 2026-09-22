@@ -110,3 +110,14 @@ Stage 1–16 tamamlandı. Ölçülen performans ve tutmayan iki hedefin gerekçe
 Claude Code oturumuna skill enjekte edebilir (bu projede yaşandı). Klonları
 geçici dizinde tutun; `.claude/` içeriğini çalıştırmayın. Ayrıntı:
 `docs/PRIVACY.md` §5.
+
+---
+
+## Bu ekosistemden başka projeler
+
+- **[mcp-vet](https://github.com/Furkiozknn/mcp-vet)** — bir MCP sunucusunun kaynağını kurmadan önce denetler
+- **[repo-vet](https://github.com/Furkiozknn/repo-vet)** — README'nin verdiği sözleri gerçekle karşılaştırır
+- **[godot-refcheck](https://github.com/Furkiozknn/godot-refcheck)** — Godot projelerindeki kırık referansları ve ölü sinyalleri bulur, onarır
+- **[mcp-census](https://github.com/Furkiozknn/mcp-census)** — resmî MCP Registry'nin yeniden üretilebilir sayımı
+
+<sub>Hepsi tek bir aranabilir sayfada: **[furkiozknn.github.io](https://furkiozknn.github.io/)** — her kart, o deponun kendi <code>project-meta.json</code> dosyasından üretiliyor.</sub>
