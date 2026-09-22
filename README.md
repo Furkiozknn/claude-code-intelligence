@@ -113,6 +113,29 @@ geçici dizinde tutun; `.claude/` içeriğini çalıştırmayın. Ayrıntı:
 
 ---
 
+## Kendi adaptörünü yazmak
+
+`cci` sağlayıcıya bağlı değil: transcript okuyan her araç bir adaptörle
+bağlanabiliyor, ve sözleşme `cci/adapters/base.py` içinde
+(`docs/PROVIDERS.md §2`). Uzatma noktası olduğunu söyleyen bir projede o
+noktanın belgesiz olması, pratikte kapalı olması demek — sözleşmeyi
+uygulayacak kişi kaynağı okuyup niyeti tahmin etmek zorunda kalır.
+
+`adapters/` altındaki **26 genel sembolün 26'sı** artık ne yaptığını ve neden
+öyle olduğunu yazıyor. Belgelenen şey imza değil karar: `Capabilities`
+alanlarının neden dürüstçe doldurulması gerektiği (`tokens=True` deyip token
+vermeyen bir adaptör, aşağıdaki her sayıyı sessizce bozar, çünkü eksik veri ile
+sıfır veri aynı görünür), `Health.status`'un neden üç değerli olduğu,
+`FileCursor`'ın neden üç alanı birden tuttuğu (dosya kırpılıp yeniden
+yazıldıysa aynı ofset artık başka bir satırın ortasıdır), `RawBatch`'in neden
+kalıcı olmadığı, `credentials_path`'in neden var olup hiç açılmadığı.
+
+Bir kapı bunu koruyor: `python3 arac/sozlesme-belgeli.py` — `cci/adapters/`
+altındaki her genel sembolün bir docstring'i olduğunu kontrol ediyor. Deponun
+geri kalanı için böyle bir zorunluluk yok; kapı bilerek yalnızca dışarıya açık
+yüzeyi kapsıyor.
+
+
 ## Bu ekosistemden başka projeler
 
 - **[mcp-vet](https://github.com/Furkiozknn/mcp-vet)** — bir MCP sunucusunun kaynağını kurmadan önce denetler
