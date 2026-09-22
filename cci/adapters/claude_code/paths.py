@@ -54,10 +54,17 @@ def config_dirs(env: Mapping[str, str] | None = None, home: Path | None = None) 
 
 
 def projects_dir(root: Path) -> Path:
+    """Transcript'lerin durdugu klasor. Var olup olmadigini sinamaz."""
     return root / "projects"
 
 
 def credentials_path(root: Path) -> Path:
+    """`.credentials.json` yolu -- YALNIZCA varliğini sinamak icin.
+
+    Bu dosya hicbir zaman acilmiyor, okunmuyor, kopyalanmiyor. Yolun burada
+    bulunmasinin tek sebebi, bir kurulumun gercekten Claude Code kurulumu olup
+    olmadigini anlamak.
+    """
     return root / ".credentials.json"
 
 
@@ -71,6 +78,12 @@ def find_transcripts(root: Path) -> tuple[Path, ...]:
 
 
 def instance_id_for(root: Path) -> str:
+    """Bir kurulum icin kararli kimlik: yolun sha256'sinin ilk 16 hanesi.
+
+    Yolun kendisi kimlige girmiyor cunku ev dizini adi cogu zaman kisinin
+    adidir; ozet, ayni kurulumu turler arasinda eslestirmeye yetiyor ve nereden
+    geldigini soylemiyor.
+    """
     return "claude-config:" + hashlib.sha256(str(root.resolve()).encode("utf-8")).hexdigest()[:16]
 
 
@@ -85,6 +98,13 @@ def _base_label(root: Path, home: Path) -> str:
 
 
 def instance_for(root: Path, *, label: str, schema_verified: bool, verified_at) -> SourceInstance:
+    """Bir kurulumu `SourceInstance` olarak tanimlar.
+
+    `network=False` bir iddia degil bir olgu: bu adaptor transcript'leri diskten
+    okuyor ve hicbir yere baglanmiyor. `schema_verified`/`verified_at` cagirandan
+    geliyor, cunku bir semanin dogrulandigi GUN, dogrulandigi gercegi kadar
+    onemli.
+    """
     return SourceInstance(
         provider="anthropic", instance_id=instance_id_for(root), label=label, kind="cli",
         root_path=str(root), network=False, schema_verified=schema_verified,

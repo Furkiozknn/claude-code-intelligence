@@ -26,6 +26,13 @@ jobs:
       - name: Sync (locked)
         run: uv sync --locked --all-extras
 
+      # cci/adapters ucuncu taraflarin uzatma noktasi (docs/PROVIDERS.md).
+      # Uzatma noktasi oldugunu soyleyen bir projede o noktanin belgesiz
+      # olmasi, pratikte kapali olmasi demek. Kapi bilerek dar: yalnizca
+      # adapters/, deponun geri kalani icin boyle bir zorunluluk yok.
+      - name: Adaptor sozlesmesi belgeli mi
+        run: python3 arac/sozlesme-belgeli.py
+
       # Not `-q`. With it, pytest printed the progress dots and no summary
       # line, so the log carried no "N passed" for anything downstream to
       # read - and otomasyon/sayi-denetim.js compares the README's claimed

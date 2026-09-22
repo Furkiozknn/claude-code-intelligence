@@ -32,6 +32,12 @@ KNOWN_TOP_KEYS = frozenset({"five_hour", "seven_day", "seven_day_opus", "seven_d
 
 
 class QuotaParseError(ValueError):
+    """Kota yaniti beklenen sekilde degil.
+
+    Ayri bir tip, cunku bu hata tahmin edilebilir ve tolere edilebilir: ucun
+    semasi degisebilir. Cagiran onu yakalayip kotasiz devam edebilmeli -- ama
+    sessizce sifir kota varsaymamali, ki bu yuzden hata yutulmuyor, atiliyor.
+    """
     pass
 
 
