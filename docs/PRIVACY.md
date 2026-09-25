@@ -22,6 +22,8 @@ hata. `secret` etiketi bir alanda görünürse test başarısız (yapısal engel
    text, arguments, tool_input, transcript, response, completion, stdout,
    stderr, diff, patch` ve `*_content`, `*_text`.
 3. Boyut: zarf ≤64 KB; OTLP gövdesi ≤1 MB (tokentab); büyük gövde → red + sayaç.
+   gzip gövdede sınır **açılırken** uygulanır (1 MB'lık bir gzip bombası
+   bellekte yüzlerce MB'a açılmaz); negatif/bozuk `Content-Length` → 400.
 4. Statusline/hook betiklerinden gelen JSON'da yalnız beyaz listeli yollar
    okunur (`rate_limits`, `context_window`, `cost.total_cost_usd`, `model`,
    `prompt_cache`, `session_id`); `transcript_path` **açılmaz** (transcript
@@ -57,13 +59,13 @@ komutuyla; otomatik silme yalnız süre dolunca ve log'a yazılarak.
 |---|---|---|---|
 | Kimlik dosyaları | Okuma sırasında sızma | bellekte, redakte hata, asla diske/log'a, opt-in Desktop cache | süreç belleği dump'ı |
 | Yerel DB | Aynı makinedeki başka kullanıcı/süreç | `~/.cci` 0700, dosyalar 0600 (Windows: kullanıcı ACL), WAL | yedek yazılımı kopyaları |
-| Loopback API | Yerel zararlı süreç | yalnız 127.0.0.1, rastgele port + token dosyası 0600, CORS yok, WS origin kontrolü | aynı kullanıcı hakkındaki süreçler |
+| Loopback API | Yerel zararlı süreç | yalnız 127.0.0.1, rastgele port + token dosyası 0600 (ilk yazımda 0600 doğar, sonradan chmod değil), CORS yok, WS origin kontrolü | aynı kullanıcı hakkındaki süreçler |
 | Snapshot dosyası (`state/latest.json`) | Aynı kullanıcı süreçlerinin okuması | 0600; `sensitive` alanlar snapshot'ta **hash'li/takma adlı** (R-10); hesap kimliği yalnız kısaltılmış | okuyan süreç toplamları görür |
-| OTLP alıcı | Sahte olay enjeksiyonu | loopback, boyut sınırı, şema doğrulama, kaynak sayaçları | yerel süreçler |
+| OTLP alıcı | Sahte olay enjeksiyonu; açık bir web sayfasından 127.0.0.1'e POST; gzip bombası | loopback, boyut sınırı (gzip açılırken de), `Origin` başlıklı istek → 403 (tarayıcı her POST'a ekler, OTLP ihracatçıları eklemez), şema doğrulama, kaynak sayaçları | yerel süreçler |
 | Statusline/hook betikleri | Claude Code'u yavaşlatma/bloklama | fail-open, exit 0, ≤50 ms, zaman aşımı | ölçüm kaybı |
 | Klonlanan araştırma repoları | `.claude/skills|hooks` enjeksiyonu (bu projede yaşandı) | klonlar scratchpad'de; `.claude/` çalıştırılmaz; README uyarısı | kullanıcı yanlış dizinde açarsa |
 | Dışa aktarım (Eco) | İstemsiz veri gönderimi | varsayılan kapalı; alan anlamları listesi; rıza parmak izi (alan/hedef/kadans değişince yeniden); makbuz | hedef tarafın işlemesi |
-| Web yüzeyi | XSS/CSRF | CSP, inline script yok, loopback, token | tarayıcı eklentileri |
+| Web yüzeyi | XSS/CSRF | CSP (`default-src 'none'`; satır içi script/style yalnız sha256 karmasıyla), `innerHTML` yok, loopback, token | tarayıcı eklentileri |
 | Fiyat yenileme | Tek dış çağrı (LiteLLM) | kullanıcı tetikler, HTTPS, hash doğrulama, bundled yedek | MITM (HTTPS'e bağlı) |
 
 ## 6. Anthropic'e giden veri (bilgilendirme)

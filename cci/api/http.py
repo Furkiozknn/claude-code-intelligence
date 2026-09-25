@@ -15,6 +15,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import os
 import secrets
 import threading
 from datetime import UTC, datetime
@@ -50,13 +51,24 @@ def load_or_create_token(path: Path) -> str:
         pass
     tok = secrets.token_urlsafe(32)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(tok, encoding="utf-8")
+    # Dosya 0600 ile DOGAR. Eskiden umask ile (cogu sistemde 0644) yazilip
+    # sonra chmod'lanirdi: arada - ve chmod basarisiz olursa hep - ayni
+    # makinedeki herkes token'i okuyabilirdi. Gecici dosya + os.replace:
+    # kisa/bozuk eski bir dosyanin izinleri de devralinmaz.
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     try:
-        import os
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(tok)
         if os.name != "nt":
-            os.chmod(path, 0o600)
-    except OSError:
-        pass
+            os.chmod(tmp, 0o600)  # onceden var olan bir tmp icin; umask yalniz daraltir
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
+        raise
     return tok
 
 
