@@ -15,7 +15,7 @@
 - **Conservation law.** Every report satisfies `total = Σ parts`; `--strict` exits 3 when one does not.
 
 ```bash
-uv sync && uv run pytest      # 273 tests
+uv sync && uv run pytest      # 282 tests
 uv run cci scan               # read Claude Code transcripts incrementally
 uv run cci daily              # requests, tokens and estimated cost per day, by model
 uv run cci quota --forecast   # when the limit is hit at this pace (needs 5+ polled cycles)
