@@ -32,10 +32,38 @@ Kurallar: `fs_write` adaptörlerde boş olmalı (aksi red); `network` listesi
 `ARCHITECTURE.md` §7 envanterine eklenir ve `doctor`'da görünür; `secret`
 sınıfı üretemez (şema testi).
 
+## 2b. Adaptör: bugün çalışan yol (Stage 2 + 15)
+
+Manifest formatı (§2) hâlâ taslak. **Bugün gerçekten çalışan** ve testle
+korunan yol Python giriş noktasıdır; üçüncü taraf paketi şunu yazar:
+
+```toml
+[project.entry-points."cci.adapters"]
+my_tool = "cci_adapter_my_tool:build"
+```
+
+`build(env: Mapping[str, str], home: Path) -> ProviderAdapter` — `PROVIDERS.md
+§2` arayüzünü karşılayan bir nesne döndürür. Keşif anında `assert_contract`
+çalışır: geçmezse **yüklenmez**, nedeni `cci providers` çıktısında yazar, ve
+çekirdek etkilenmez. Aynı adı birinci taraf bir adaptörle paylaşan eklenti de
+reddedilir — sessizce üstüne yazmak, hangi adaptörün koştuğunu belirsizleştirir.
+
+```
+cci providers            # ulaşılabilen her adaptör + yüklenemeyenin nedeni
+cci providers --strict   # bir eklenti yüklenemediyse çıkış 3
+cci scan                 # kayıtlı her adaptörden toplar
+```
+
+Bunu ispatlayan testler `tests/test_adapter_plugins.py` içinde: adaptör paket
+sınırının **dışına** yazılıyor (geçici dizin + kendi `.dist-info` meta verisi,
+`pip install`in ürettiğinin aynısı) ve ürünün ona ulaşıp ulaşmadığı, kaydının
+olay deposuna girip girmediği sorulıyor. Sözleşme testi bunu ispat edemez:
+onun gördüğü adaptörler aynı dosyada, aynı elden yazılmış olanlardır.
+
 ## 3. Taşıma
-- **In-process (Python entry point):** birinci taraf eklentiler; aynı süreçte,
-  ama ayrı görev ve zaman aşımı; istisna eklentiyi devre dışı bırakır, çekirdeği
-  değil.
+- **In-process (Python entry point):** `[project.entry-points."cci.adapters"]`
+  (§2b). Çalışıyor. İstisna eklentiyi devre dışı bırakır, çekirdeği değil;
+  ayrı görev ve zaman aşımı henüz yok.
 - **JSON-RPC 2.0 / stdio (`exec:`):** herhangi bir dil (Rust adaptör için
   yol). **Stage 15'te** (R-5); Core ve Adv yalnız in-process. Yöntemler
   `PROVIDERS.md` §2; çekirdek çocuk süreci başlatır, 30 sn yanıtsızlıkta
@@ -69,6 +97,18 @@ Kullanıcı `cci plugin list|enable|disable|doctor`.
    zinciri; bkz. `PRIVACY.md` §5).
 
 ## 7. Çekirdek genişletme noktaları (kod)
-`registry.register_adapter()`, `estimators.register()`, `alerts.register_sink()`,
-`surfaces.snapshot_schema` (sürümlü JSON şeması; yüzeyler yalnız bunu okur).
+
+| Nokta | Durum |
+|---|---|
+| `cci.adapters.Registry.register()` / `builtin_registry()` / `cci.adapters` giriş noktası grubu | **çalışıyor** (§2b) |
+| `estimators.register()` | henüz yok — estimator'lar `cci/forecast` içinde adıyla seçiliyor |
+| `alerts.register_sink()` | henüz yok — kanallar `cci/alerts` içinde sabit |
+| `surfaces.snapshot_schema` | sürümlü JSON şeması var; yüzeyler yalnız bunu okur |
+
 Snapshot şeması geriye uyumlu: alan silme → major sürüm.
+
+## 8. Ne yazıyor, ne çalışıyor
+
+Bu belgenin geri kalanı (§2 manifest, §3 stdio, §4 `cci plugin` komutları,
+§5–6 kabul listeleri) **tasarım**dır; kod karşılığı yoktur. Ayrımı yazmak,
+belgeyi harfiyen izleyen birinin çağrılmayacak bir eklenti yazmasından iyidir.
