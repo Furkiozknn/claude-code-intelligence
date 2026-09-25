@@ -26,6 +26,13 @@ jobs:
       - name: Sync (locked)
         run: uv sync --locked --all-extras
 
+      # cci/adapters ucuncu taraflarin uzatma noktasi (docs/PROVIDERS.md).
+      # Uzatma noktasi oldugunu soyleyen bir projede o noktanin belgesiz
+      # olmasi, pratikte kapali olmasi demek. Kapi bilerek dar: yalnizca
+      # adapters/, deponun geri kalani icin boyle bir zorunluluk yok.
+      - name: Adaptor sozlesmesi belgeli mi
+        run: python3 arac/sozlesme-belgeli.py
+
       # Not `-q`. With it, pytest printed the progress dots and no summary
       # line, so the log carried no "N passed" for anything downstream to
       # read - and otomasyon/sayi-denetim.js compares the README's claimed
@@ -88,6 +95,44 @@ jobs:
           test -s doctor.txt || { echo "doctor produced no output"; exit 1; }
           grep -q "cci " doctor.txt || { echo "doctor output does not look like a report"; exit 1; }
           echo "doctor ran with an ASCII-only stdout"
+
+      # The extension point, exercised the way a third party would reach it.
+      # cci/adapters was documented, contract-tested and UNREACHABLE: the
+      # registry's `register()` was called from one test and nowhere else,
+      # and every call site imported a concrete class by name. So a person
+      # following docs/EXTENDING.md ended up with an object nothing would
+      # ever call. The unit tests synthesise the .dist-info; this step does
+      # a real install, because that is the thing being promised.
+      - name: A third-party adapter installs and is reachable
+        run: |
+          set -e
+          uv pip install ./ornekler/cci-adapter-ornek
+          uv run cci --json providers > providers.json
+          uv run python - <<'PY'
+          import json, sys
+          d = json.load(open("providers.json"))
+          names = {a["name"]: a for a in d["adapters"]}
+          assert d["entry_point_group"] == "cci.adapters", d["entry_point_group"]
+          assert "ornek" in names, sorted(names)
+          assert names["ornek"]["builtin"] is False
+          assert names["ornek"]["capabilities"]["schema_verified"] is False
+          assert not d["failures"], d["failures"]
+          print("ornek adaptoru kurulu paketten bulundu")
+          PY
+
+      # ... and the negative control: with the package gone it must NOT be
+      # listed. Otherwise the step above would pass for some other reason.
+      - name: With it uninstalled, it is gone again
+        run: |
+          set -e
+          uv pip uninstall cci-adapter-ornek
+          uv run cci --json providers > after.json
+          uv run python - <<'PY'
+          import json
+          names = [a["name"] for a in json.load(open("after.json"))["adapters"]]
+          assert "ornek" not in names, names
+          print("kaldirilinca listede yok:", names)
+          PY
 
       # Exit codes are a contract: `cci today --strict` is meant to be usable
       # as a gate, and a gate whose exit code drifts is a gate that stopped
