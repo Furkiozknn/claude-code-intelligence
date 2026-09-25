@@ -14,7 +14,14 @@ concurrency:
 
 jobs:
   test:
+    # pyproject.toml, 3.12 ve 3.13'u destekledigini soyluyor (classifiers).
+    # Tek surumde kosan bir CI, digerinin bozuldugunu hic gormez.
+    name: test (py${{ matrix.python }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13"]
     steps:
       - uses: actions/checkout@v7
 
@@ -22,9 +29,13 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
+          python-version: ${{ matrix.python }}
 
       - name: Sync (locked)
-        run: uv sync --locked --all-extras
+        run: uv sync --locked --all-extras --python ${{ matrix.python }}
+
+      - name: Python surumu dogru mu
+        run: uv run python -c "import sys; v='%d.%d' % sys.version_info[:2]; print(v); assert v == '${{ matrix.python }}', v"
 
       # cci/adapters ucuncu taraflarin uzatma noktasi (docs/PROVIDERS.md).
       # Uzatma noktasi oldugunu soyleyen bir projede o noktanin belgesiz
