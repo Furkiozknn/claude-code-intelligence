@@ -14,17 +14,29 @@ concurrency:
 
 jobs:
   test:
+    # pyproject.toml, 3.12 ve 3.13'u destekledigini soyluyor (classifiers).
+    # Tek surumde kosan bir CI, digerinin bozuldugunu hic gormez.
+    name: test (py${{ matrix.python }})
     runs-on: ubuntu-latest
+    timeout-minutes: 10  # olculen en uzun kosu 26 sn
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13"]
     steps:
       - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78  # v7.6.0
         with:
           enable-cache: true
+          python-version: ${{ matrix.python }}
 
       - name: Sync (locked)
-        run: uv sync --locked --all-extras
+        run: uv sync --locked --all-extras --python ${{ matrix.python }}
+
+      - name: Python surumu dogru mu
+        run: uv run python -c "import sys; v='%d.%d' % sys.version_info[:2]; print(v); assert v == '${{ matrix.python }}', v"
 
       # cci/adapters ucuncu taraflarin uzatma noktasi (docs/PROVIDERS.md).
       # Uzatma noktasi oldugunu soyleyen bir projede o noktanin belgesiz
@@ -52,11 +64,12 @@ jobs:
   # stdout attached, so this job spawns one.
   cli-contract:
     runs-on: ubuntu-latest
+    timeout-minutes: 10  # olculen en uzun kosu 16 sn
     steps:
       - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78  # v7.6.0
 
       - name: Install the package itself
         run: uv sync --locked

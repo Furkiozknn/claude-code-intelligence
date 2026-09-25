@@ -204,3 +204,34 @@ def test_dashboard_still_renders_and_csp_drops_unsafe_inline(api):
     assert _sha256_source("".join(parser.blocks["script"])) in csp
     assert _sha256_source("".join(parser.blocks["style"])) in csp
     assert _sha256_source(DASHBOARD_JS) in csp and _sha256_source(DASHBOARD_CSS) in csp
+
+
+def test_token_file_is_never_world_readable(tmp_path, monkeypatch):
+    # Dosya once varsayilan umask ile (cogu sistemde 0644) yaziliyor, izin
+    # ancak SONRA 0600'e cekiliyordu: arada ayni makinedeki herkes token'i
+    # okuyabiliyordu, chmod basarisiz olursa da sonsuza dek. Dosya 0600 ile
+    # DOGMALI; chmod'a hic ulasilmasa bile.
+    import os
+    import stat
+    if os.name == "nt":
+        pytest.skip("POSIX izinleri")
+    monkeypatch.setattr(os, "chmod", lambda *a, **k: None)
+    old = os.umask(0o022)
+    try:
+        p = tmp_path / "sub" / "api_token"
+        load_or_create_token(p)
+    finally:
+        os.umask(old)
+    assert stat.S_IMODE(p.stat().st_mode) == 0o600
+
+
+def test_short_token_file_is_replaced_with_a_private_one(tmp_path):
+    import os
+    import stat
+    p = tmp_path / "api_token"
+    p.write_text("kisa", encoding="utf-8")
+    os.chmod(p, 0o644)
+    tok = load_or_create_token(p)
+    assert len(tok) >= 32 and p.read_text(encoding="utf-8") == tok
+    if os.name != "nt":
+        assert stat.S_IMODE(p.stat().st_mode) == 0o600
