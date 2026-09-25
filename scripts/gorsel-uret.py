@@ -161,7 +161,7 @@ def banner_svg() -> str:
     <text x="268" y="262">OTLP alici</text>
     <text x="378" y="262">·</text><text x="398" y="262">transcript tarama</text>
     <text x="558" y="262">·</text><text x="578" y="262">kota takibi</text>
-    <text x="688" y="262">·</text><text x="708" y="262">256 test</text>
+    <text x="688" y="262">·</text><text x="708" y="262">282 test</text>
   </g>
   <line x1="268" y1="278" x2="800" y2="278" stroke="{MAVI}" stroke-opacity="0.25" stroke-width="1"/>
 </svg>

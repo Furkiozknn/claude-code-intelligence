@@ -49,7 +49,7 @@ alıcı (3), SQLite olay deposu (4), normalizasyon + dedup/birleştirme (5), fiy
 tablosu + özetler (6), pace v1 + boru hattı + snapshot + CLI (7).
 
 ```
-uv sync && uv run pytest                    # 273 test
+uv sync && uv run pytest                    # 282 test
 uv run cci providers                        # ulaşılabilen adaptörler + yüklenemeyenin nedeni
 uv run cci scan                             # kayıtlı her adaptörden artımlı tara
 uv run cci today | daily | sessions         # özetler (--json, --strict → koruma yasası ihlalinde çıkış 3)
@@ -125,7 +125,7 @@ bağlanabiliyor, ve sözleşme `cci/adapters/base.py` içinde
 noktanın belgesiz olması, pratikte kapalı olması demek — sözleşmeyi
 uygulayacak kişi kaynağı okuyup niyeti tahmin etmek zorunda kalır.
 
-`adapters/` altındaki **26 genel sembolün 26'sı** artık ne yaptığını ve neden
+`adapters/` altındaki **28 genel sembolün 28'i** artık ne yaptığını ve neden
 öyle olduğunu yazıyor. Belgelenen şey imza değil karar: `Capabilities`
 alanlarının neden dürüstçe doldurulması gerektiği (`tokens=True` deyip token
 vermeyen bir adaptör, aşağıdaki her sayıyı sessizce bozar, çünkü eksik veri ile
