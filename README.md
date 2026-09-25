@@ -1,5 +1,29 @@
 ![claude-code-intelligence — token nereye gitti, ne tuttu, kota ne zaman bitiyor](assets/banner.svg)
 
+# claude-code-intelligence
+
+<details>
+<summary><b>In English</b></summary>
+
+<br>
+
+**Where your Claude Code tokens went, what they cost, and when the quota resets.** It is a local-first layer that observes, normalises, forecasts and alerts on AI coding-agent usage. Claude Code comes first; the architecture takes other providers as adapters. The rest of this README is in Turkish.
+
+- **No content, by construction.** Prompts, responses, tool arguments and file contents are not defined in any type, so a privacy review is a `grep`.
+- **Local-first.** The network inventory has two targets: the quota endpoint and an optional price refresh. The OTLP receiver listens on `127.0.0.1`. Nothing is exported without explicit consent.
+- **An evidence class on every number:** observed, derived, vendor-estimated, estimated, predicted or inferred. A cost derived from list prices is marked `≈`, and where a vendor does not report its own cost the figure is `[withheld]` rather than invented.
+- **Conservation law.** Every report satisfies `total = Σ parts`; `--strict` exits 3 when one does not.
+
+```bash
+uv sync && uv run pytest      # 273 tests
+uv run cci scan               # read Claude Code transcripts incrementally
+uv run cci daily              # requests, tokens and estimated cost per day, by model
+uv run cci quota --forecast   # when the limit is hit at this pace (needs 5+ polled cycles)
+uv run cci snapshot && uv run cci serve   # local dashboard
+```
+
+</details>
+
 AI coding agent kullanımını (önce Claude Code, mimari olarak diğer
 sağlayıcılar) **gözlemleyen, normalize eden, analiz eden, ölçen, tahmin
 eden, anomali tespit eden, uyaran ve "şu anda ne yapmalıyım?" sorusuna
