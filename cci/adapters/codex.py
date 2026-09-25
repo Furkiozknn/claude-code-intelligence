@@ -31,6 +31,12 @@ UNKNOWN_MODEL = "codex-unknown"
 
 
 def sessions_dir(env: Mapping[str, str] | None = None, home: Path | None = None) -> Path:
+    """Codex'in oturum dosyalarinin durdugu klasor.
+
+    `env` ve `home` disaridan verilebiliyor cunku bu fonksiyonun test edilebilir
+    olmasi gerekiyor: gercek ev dizinine bagli bir yol cozumu, ancak testi
+    calistiran kisinin makinesinde dogrudur.
+    """
     env = os.environ if env is None else env
     base = Path(env["CODEX_HOME"]).expanduser() if env.get("CODEX_HOME") else (home or Path.home()) / ".codex"
     return base / "sessions"
@@ -91,6 +97,12 @@ def records_from_rollout(lines: list[tuple[int, dict]], instance: SourceInstance
 
 
 class CodexAdapter(ProviderAdapter):
+    """Codex transcript'lerini okuyan adaptor.
+
+    Salt okur: hicbir kaynak dosyaya yazmaz, hicbir jeton yenilemez. `normalize`
+    saf bir fonksiyondur, boylece ayni ham girdi her zaman ayni normalize
+    ciktiyi verir ve bir hata replay edilebilir.
+    """
     name = "codex"
     provider = "openai"
 

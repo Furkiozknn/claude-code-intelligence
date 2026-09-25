@@ -49,8 +49,9 @@ alıcı (3), SQLite olay deposu (4), normalizasyon + dedup/birleştirme (5), fiy
 tablosu + özetler (6), pace v1 + boru hattı + snapshot + CLI (7).
 
 ```
-uv sync && uv run pytest                    # 261 test
-uv run cci scan                             # Claude Code + Codex transcript'lerini artımlı tara
+uv sync && uv run pytest                    # 273 test
+uv run cci providers                        # ulaşılabilen adaptörler + yüklenemeyenin nedeni
+uv run cci scan                             # kayıtlı her adaptörden artımlı tara
 uv run cci today | daily | sessions         # özetler (--json, --strict → koruma yasası ihlalinde çıkış 3)
 uv run cci session <id>                     # oturum teşhisi (döngü, araç p95, context, sağlık)
 uv run cci quota [--poll|--forecast|--backtest]
@@ -65,7 +66,10 @@ uv run python benchmarks/bench.py           # → benchmarks/RESULTS.md
 ```
 
 Stage 1–16 tamamlandı. Ölçülen performans ve tutmayan iki hedefin gerekçesi:
-`docs/ARCHITECTURE.md` §11.
+`docs/ARCHITECTURE.md` §11. Stage 15'in kapsam dışı kalan kısmı:
+`docs/IMPLEMENTATION_PLAN.md` §Stage 15 notu — dört adaptör planlanmıştı, ikisi
+var (Claude Code, Codex); geri kalanı için gereken şey kod değil, doğrulanmış
+fixture.
 
 | Çıktı | Nerede |
 |---|---|
@@ -110,3 +114,66 @@ Stage 1–16 tamamlandı. Ölçülen performans ve tutmayan iki hedefin gerekçe
 Claude Code oturumuna skill enjekte edebilir (bu projede yaşandı). Klonları
 geçici dizinde tutun; `.claude/` içeriğini çalıştırmayın. Ayrıntı:
 `docs/PRIVACY.md` §5.
+
+---
+
+## Kendi adaptörünü yazmak
+
+`cci` sağlayıcıya bağlı değil: transcript okuyan her araç bir adaptörle
+bağlanabiliyor, ve sözleşme `cci/adapters/base.py` içinde
+(`docs/PROVIDERS.md §2`). Uzatma noktası olduğunu söyleyen bir projede o
+noktanın belgesiz olması, pratikte kapalı olması demek — sözleşmeyi
+uygulayacak kişi kaynağı okuyup niyeti tahmin etmek zorunda kalır.
+
+`adapters/` altındaki **26 genel sembolün 26'sı** artık ne yaptığını ve neden
+öyle olduğunu yazıyor. Belgelenen şey imza değil karar: `Capabilities`
+alanlarının neden dürüstçe doldurulması gerektiği (`tokens=True` deyip token
+vermeyen bir adaptör, aşağıdaki her sayıyı sessizce bozar, çünkü eksik veri ile
+sıfır veri aynı görünür), `Health.status`'un neden üç değerli olduğu,
+`FileCursor`'ın neden üç alanı birden tuttuğu (dosya kırpılıp yeniden
+yazıldıysa aynı ofset artık başka bir satırın ortasıdır), `RawBatch`'in neden
+kalıcı olmadığı, `credentials_path`'in neden var olup hiç açılmadığı.
+
+Bir kapı bunu koruyor: `python3 arac/sozlesme-belgeli.py` — `cci/adapters/`
+altındaki her genel sembolün bir docstring'i olduğunu kontrol ediyor. Deponun
+geri kalanı için böyle bir zorunluluk yok; kapı bilerek yalnızca dışarıya açık
+yüzeyi kapsıyor.
+
+**Ama belgelenmiş bir uzatma noktası, ona takılamıyorsa kapalıdır.** Sözleşme
+belgeliydi ve sözleşme testi vardı; kayıt defteri de vardı — ve `register()`
+deponun tamamında yalnızca bir testten çağrılıyordu. Ürünün hiçbir yeri kayıt
+defterini okumuyor, her çağrı yeri somut sınıfı adıyla içe aktarıyordu. Yani
+`EXTENDING.md`'yi harfiyen izleyip bir adaptör yazan kişi, hiçbir zaman
+çağrılmayacak bir nesne elde ediyordu.
+
+Artık bir giriş noktası grubu var ve birinci taraf iki adaptör de aynı yoldan
+geçiyor:
+
+```toml
+[project.entry-points."cci.adapters"]
+my_tool = "cci_adapter_my_tool:build"
+```
+
+```
+uv run cci providers            # hangi adaptör ulaşılabiliyor, ulaşamayanın nedeni ne
+uv run cci providers --strict   # bir eklenti yüklenemediyse çıkış 3
+```
+
+Sözleşme testi bunu ispat edemezdi: gördüğü adaptörler aynı dosyada, aynı
+elden yazılmıştır. `tests/test_adapter_plugins.py` adaptörü paket sınırının
+**dışına** koyuyor — geçici dizin, kendi `.dist-info` meta verisi, yani
+`pip install`in ürettiğinin aynısı — ve `cci scan`ın onun kaydını gerçekten
+olay deposuna yazdığını gösteriyor. Negatif kontrol de orada: meta veri
+kaldırılınca hiçbir şey bulunmuyor, yani testi geçiren şey modülün
+`sys.path`te olması değil, giriş noktasının kendisi. Patlayan bir eklenti
+kendini devre dışı bırakıyor, çekirdeği değil.
+
+
+## Bu ekosistemden başka projeler
+
+- **[mcp-vet](https://github.com/Furkiozknn/mcp-vet)** — bir MCP sunucusunun kaynağını kurmadan önce denetler
+- **[repo-vet](https://github.com/Furkiozknn/repo-vet)** — README'nin verdiği sözleri gerçekle karşılaştırır
+- **[godot-refcheck](https://github.com/Furkiozknn/godot-refcheck)** — Godot projelerindeki kırık referansları ve ölü sinyalleri bulur, onarır
+- **[mcp-census](https://github.com/Furkiozknn/mcp-census)** — resmî MCP Registry'nin yeniden üretilebilir sayımı
+
+<sub>Hepsi tek bir aranabilir sayfada: **[furkiozknn.github.io](https://furkiozknn.github.io/)** — her kart, o deponun kendi <code>project-meta.json</code> dosyasından üretiliyor.</sub>

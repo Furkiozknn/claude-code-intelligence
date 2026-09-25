@@ -18,7 +18,7 @@ from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
 from cci import __version__
-from cci.adapters.base import ProbeRoot
+from cci.adapters.base import ENTRY_POINT_GROUP, ProbeRoot
 from cci.adapters.claude_code.adapter import ClaudeCodeAdapter
 from cci.adapters.claude_code.paths import credentials_path
 from cci.analytics.summaries import ConservationError
@@ -70,10 +70,25 @@ class Context:
         self.home = home if home is not None else Path.home()
         self.tz = local_tz()
         self.adapter = ClaudeCodeAdapter(env=self.env, home=self.home)
+        self._registry = None
         self.table = PricingTable.load_bundled()
         self.config = load_config(self.data_dir / "config.toml")
         self._store: EventStore | None = None
         self._pipe: Pipeline | None = None
+
+    @property
+    def registry(self):
+        """Bu kurulumda gercekten ulasilabilen adaptorler.
+
+        Birinci taraf ikisi artik somut sinif adiyla degil buradan geliyor,
+        cunku `EXTENDING.md` ucuncu taraflara adaptor yazmayi teklif ediyor ve
+        o teklif ancak disaridan gelen bir adaptor de ayni yoldan kosuyorsa
+        gercek.
+        """
+        if self._registry is None:
+            from cci.adapters import builtin_registry
+            self._registry = builtin_registry(self.env, self.home)
+        return self._registry
 
     @property
     def store(self) -> EventStore:
@@ -171,12 +186,15 @@ def quota_lines(snap: QuotaSnapshot | None, now: datetime) -> list[str]:
 def cmd_scan(ctx: Context, args: argparse.Namespace) -> int:
     report = ctx.pipe.ingest_transcripts(ctx.adapter)
     extra = {}
+    # Her adaptor kayit defterinden geliyor: `codex` da, disaridan kurulmus
+    # bir `cci.adapters` girisi de. Somut sinifi burada adiyla ice aktarmak,
+    # ucuncu taraf adaptorunu cagrilamaz birakiyordu.
     if not args.claude_only:
-        from cci.adapters.codex import CodexAdapter
-        cx = CodexAdapter(env=ctx.env, home=ctx.home)
-        if cx.discover():
-            r = ctx.pipe.ingest_adapter(cx)
-            extra["codex"] = {"instances": r.instances, "records": r.records, "written": r.written}
+        for ad in ctx.registry.all():
+            if ad.name == ctx.adapter.name or not ad.discover():
+                continue
+            r = ctx.pipe.ingest_adapter(ad)
+            extra[ad.name] = {"instances": r.instances, "records": r.records, "written": r.written}
             for f in ("instances", "raw_items", "records", "written", "duplicates", "rejected", "skipped_lines"):
                 setattr(report, f, getattr(report, f) + getattr(r, f))
     data = {"instances": report.instances, "raw_items": report.raw_items, "records": report.records,
@@ -184,8 +202,52 @@ def cmd_scan(ctx: Context, args: argparse.Namespace) -> int:
             "skipped_lines": report.skipped_lines, "counters": dict(report.counters), "providers": extra}
     ctx.out(data, lambda: f"tarandi: {report.instances} kaynak, {report.raw_items} kayit, {report.written} yeni olay, "
                           f"{report.duplicates} tekrar, {report.rejected} red, {report.skipped_lines} bozuk satir"
-                          + (f"  (codex: {extra['codex']['written']})" if extra else ""))
+                          + (("  (" + ", ".join(f"{k}: {v['written']}" for k, v in extra.items()) + ")")
+                             if extra else ""))
     return EXIT_OK
+
+
+def cmd_providers(ctx: Context, args: argparse.Namespace) -> int:
+    """Hangi adaptorler gercekten ulasilabiliyor, ve ulasamayanin nedeni ne.
+
+    `EXTENDING.md` ucuncu taraflara adaptor yazmayi teklif ediyor; bu komut o
+    teklifin karsiligi. Adaptorunu yeni yazmis birinin sorabilecegi tek soru
+    "yuklendi mi, yuklenmediyse neden" -- ve yuklenememe de bir sonuctur,
+    sessizce atlanacak bir sey degil.
+    """
+    satirlar: list[str] = []
+    veri: dict = {"adapters": [], "failures": [], "entry_point_group": ENTRY_POINT_GROUP}
+    for ad in ctx.registry.all():
+        caps = ad.capabilities()
+        health = ad.health()
+        try:
+            instances = ad.discover()
+        except Exception as exc:                        # noqa: BLE001
+            instances = ()
+            health = health.model_copy(update={"status": "down", "error_class": type(exc).__name__})
+        veri["adapters"].append({
+            "name": ad.name, "provider": ad.provider,
+            "instances": [i.instance_id for i in instances],
+            "capabilities": caps.model_dump(mode="json"),
+            "health": health.model_dump(mode="json"),
+            "builtin": ad.__class__.__module__.startswith("cci.adapters."),
+        })
+        yetenek = ", ".join(k for k in ("tokens", "cost_vendor", "quota", "sessions", "tools",
+                                        "attribution", "realtime")
+                            if getattr(caps, k, False)) or "-"
+        nereden = "" if ad.__class__.__module__.startswith("cci.adapters.") else "  [kurulu paket]"
+        dogrulandi = "dogrulandi" if caps.schema_verified else "DOGRULANMADI -> inferred"
+        satirlar.append(f"{ad.name:<16} {ad.provider:<12} {len(instances)} kaynak  "
+                        f"{health.status:<8} {dogrulandi}{nereden}")
+        satirlar.append(f"{'':<16} {yetenek}")
+    for f in ctx.registry.failures():
+        veri["failures"].append(f.model_dump(mode="json"))
+        satirlar.append(f"{f.name:<16} YUKLENMEDI   {f.error_class}: {f.error}")
+        satirlar.append(f"{'':<16} {f.source}")
+    if not satirlar:
+        satirlar.append("hicbir adaptor yok")
+    ctx.out(veri, lambda: "\n".join(satirlar))
+    return EXIT_CONSERVATION if ctx.registry.failures() and args.strict else EXIT_OK
 
 
 def cmd_daily(ctx: Context, args: argparse.Namespace) -> int:
@@ -727,6 +789,9 @@ def build_parser() -> argparse.ArgumentParser:
         s.add_argument("--days", type=int, default=0)
         s.add_argument("--strict", action="store_true")
         s.set_defaults(fn=cmd_daily, today=today)
+    s = sub.add_parser("providers", help="ulasilabilen adaptorler ve yuklenemeyenlerin nedeni")
+    s.add_argument("--strict", action="store_true", help="bir eklenti yuklenemediyse cikis 3")
+    s.set_defaults(fn=cmd_providers)
     s = sub.add_parser("sessions"); s.add_argument("--limit", type=int, default=20); s.add_argument("--strict", action="store_true"); s.set_defaults(fn=cmd_sessions)
     s = sub.add_parser("session", help="oturum teshisi"); s.add_argument("session_id"); s.set_defaults(fn=cmd_session)
     s = sub.add_parser("quota"); s.add_argument("--poll", action="store_true", help="canli sorgu (kimlik dosyasi gerekir)")

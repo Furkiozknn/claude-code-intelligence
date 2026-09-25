@@ -26,6 +26,13 @@ SCHEMA_VERIFIED_AT = date(2026, 9, 7)
 
 
 class ClaudeCodeAdapter(ProviderAdapter):
+    """Claude Code'un yerel transcript'lerini ve kota ucunu okuyan adaptor.
+
+    Salt okur: `~/.claude` altindaki hicbir dosyaya yazmaz ve `.credentials.json`
+    dosyasini hic acmaz -- yolu yalnizca varliğini sinamak icin biliyor. Ucuncu
+    taraf bir adaptor yazan icin burasi referans uygulama: `normalize` saf,
+    `collect` yalniz bellek, kalici olan tek sey imlec.
+    """
     name = "claude_code"
     provider = "anthropic"
 

@@ -25,6 +25,23 @@ Sıra MP'nin verdiği sıradır; her aşamanın **kabul ölçütü** ve testi va
 | 15 | Cross-provider support | Codex (rollout + app-server), Gemini CLI, Copilot (SQLite), aider adaptörleri; JSON-RPC/stdio taşıması (R-5); account/local kapsam | Her adaptör tarihli fixture + `schema_verified`; kapsam dışlama gerekçesi | Eco |
 | 16 | CLI/TUI/Desktop surfaces | TUI tam, widget, tray menüsü, paketleme (PyInstaller), kurulum belgeleri | 80×24 TUI; widget ≤ 120×40; kontrast testi; kurulum sıfırdan 5 dk | Eco |
 
+## Stage 15 notu — kapsam dışı kalan (kabul ölçütü: "kapsam dışlama gerekçesi")
+
+Planlanan dört adaptörden **ikisi** var: Claude Code (referans uygulama) ve
+Codex. Gemini CLI, Copilot ve aider yazılmadı, ve eksik olan şey kod değil:
+her adaptörün kabul ölçütü "tarihli fixture + `schema_verified`", yani o
+ürünün gerçek çıktısından alınmış, redakte edilmiş bir örnek. Elde o örnekler
+yok; `PROVIDERS.md` §5'teki format bilgileri araştırma notlarından geliyor,
+doğrulanmış fixture değil. `schema_verified=false` ile yazılan bir adaptörün
+ürettiği her sayı `inferred` sınıfına düşer — yani araç, kendi ölçüt
+sisteminde güvenilmez veri üretmiş olur.
+
+JSON-RPC/stdio taşıması (R-5) da yok; in-process Python giriş noktası yolu
+çalışıyor ve testli (`EXTENDING.md` §2b).
+
+Bu satır, Stage 15'in kendi kabul ölçütünün istediği gerekçedir; daha önce
+hiçbir yerde yazılı değildi.
+
 ## Stage 1 ayrıntı (ilk kod)
 ```
 cci/model/evidence.py    EvidenceClass, PrivacyClass (Enum)

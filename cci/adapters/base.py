@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import abc
 from datetime import date, datetime
-from typing import Any, Iterable, Literal
+from pathlib import Path
+from typing import Any, Iterable, Literal, Mapping
 
 from pydantic import model_validator
 
@@ -23,6 +24,18 @@ HealthStatus = Literal["ok", "degraded", "down"]
 
 
 class Capabilities(CciModel):
+    """Bir saglayicinin gercekten NE verebildigi -- ne vaat ettigi degil.
+
+    Her alan bir yetenegin varligini soyluyor, kalitesini degil. Ucuncu taraf
+    bir adaptor yazan kisi burayi durust doldurmak zorunda: `tokens=True` deyip
+    token vermeyen bir adaptor, boru hattinin asagisindaki her sayiyi sessizce
+    bozar, cunku eksik veri ile sifir veri ayni sekilde gorunur.
+
+    `schema_verified` ve `verified_at` birlikte anlamli: bir sema yalnizca
+    BAKILDIGI GUN dogrulanmistir, ve saglayici semasini degistirdiginde o tarih
+    iddianin ne kadar eskidigini soyler. Dogrulanmis demek ebediyen dogru
+    demek degil.
+    """
     tokens: bool = F("public", default=False)
     cost_vendor: bool = F("public", default=False)
     quota: bool = F("public", default=False)
@@ -52,6 +65,17 @@ class ProbeRoot(CciModel):
 
 
 class Health(CciModel):
+    """Adaptorun su anda calisip calismadigi, ve calismiyorsa neden.
+
+    `detail` bilerek `internal` ve bilerek kisa: redakte edilmis bir aciklama
+    tasir, asla token, kimlik bilgisi ya da transcript icerigi tasimaz. Bir
+    saglik alaninin sizinti yoluna donusmesi, tam da kimsenin bakmadigi yerde
+    olur.
+
+    `status` uc degerli, iki degil: `degraded`, "calisiyor ama eksik veriyle"
+    demek ve onu `ok` saymak, boru hattinin asagisinda eksik veriyi tam veri
+    gibi gostermek olurdu.
+    """
     status: HealthStatus = F("public")
     last_success_at: datetime | None = F("internal", default=None)
     lag_s: float | None = F("internal", default=None, ge=0)
@@ -67,6 +91,14 @@ class Health(CciModel):
 
 
 class FileCursor(CciModel):
+    """Bir dosyanin neresine kadar okundugu -- artimli taramanin butun hafizasi.
+
+    Ucu birden gerekli. `bytes_consumed` tek basina yetmez: dosya kirpilip
+    yeniden yazildiysa ayni ofset artik baska bir satirin ortasidir, ve
+    `size` ile `mtime_ns` bunu yakalar. Dogrulayici `bytes_consumed > size`
+    durumunu reddeder, cunku o noktada imlec artik bir konum degil bir tahmin
+    olur.
+    """
     size: int = F("internal", ge=0)
     mtime_ns: int = F("internal", ge=0)
     bytes_consumed: int = F("internal", ge=0)
@@ -103,6 +135,16 @@ class RawItem(CciModel):
 
 
 class RawBatch(CciModel):
+    """Bir toplama turunun ham ciktisi. Kalici degildir ve olmamalidir.
+
+    `collect` bunu yalnizca bellekte tasir; sozlesme geregi hicbir adaptor ham
+    veriyi diske yazmaz. Kalici olan tek sey `next_cursor`: bir sonraki turun
+    nereden devam edecegi.
+
+    `complete=False`, "bu tur her seyi getirmedi" demek ve `skipped`, bozuk ya
+    da ayristirilamayan satirlarin sayisi. Ikisi de sessizce yutulmaz, cunku
+    eksik bir tur ile bos bir tur ayni sayiyi uretir ve ayni sey degildir.
+    """
     instance: SourceInstance = F("internal")
     items: tuple[RawItem, ...] = F("internal", default=())
     complete: bool = F("public", default=True)
@@ -168,9 +210,46 @@ def assert_contract(adapter: ProviderAdapter) -> None:
         raise AssertionError("health() Health dondurmeli")
 
 
+ENTRY_POINT_GROUP = "cci.adapters"
+"""Kurulmus bir paketin adaptorunu duyurdugu giris noktasi grubu.
+
+`EXTENDING.md` ucuncu taraflara `cci-adapter-<x>` yazmayi teklif ediyor. Teklif
+ancak bu grup varsa gercek: onsuz yazilan adaptoru cagiracak bir sey yok.
+Paket su satiri koyar:
+
+    [project.entry-points."cci.adapters"]
+    my_tool = "cci_adapter_my_tool:build"
+
+`build`, PROVIDERS.md §2 arayuzunu karsilayan bir adaptor dondurur. Kesfedildigi
+anda sozlesme denetlenir; gecmezse yuklenmez ve nedeni `cci providers` ciktisinda
+yazar -- bir eklenti kendini devre disi birakir, cekirdegi degil (EXTENDING §3).
+"""
+
+
+class LoadFailure(CciModel):
+    """Yuklenemeyen bir adaptor ve nedeni.
+
+    Sessizce atlamak, adaptorunu yeni yazmis birine "hicbir sey olmadi"
+    demektir. Basarisizlik da kesfin bir sonucudur ve `cci providers` onu
+    ayni tabloda gosterir.
+    """
+    name: str
+    source: str
+    error_class: str
+    error: str
+
+
 class Registry:
+    """Kayitli adaptorler. Kayit aninda sozlesme dogrulanir.
+
+    `register` once `assert_contract` cagirir: eksik bir yontemle gelen bir
+    adaptor kayit olamaz, calisma aninda degil kayit aninda dusuruur. Ayni ad
+    iki kez kayit olamaz -- sessizce ustune yazmak, hangi adaptorun kostugunu
+    belirsizlestirirdi.
+    """
     def __init__(self) -> None:
         self._adapters: dict[str, ProviderAdapter] = {}
+        self._failures: list[LoadFailure] = []
 
     def register(self, adapter: ProviderAdapter) -> ProviderAdapter:
         assert_contract(adapter)
@@ -188,10 +267,57 @@ class Registry:
     def names(self) -> tuple[str, ...]:
         return tuple(self._adapters)
 
+    def failures(self) -> tuple["LoadFailure", ...]:
+        return tuple(self._failures)
+
     def instances(self) -> Iterable[tuple[ProviderAdapter, SourceInstance]]:
         for adapter in self._adapters.values():
             for inst in adapter.discover():
                 yield adapter, inst
+
+    def load_installed(self, env: Mapping[str, str], home: Path,
+                       *, group: str = ENTRY_POINT_GROUP) -> tuple[ProviderAdapter, ...]:
+        """Kurulu paketlerin duyurdugu adaptorleri yukle.
+
+        Her giris noktasi `(env, home)` alan bir fabrika cagirir. Bir eklentinin
+        yuklenmesi neyi bozarsa bozsun -- import hatasi, sozlesme ihlali, ad
+        cakismasi -- yalniz o eklenti dusuyor: hata `failures()` icinde
+        sayiliyor ve digerleri yuklenmeye devam ediyor.
+        """
+        from importlib.metadata import entry_points
+
+        yuklenen: list[ProviderAdapter] = []
+        for ep in sorted(entry_points(group=group), key=lambda e: e.name):
+            try:
+                adapter = ep.load()(env=dict(env), home=home)
+                self.register(adapter)
+            except Exception as exc:            # noqa: BLE001 - eklenti cekirdegi dusurmez
+                self._failures.append(LoadFailure(
+                    name=ep.name, source=ep.value,
+                    error_class=type(exc).__name__, error=str(exc)[:300]))
+                continue
+            yuklenen.append(adapter)
+        return tuple(yuklenen)
+
+
+def builtin_registry(env: Mapping[str, str], home: Path,
+                     *, installed: bool = True) -> Registry:
+    """Bu kurulumda gercekten ulasilabilen her adaptor.
+
+    Once iki birinci taraf adaptor, sonra kurulu paketlerin duyurdugu her sey.
+    Cagri yerleri somut sinifi adiyla ice aktarmak yerine buradan gecer, boylece
+    disaridan gelen bir adaptor de ayni yoldan kosuyor -- yoksa `EXTENDING.md`
+    bir sozden ibaret kalir.
+    """
+    from cci.adapters.claude_code.adapter import ClaudeCodeAdapter
+    from cci.adapters.codex import CodexAdapter
+
+    reg = Registry()
+    reg.register(ClaudeCodeAdapter(env=env, home=home))
+    reg.register(CodexAdapter(env=env, home=home))
+    if installed:
+        reg.load_installed(env, home)
+    return reg
 
 
 registry = Registry()
