@@ -1,5 +1,8 @@
 ![claude-code-intelligence — token nereye gitti, ne tuttu, kota ne zaman bitiyor](assets/banner.svg)
 
+<p align="center"><img src="docs/reel/reel.gif" alt="claude-code-intelligence - 15 saniyelik tanıtım videosu" width="720"></p>
+<p align="center"><sub><a href="docs/reel/reel.mp4">Sesli MP4 sürümü</a></sub></p>
+
 AI coding agent kullanımını (önce Claude Code, mimari olarak diğer
 sağlayıcılar) **gözlemleyen, normalize eden, analiz eden, ölçen, tahmin
 eden, anomali tespit eden, uyaran ve "şu anda ne yapmalıyım?" sorusuna
