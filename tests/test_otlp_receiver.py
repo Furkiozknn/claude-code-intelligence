@@ -151,3 +151,86 @@ def test_metrics_endpoint_end_to_end(receiver):
     assert status == 200
     assert {e.type for e in receiver._sink_list} >= {"usage.metric_delta", "code.lines", "session.started"}
     assert all(receiver.gate.check(e).accepted for e in receiver._sink_list)
+
+
+# --- sertlestirme: 25 Eylul 2026 ------------------------------------------------
+# Alici tek basina calisan, kimlik dogrulamasi olmayan bir yerel HTTP sunucusu.
+# Asagidaki uc test, her biri o gun gercekten calisan bir saldiri yolunu kapatir.
+
+
+def _raw(r, request: bytes, timeout: float = 3.0) -> bytes:
+    import socket
+    host, port = r.address
+    with socket.create_connection((host, port), timeout=timeout) as s:
+        s.sendall(request)
+        chunks = []
+        try:
+            while True:
+                c = s.recv(65536)
+                if not c:
+                    break
+                chunks.append(c)
+                if b"\r\n\r\n" in b"".join(chunks):
+                    break
+        except TimeoutError:
+            pass
+        return b"".join(chunks)
+
+
+def test_gzip_bomb_is_rejected_without_inflating_it(receiver):
+    # 1 MB sinirinin altinda kalan bir gzip govdesi, acildiginda yuzlerce MB
+    # olabiliyordu - ve alici onu once TAMAMEN acip ancak sonra boyutuna
+    # bakiyordu. Sinir, acma sirasinda uygulanmali.
+    import tracemalloc
+    bomb = gzip.compress(b" " * (200 * 1024 * 1024), compresslevel=9)
+    assert len(bomb) < receiver.max_body
+    tracemalloc.start()
+    try:
+        status, _ = post(receiver, "/v1/logs", bomb, encoding="gzip")
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert status == 413 and receiver.counters["too_large"] == 1 and receiver._sink_list == []
+    assert peak < 32 * 1024 * 1024, f"alici govdeyi acarken {peak // 2**20} MB ayirdi"
+
+
+def test_gzip_body_at_the_limit_is_still_accepted(receiver):
+    raw = json.dumps(logs_doc()).encode()
+    receiver.max_body = len(raw)
+    status, _ = post(receiver, "/v1/logs", gzip.compress(raw), encoding="gzip")
+    assert status == 200 and len(receiver._sink_list) == 1
+
+
+def test_negative_content_length_is_400_not_an_unbounded_read(receiver):
+    # int("-1") gecerli; rfile.read(-1) ise baglanti kapanana kadar okur -
+    # boyut siniri atlanir ve is parcacigi istemci gidene dek asili kalir.
+    resp = _raw(receiver, b"POST /v1/logs HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\n"
+                          b"Content-Length: -1\r\n\r\n{}")
+    assert resp.startswith(b"HTTP/1.1 400"), resp[:60]
+    assert receiver.counters["bad_request"] == 1 and receiver._sink_list == []
+
+
+@pytest.mark.parametrize("ctype", ["application/json", ""])
+def test_browser_requests_are_refused(receiver, ctype):
+    # Tarayici her POST'a Origin ekler; OTLP ihracatcilari eklemez. Origin'li
+    # bir istek, kullanicinin actigi herhangi bir web sayfasinin 127.0.0.1'e
+    # sahte kullanim/maliyet yazmaya calismasidir (icerik turu bos bir Blob
+    # "basit istek" sayilir, on ucus yok). Depoya hicbir sey girmemeli.
+    host, port = receiver.address
+    conn = http.client.HTTPConnection(host, port, timeout=5)
+    body = json.dumps(logs_doc()).encode()
+    headers = {"Content-Length": str(len(body)), "Origin": "https://ornek.invalid"}
+    if ctype:
+        headers["Content-Type"] = ctype
+    conn.request("POST", "/v1/logs", body=body, headers=headers)
+    resp = conn.getresponse()
+    resp.read()
+    conn.close()
+    assert resp.status == 403
+    assert receiver.counters["browser_origin"] == 1 and receiver._sink_list == []
+
+
+@pytest.mark.parametrize("body", [b"not gzip at all", gzip.compress(b'{"resourceLogs": []}')[:-12]])
+def test_corrupt_or_truncated_gzip_is_400(receiver, body):
+    status, body_ = post(receiver, "/v1/logs", body, encoding="gzip")
+    assert status == 400 and body_ == {"error": "bad gzip"} and receiver.counters["bad_request"] == 1
