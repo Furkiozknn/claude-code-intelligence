@@ -4,16 +4,21 @@
   200 + `dropped_traces` sayaci; R-2).
 - Icerik turu: `application/json` (OTLP/JSON). `application/x-protobuf` icin
   protobuf cozucu yoksa DURUST 415 doner (sessiz "200 OK" yok - zcquant anti-kalibi).
-- Govde <= 1 MB (413), gzip desteklenir, bozuk JSON 400.
+- Govde <= 1 MB (413), gzip desteklenir, bozuk JSON 400. Sinir gzip ACILIRKEN
+  uygulanir: 1 MB'lik bir gzip bombasi bellekte yuzlerce MB'a acilmaz.
+- Negatif/bozuk `Content-Length` 400 (okunmaz; `read(-1)` sinirsiz okurdu).
+- `Origin` basligi tasiyan istek 403: tarayici her POST'a Origin ekler, OTLP
+  ihracatcilari eklemez. Boylece acik bir web sayfasi 127.0.0.1'e sahte
+  kullanim/maliyet yazamaz (kimlik dogrulamasi olmayan alicinin tek kapisi).
 - Her olay ingest kapisindan gecer; kabul edilenler `sink`'e verilir.
 - Hicbir istek yolu/govde loglanmaz (log_message susturuldu).
 """
 
 from __future__ import annotations
 
-import gzip
 import json
 import threading
+import zlib
 from collections import Counter
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Callable, Mapping
@@ -32,6 +37,24 @@ try:  # protobuf cozucu opsiyonel bagimlilik (Stage 3b)
     HAS_PROTO = True
 except Exception:  # pragma: no cover - bagimlilik yoksa
     HAS_PROTO = False
+
+
+def gunzip_bounded(body: bytes, limit: int) -> bytes | None:
+    """gzip govdesini en fazla `limit` bayta acar; asarsa None.
+
+    `gzip.decompress` once her seyi acar: 1 MB'lik bir bomba bellekte yuzlerce
+    MB olur ve boyut kontrolu ancak ondan sonra gelir. Burada acma, siniri
+    bir bayt gecen noktada durur. Bozuk gzip `zlib.error` firlatir.
+    """
+    d = zlib.decompressobj(wbits=16 + zlib.MAX_WBITS)
+    out = d.decompress(body, limit + 1)
+    if len(out) > limit:
+        return None
+    if not d.eof:
+        # Girdi bitti ama akis tamamlanmadi: kesik gzip. (Sinira takilan
+        # durum yukarida yakalandi; burada kalan girdi yok.)
+        raise zlib.error("truncated gzip stream")
+    return out
 
 
 class OtlpReceiver:
@@ -129,27 +152,38 @@ class OtlpReceiver:
                 self.end_headers()
                 self.wfile.write(data)
 
+            def _refuse(self, status: int, counter: str, error: str) -> None:
+                # Govde okunmadan donuluyor; baglanti acik kalirsa okunmamis
+                # baytlar bir sonraki istek diye ayristirilir. Kapat.
+                receiver.counters[counter] += 1
+                self.close_connection = True
+                self._send(status, {"error": error})
+
             def do_POST(self) -> None:  # noqa: N802
-                try:
-                    length = int(self.headers.get("Content-Length") or 0)
-                except ValueError:
-                    length = 0
+                if self.headers.get("Origin") is not None:
+                    self._refuse(403, "browser_origin", "browser requests are not accepted")
+                    return
+                raw_len = (self.headers.get("Content-Length") or "0").strip()
+                if not (raw_len.isascii() and raw_len.isdigit()):
+                    self._refuse(400, "bad_request", "invalid content-length")
+                    return
+                length = int(raw_len)
                 if length > receiver.max_body:
-                    receiver.counters["too_large"] += 1
-                    self._send(413, {"error": "body too large"})
+                    self._refuse(413, "too_large", "body too large")
                     return
                 body = self.rfile.read(length) if length else b""
                 if (self.headers.get("Content-Encoding") or "").lower() == "gzip":
                     try:
-                        body = gzip.decompress(body)
-                    except OSError:
+                        inflated = gunzip_bounded(body, receiver.max_body)
+                    except zlib.error:
                         receiver.counters["bad_request"] += 1
                         self._send(400, {"error": "bad gzip"})
                         return
-                    if len(body) > receiver.max_body:
+                    if inflated is None:
                         receiver.counters["too_large"] += 1
                         self._send(413, {"error": "body too large"})
                         return
+                    body = inflated
                 status, payload = receiver.handle(self.path, self.headers.get("Content-Type") or "", body)
                 self._send(status, payload)
 
