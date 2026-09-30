@@ -7,6 +7,21 @@ etiketle surum uyusmazsa yayini durdurur.
 
 ## Yayimlanmamis
 
+### Arayuz ve gizlilik
+- README gorselleri gercek kullanim verisinden uretilmisti (gercek gunluk tutarlar,
+  olay/transcript sayilari). Hepsi `scripts/ornek-veri.py`'nin yazdigi SENTETIK veriyle
+  yeniden uretildi ve README'de oyle etiketlendi; `scripts/gorsel-uret.py` artik
+  kullanicinin kendi dizinine bakamiyor. Uretici belirsiz `docs/reel/` kaldirildi.
+- Yeni `scripts/demo-uret.py`: gercek `cci` komutlarini sentetik veride kosar,
+  `docs/demo/demo.gif` ve kanit metnini uretir.
+- README ilk ekrani: tek cumle, tek komutlu kurulum (`uv tool install`), demo,
+  ne zaman kullanilir/kullanilmaz.
+- `cci --help`: her alt komutun aciklamasi, ilk kullanim ornegi, cikis kodlari.
+- `cci today`: veri var ama bugun kayit yoksa "veri yok" demiyor (cikis kodu 4 ayni).
+- `cci scan`: Claude Code klasoru bulunamazsa nereye baktigini stderr'e yaziyor.
+- `--data-dir` bir dosyayi gosterirse Python izi yerine kullanim hatasi (cikis 2).
+- `cci session`: bulunamayinca `cci sessions`'a yonlendiriyor.
+
 ### Guvenlik
 - OTLP alicisi: gzip govdesi siniri artik acilirken uygulaniyor. Once tamamen
   acilip sonra olculdugu icin 1 MB'in altindaki bir gzip bombasi yuzlerce MB
