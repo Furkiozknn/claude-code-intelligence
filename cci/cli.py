@@ -200,6 +200,9 @@ def cmd_scan(ctx: Context, args: argparse.Namespace) -> int:
     data = {"instances": report.instances, "raw_items": report.raw_items, "records": report.records,
             "written": report.written, "duplicates": report.duplicates, "rejected": report.rejected,
             "skipped_lines": report.skipped_lines, "counters": dict(report.counters), "providers": extra}
+    if not report.instances:
+        print("Claude Code kaydi bulunamadi: " + (", ".join(str(r) for r in ctx.adapter.roots()) or "~/.claude yok")
+              + " (baska konum icin CLAUDE_CONFIG_DIR ayarla)", file=sys.stderr)
     ctx.out(data, lambda: f"tarandi: {report.instances} kaynak, {report.raw_items} kayit, {report.written} yeni olay, "
                           f"{report.duplicates} tekrar, {report.rejected} red, {report.skipped_lines} bozuk satir"
                           + (("  (" + ", ".join(f"{k}: {v['written']}" for k, v in extra.items()) + ")")
@@ -262,7 +265,10 @@ def cmd_daily(ctx: Context, args: argparse.Namespace) -> int:
         today = datetime.now(ctx.tz).date()
         days = [d for d in days if d.day == today]
     if not days:
-        ctx.out({"days": []}, lambda: "veri yok (once `cci scan` ya da OTLP kurulumu)")
+        var_mi = args.today and bool(ctx.pipe.daily())
+        msg = ("bugun icin kayit yok (onceki gunler icin `cci daily`)" if var_mi
+               else "veri yok (once `cci scan` ya da OTLP kurulumu)")
+        ctx.out({"days": []}, lambda: msg)
         return EXIT_NO_DATA
 
     def text() -> str:
@@ -306,7 +312,8 @@ def cmd_session(ctx: Context, args: argparse.Namespace) -> int:
     summaries = ctx.pipe.sessions()
     match = [s for s in summaries if s.session_id == args.session_id or s.session_id.startswith(args.session_id)]
     if len(match) != 1:
-        print("oturum bulunamadi ya da belirsiz: " + ", ".join(s.session_id[:8] for s in match) if match else "oturum bulunamadi", file=sys.stderr)
+        print("oturum belirsiz, daha uzun bir on ek yaz: " + ", ".join(s.session_id[:8] for s in match) if match
+              else "oturum bulunamadi (kimlikler icin `cci sessions`)", file=sys.stderr)
         return EXIT_NO_DATA
     s = match[0]
     d = ctx.pipe.diagnose(s.session_id, cost=s.totals.cost)
@@ -776,37 +783,54 @@ def statusline_command() -> str:
 
 
 # ------------------------------------------------------------------ giris
+EPILOG = (
+    "ilk kullanim:\n"
+    "  cci scan      Claude Code kayitlarini oku (artimli)\n"
+    "  cci daily     gun basina istek, token, tahmini maliyet\n"
+    "  cci doctor    bu sayilara guvenebilir miyim\n\n"
+    "cikis kodlari: 0 ok, 2 kullanim hatasi, 3 koruma yasasi ihlali (--strict), 4 veri yok, 5 kimlik yok\n"
+    "kaynak: CLAUDE_CONFIG_DIR (yoksa ~/.claude); ayrintili yardim: cci <komut> --help"
+)
+
+
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="cci", description="Claude Code Intelligence Platform")
+    p = argparse.ArgumentParser(
+        prog="cci", formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="Claude Code kullaniminiz nereye gitti: token, tahmini maliyet, kota. Yerel calisir; "
+                    "prompt ya da yanit icerigi okunmaz.",
+        epilog=EPILOG)
     p.add_argument("--data-dir", default=None, help="veri dizini (varsayilan: %%LOCALAPPDATA%%/cci ya da ~/.cci)")
-    p.add_argument("--json", action="store_true")
+    p.add_argument("--json", action="store_true", help="makine okunur JSON cikti")
     p.add_argument("--version", action="version", version=f"cci {__version__}")
     sub = p.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("scan", help="transcript'leri artimli tara (Claude Code + Codex)")
     s.add_argument("--claude-only", action="store_true"); s.set_defaults(fn=cmd_scan)
     for name, today in (("today", True), ("daily", False)):
-        s = sub.add_parser(name, help="gunluk ozet")
-        s.add_argument("--days", type=int, default=0)
-        s.add_argument("--strict", action="store_true")
+        s = sub.add_parser(name, help="bugunun ozeti" if today else "gun gun ozet")
+        s.add_argument("--days", type=int, default=0, help="yalniz son N gun (0 = hepsi)")
+        s.add_argument("--strict", action="store_true", help="toplam = parcalar toplami tutmazsa cikis 3")
         s.set_defaults(fn=cmd_daily, today=today)
     s = sub.add_parser("providers", help="ulasilabilen adaptorler ve yuklenemeyenlerin nedeni")
     s.add_argument("--strict", action="store_true", help="bir eklenti yuklenemediyse cikis 3")
     s.set_defaults(fn=cmd_providers)
-    s = sub.add_parser("sessions"); s.add_argument("--limit", type=int, default=20); s.add_argument("--strict", action="store_true"); s.set_defaults(fn=cmd_sessions)
-    s = sub.add_parser("session", help="oturum teshisi"); s.add_argument("session_id"); s.set_defaults(fn=cmd_session)
-    s = sub.add_parser("quota"); s.add_argument("--poll", action="store_true", help="canli sorgu (kimlik dosyasi gerekir)")
+    s = sub.add_parser("sessions", help="son oturumlar: token, maliyet, saglik")
+    s.add_argument("--limit", type=int, default=20, help="en fazla kac oturum")
+    s.add_argument("--strict", action="store_true", help="koruma yasasi ihlalinde cikis 3"); s.set_defaults(fn=cmd_sessions)
+    s = sub.add_parser("session", help="tek oturumun teshisi"); s.add_argument("session_id", help="oturum kimligi ya da on eki (`cci sessions`)"); s.set_defaults(fn=cmd_session)
+    s = sub.add_parser("quota", help="kota durumu ve tahmin"); s.add_argument("--poll", action="store_true", help="canli sorgu (kimlik dosyasi gerekir)")
     s.add_argument("--forecast", action="store_true", help="harman tahmin v2 (>=5 dongu)")
     s.add_argument("--backtest", action="store_true", help="yontem karsilastirma (MAE, bant kapsama)"); s.set_defaults(fn=cmd_quota)
-    sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
+    sub.add_parser("doctor", help="kurulum ve veri saglik denetimi").set_defaults(fn=cmd_doctor)
     s = sub.add_parser("advise", help="su anda ne yapmaliyim"); s.add_argument("--apply", action="store_true")
     s.add_argument("--undo", default=None); s.add_argument("--force", action="store_true")
     s.add_argument("--history", action="store_true"); s.set_defaults(fn=cmd_advise)
     s = sub.add_parser("alerts", help="uyarilari degerlendir/goster"); s.add_argument("--history", action="store_true")
     s.add_argument("--dry-run", action="store_true", help="olay yazma, sadece goster"); s.set_defaults(fn=cmd_alerts)
-    s = sub.add_parser("snapshot"); s.add_argument("--out", default=None); s.set_defaults(fn=cmd_snapshot)
-    sub.add_parser("statusline").set_defaults(fn=cmd_statusline)
-    s = sub.add_parser("setup"); s.add_argument("what"); s.add_argument("--write", action="store_true")
-    s.add_argument("--settings", default=None); s.add_argument("--port", type=int, default=DEFAULT_OTLP_PORT); s.set_defaults(fn=cmd_setup)
+    s = sub.add_parser("snapshot", help="pano icin anlik goruntu yaz"); s.add_argument("--out", default=None, help="cikti dosyasi"); s.set_defaults(fn=cmd_snapshot)
+    sub.add_parser("statusline", help="Claude Code durum cubugu icin tek satir").set_defaults(fn=cmd_statusline)
+    s = sub.add_parser("setup", help="settings.json icin OTLP / statusline ayari (yedekli)")
+    s.add_argument("what", help="otlp | statusline"); s.add_argument("--write", action="store_true", help="yaz (yoksa yalniz goster)")
+    s.add_argument("--settings", default=None, help="settings.json yolu"); s.add_argument("--port", type=int, default=DEFAULT_OTLP_PORT, help="OTLP portu"); s.set_defaults(fn=cmd_setup)
     s = sub.add_parser("run", help="daemon dongusu"); s.add_argument("--once", action="store_true")
     s.add_argument("--interval", type=float, default=60.0); s.add_argument("--otlp-port", type=int, default=DEFAULT_OTLP_PORT)
     s.add_argument("--api-port", type=int, default=DEFAULT_API_PORT); s.add_argument("--no-api", action="store_true")
@@ -855,7 +879,11 @@ def main(argv: list[str] | None = None, *, env: dict[str, str] | None = None, ho
         args = parser.parse_args(argv)
     except SystemExit as exc:
         return int(exc.code) if isinstance(exc.code, int) else EXIT_USAGE
-    ctx = Context(Path(args.data_dir) if args.data_dir else default_data_dir(), as_json=args.json, env=env, home=home)
+    data_dir = Path(args.data_dir) if args.data_dir else default_data_dir()
+    if data_dir.exists() and not data_dir.is_dir():
+        print(f"--data-dir bir klasor olmali, dosya bulundu: {data_dir}", file=sys.stderr)
+        return EXIT_USAGE
+    ctx = Context(data_dir, as_json=args.json, env=env, home=home)
     try:
         return int(args.fn(ctx, args))
     finally:

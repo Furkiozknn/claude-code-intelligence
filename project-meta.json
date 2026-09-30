@@ -35,7 +35,7 @@
     "telemetry",
     "token-usage"
   ],
-  "summary": "Where the tokens went, what it cost, and when the limit resets. Every number carries an evidence class - observed, derived, estimated - and one that fails the reconciliation gate is not printed at all. No prompt, response or file content is defined in any type, so a privacy review is a grep. Local-first. 282 tests.",
+  "summary": "Where the tokens went, what it cost, and when the limit resets. Every number carries an evidence class - observed, derived, estimated - and one that fails the reconciliation gate is not printed at all. No prompt, response or file content is defined in any type, so a privacy review is a grep. Local-first. 287 tests.",
   "key_features": [
     "Where the tokens went, what it cost, and when the limit resets",
     "Every number carries an evidence class - observed, derived or estimated - and one that fails the reconciliation gate is not printed at all",
@@ -48,13 +48,13 @@
     "screenshots": [
       "assets/pano-ekran-goruntusu.png"
     ],
-    "gifs": [],
+    "gifs": ["docs/demo/demo.gif"],
     "videos": []
   },
   "tests": {
-    "count": 282,
-    "source": "`282 passed`",
-    "measured": "2026-09-25"
+    "count": 287,
+    "source": "`287 passed`",
+    "measured": "2026-09-30"
   },
   "ci": {
     "workflows": [

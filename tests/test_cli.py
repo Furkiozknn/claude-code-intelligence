@@ -316,3 +316,39 @@ def test_main_cikti_akisini_sertlestiriyor(monkeypatch, tmp_path):
     monkeypatch.setattr("sys.stderr", akis)
     main(["--data-dir", str(tmp_path / "d"), "today"], env={}, home=tmp_path)
     assert akis.encoding.lower() == "utf-8"
+
+
+def test_today_with_only_older_days_says_so_not_no_data(tmp_path, capsys):
+    from tests.test_pipeline import layout, assistant
+    root = tmp_path / ".claude"
+    layout(root, [assistant("msg_1", "req_1", 40, ts="2020-01-02T10:00:00.000Z")])
+    env = {"CLAUDE_CONFIG_DIR": str(root)}
+    run(["scan"], tmp_path, env, capsys)
+    code, out = run(["today"], tmp_path, env, capsys)
+    assert code == EXIT_NO_DATA and "bugun icin kayit yok" in out.out and "veri yok" not in out.out
+
+
+def test_data_dir_that_is_a_file_is_a_usage_error_not_a_traceback(tmp_path, capsys):
+    f = tmp_path / "dosya"
+    f.write_text("x", encoding="utf-8")
+    code = main(["--data-dir", str(f), "today"], env={}, home=tmp_path)
+    assert code == 2 and "klasor olmali" in capsys.readouterr().err
+
+
+def test_scan_with_no_claude_dir_hints_where_it_looked(tmp_path, capsys):
+    code, out = run(["scan"], tmp_path, {"CLAUDE_CONFIG_DIR": str(tmp_path / "yok")}, capsys)
+    assert code == EXIT_OK and "0 kaynak" in out.out and "CLAUDE_CONFIG_DIR" in out.err
+
+
+def test_session_not_found_points_to_sessions_list(workspace, capsys):
+    tmp, env = workspace
+    run(["scan"], tmp, env, capsys)
+    code, out = run(["session", "yok-boyle-bir-oturum"], tmp, env, capsys)
+    assert code == EXIT_NO_DATA and "cci sessions" in out.err
+
+
+def test_every_subcommand_has_help_text():
+    import argparse
+    from cci.cli import build_parser
+    sub = next(a for a in build_parser()._actions if isinstance(a, argparse._SubParsersAction))
+    assert all(c.help for c in sub._choices_actions) and len(sub._choices_actions) == len(sub.choices)

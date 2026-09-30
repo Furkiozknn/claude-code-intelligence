@@ -15,17 +15,38 @@
 - **Conservation law.** Every report satisfies `total = Σ parts`; `--strict` exits 3 when one does not.
 
 ```bash
-uv sync && uv run pytest      # 282 tests
-uv run cci scan               # read Claude Code transcripts incrementally
-uv run cci daily              # requests, tokens and estimated cost per day, by model
-uv run cci quota --forecast   # when the limit is hit at this pace (needs 5+ polled cycles)
-uv run cci snapshot && uv run cci serve   # local dashboard
+uv tool install git+https://github.com/Furkiozknn/claude-code-intelligence
+cci scan && cci daily          # read Claude Code transcripts; requests, tokens, estimated cost per day
+cci quota --forecast           # when the limit is hit at this pace (needs 5+ polled cycles)
+cci snapshot && cci serve      # local dashboard
 ```
 
 </details>
 
-<p align="center"><img src="docs/reel/reel.gif" alt="claude-code-intelligence - 15 saniyelik tanıtım videosu" width="720"></p>
-<p align="center"><sub><a href="docs/reel/reel.mp4">Sesli MP4 sürümü</a></sub></p>
+**Claude Code kullanımınızın nereye gittiğini gösterir: hangi gün, hangi modelde kaç token gitti, tahmini maliyeti ne, kota ne zaman bitecek.** Bilgisayarınızdaki transcript'leri okur; prompt ya da yanıt içeriğine bakmaz. Ağ erişimi yalnız kota ucu ve isteğe bağlı fiyat yenilemeyle sınırlı.
+
+```bash
+uv tool install git+https://github.com/Furkiozknn/claude-code-intelligence   # ya da tek seferlik: uvx --from git+https://github.com/Furkiozknn/claude-code-intelligence cci daily
+cci scan && cci daily
+```
+
+Temiz makinede ölçülen süre: kurulum ~9 sn, ilk sonuç (`scan` + `daily`) kurulumdan sonra ~4 sn (boş `uv` önbelleği, 271 kayıtlık örnek veri; ayrıntı: [`docs/DENETIM.md`](docs/DENETIM.md)).
+
+![cci scan, daily, sessions ve advise komutlarının gerçek çıktısı; sentetik örnek veri](docs/demo/demo.gif)
+
+<sub>**Sentetik örnek veri.** Bu demo ve aşağıdaki görseller kimsenin gerçek kullanımından üretilmedi:
+[`scripts/ornek-veri.py`](scripts/ornek-veri.py) uydurma bir Claude Code kaydı yazar, komutlar onun üzerinde
+gerçekten çalıştırılır ([`scripts/demo-uret.py`](scripts/demo-uret.py)); çıktı elle yazılmadı.
+Yazılan sayılar ölçüm değil, örnektir. `≈` maliyetin liste fiyatından türetilmiş bir tahmin olduğunu,
+**`[withheld]`** satıcının kendi maliyetini vermediği yerde bir sayı uydurulmadığını söyler.</sub>
+
+| Ne zaman kullanılır | Ne zaman kullanılmaz |
+|---|---|
+| "Bu hafta tokenlarım nereye gitti?" sorusuna kendi bilgisayarındaki kayıtlardan cevap arıyorsan | Fatura ya da resmî harcama belgesi gerekiyorsa: maliyet liste fiyatından türetilmiş **tahmindir**, faturanın yerine geçmez |
+| Kota limitine ne zaman çarpacağını görmek, uyarı almak istiyorsan | Ekip ya da kurum düzeyinde merkezî izleme istiyorsan: veri tek makinede kalır |
+| Sayılara güvenip güvenemeyeceğini kontrol etmek istiyorsan (`cci doctor`, `--strict`) | Prompt/yanıt içeriğini analiz etmek istiyorsan: bu araç içeriği bilerek tanımlamaz |
+
+<p align="center"><img src="assets/terminal.svg" alt="cci daily komutunun çıktısı: gün başına istek, token ve tahmini maliyet, model kırılımıyla (sentetik örnek veri)" width="900"></p>
 
 AI coding agent kullanımını (önce Claude Code, mimari olarak diğer
 sağlayıcılar) **gözlemleyen, normalize eden, analiz eden, ölçen, tahmin
@@ -36,30 +57,24 @@ Bu bir usage monitor, token sayacı, kota görüntüleyici, pano, CLI aracı
 veya taskbar widget'ı **değildir** — bunların birleşiminden büyük bir sistem
 hedefleniyor.
 
-![cci daily komutunun gerçek çıktısı: gün başına istek, token ve tahmini maliyet, model kırılımıyla](assets/terminal.svg)
-
-<sub>Gerçek çıktı, elle yazılmış bir örnek değil: `python scripts/gorsel-uret.py`
-bu görseli `cci daily`'yi çalıştırıp üretir. Dikkat edilecek iki işaret —
-maliyetin yanındaki **≈** rakamın liste fiyatından türetilmiş bir tahmin
-olduğunu söyler, **`[withheld]`** ise satıcının kendi maliyetini vermediği
-yerde uydurulmadığını. Bu depoda tahmin, ölçümün yerine geçmez.</sub>
-
 ## Hızlı başlangıç
 
 Yerel-öncelikli pano: Claude Code transcript'lerini tarar, bir anlık görüntü
 üretir ve tarayıcıda gösterir.
 
 ```
-uv sync
-uv run cci scan
-uv run cci snapshot
-uv run cci serve
+uv tool install git+https://github.com/Furkiozknn/claude-code-intelligence
+cci scan
+cci snapshot
+cci serve
 ```
 
-![cci pano ekran görüntüsü: gerçek taranmış verilerle Kota, Dikkat, Bugün, Uyarılar ve Sağlık bölümleri](assets/pano-ekran-goruntusu.png)
+Kaynaktan çalışmak isteyenler: `git clone` sonrası `uv sync`, komutların başına `uv run` ekleyin.
 
-<sub>Panonun kendisi, yukarıdaki dört komut çalıştırıldıktan sonra. Gösterdiği
-her sayı taranmış gerçek transcript'lerden geliyor.</sub>
+![cci pano ekran görüntüsü: Kota, Dikkat, Bugün, Uyarılar ve Sağlık bölümleri; sentetik örnek veriyle](assets/pano-ekran-goruntusu.png)
+
+<sub>Panonun kendisi, yukarıdaki dört komut sentetik örnek veri üzerinde çalıştırıldıktan sonra.
+`kota` boş: kota ucu yalnız `cci quota --poll` ile (kimlik dosyanız varsa) sorgulanır.</sub>
 
 ## Yöntem ve durum
 
@@ -76,7 +91,7 @@ alıcı (3), SQLite olay deposu (4), normalizasyon + dedup/birleştirme (5), fiy
 tablosu + özetler (6), pace v1 + boru hattı + snapshot + CLI (7).
 
 ```
-uv sync && uv run pytest                    # 282 test
+uv sync && uv run pytest                    # 287 test
 uv run cci providers                        # ulaşılabilen adaptörler + yüklenemeyenin nedeni
 uv run cci scan                             # kayıtlı her adaptörden artımlı tara
 uv run cci today | daily | sessions         # özetler (--json, --strict → koruma yasası ihlalinde çıkış 3)
