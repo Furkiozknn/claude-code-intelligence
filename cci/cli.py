@@ -13,6 +13,7 @@ import shutil
 import sys
 import time
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
@@ -305,6 +306,85 @@ def cmd_sessions(ctx: Context, args: argparse.Namespace) -> int:
                          f"  {'proje ' + s.project_key[:8] if s.project_key else ''}" for s in sessions)
 
     ctx.out({"sessions": [{**s.model_dump(mode="json"), "diagnostics": diags[s.session_id].model_dump(mode="json")} for s in sessions]}, text)
+    return EXIT_OK
+
+
+def project_labels(paths: list[str]) -> dict[str, str]:
+    """project_key -> the path the user typed, for display only.
+
+    The store holds sha256(cwd)[:16], never the path, and this keeps it that
+    way: a label exists only for a path given on this command line, hashed
+    here and printed, never written anywhere. Claude Code records `cwd` as
+    the OS spells it, so a few spellings of the same directory are hashed
+    (as typed, resolved, and with either slash direction).
+    """
+    import hashlib
+
+    labels: dict[str, str] = {}
+    for raw in paths:
+        variants = {raw, raw.rstrip("/\\")}
+        try:
+            resolved = str(Path(raw).expanduser().resolve())
+            variants |= {resolved, resolved.rstrip("/\\")}
+        except OSError:
+            pass
+        for v in list(variants):
+            variants |= {v.replace("\\", "/"), v.replace("/", "\\")}
+        for v in variants:
+            if v:
+                labels.setdefault(hashlib.sha256(v.encode("utf-8")).hexdigest()[:16], raw)
+    return labels
+
+
+def cmd_projects(ctx: Context, args: argparse.Namespace) -> int:
+    """Where the tokens went, by project (working directory) instead of by day."""
+    from cci.analytics.summaries import summarize_projects
+
+    now = datetime.now(UTC)
+    since = now - timedelta(days=args.days) if args.days else None
+    try:
+        report = summarize_projects(ctx.pipe.records(since=since), pricing_version=ctx.table.version,
+                                    strict=args.strict)
+    except ConservationError as exc:
+        print(f"KORUMA YASASI IHLALI: {exc}", file=sys.stderr)
+        return EXIT_CONSERVATION
+    if not report.projects:
+        ctx.out({"projects": []}, lambda: "veri yok (once `cci scan` ya da OTLP kurulumu)")
+        return EXIT_NO_DATA
+    labels = project_labels(list(args.name or []) + ([os.getcwd()] if args.here else []))
+    shown = report.projects[: args.limit]
+    total = report.totals
+    by_cost = total.cost.released and total.cost.value not in (None, Decimal(0))
+
+    def share(p) -> float:
+        if by_cost and p.totals.cost.released and p.totals.cost.value is not None:
+            return float(p.totals.cost.value / total.cost.value) * 100
+        whole = total.tokens.billable_total
+        return p.totals.tokens.billable_total / whole * 100 if whole else 0.0
+
+    def text() -> str:
+        period = f"son {args.days} gun" if args.days else "tum kayitlar"
+        flag = "" if report.conservation.ok else "  !koruma"
+        lines = [f"{period} [{getattr(ctx.tz, 'key', ctx.tz)}]  proje {len(report.projects)}  "
+                 f"istek {total.requests}  token {total.tokens.billable_total:,}  maliyet {_fig(total.cost)}≈  "
+                 f"pay: {'maliyet' if by_cost else 'token'}{flag}"]
+        for p in shown:
+            label = labels.get(p.project_key, "")
+            lines.append(f"  {p.project_key[:8]}  {share(p):5.1f}%  istek {p.totals.requests:>5}  "
+                         f"token {p.totals.tokens.billable_total:>12,}  {_fig(p.totals.cost):>10}≈  "
+                         f"oturum {p.sessions:>3}  son {p.last_at.astimezone(ctx.tz).strftime('%m-%d %H:%M')}"
+                         + (f"  {label}" if label else ""))
+        if len(report.projects) > len(shown):
+            lines.append(f"  ... {len(report.projects) - len(shown)} proje daha (--limit)")
+        if not labels:
+            lines.append("  (proje anahtari = sha256(cwd)[:16]; yol saklanmaz. Etiket icin: --name YOL ya da --here)")
+        return "\n".join(lines)
+
+    data = report.model_dump(mode="json")
+    data["projects"] = data["projects"][: args.limit]
+    data["labels"] = {k: v for k, v in labels.items() if any(p.project_key == k for p in report.projects)}
+    data["share_basis"] = "cost" if by_cost else "tokens"
+    ctx.out(data, text)
     return EXIT_OK
 
 
@@ -816,6 +896,13 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("sessions", help="son oturumlar: token, maliyet, saglik")
     s.add_argument("--limit", type=int, default=20, help="en fazla kac oturum")
     s.add_argument("--strict", action="store_true", help="koruma yasasi ihlalinde cikis 3"); s.set_defaults(fn=cmd_sessions)
+    s = sub.add_parser("projects", help="proje (calisma dizini) basina istek, token, tahmini maliyet ve pay")
+    s.add_argument("--days", type=int, default=0, help="yalniz son N gun (0 = hepsi)")
+    s.add_argument("--limit", type=int, default=20, help="en fazla kac proje")
+    s.add_argument("--name", action="append", metavar="YOL",
+                   help="bu yolun projesini etiketle (yerelde hash'lenir, saklanmaz; tekrarlanabilir)")
+    s.add_argument("--here", action="store_true", help="bulundugun dizinin projesini etiketle")
+    s.add_argument("--strict", action="store_true", help="projeler toplami tutmazsa cikis 3"); s.set_defaults(fn=cmd_projects)
     s = sub.add_parser("session", help="tek oturumun teshisi"); s.add_argument("session_id", help="oturum kimligi ya da on eki (`cci sessions`)"); s.set_defaults(fn=cmd_session)
     s = sub.add_parser("quota", help="kota durumu ve tahmin"); s.add_argument("--poll", action="store_true", help="canli sorgu (kimlik dosyasi gerekir)")
     s.add_argument("--forecast", action="store_true", help="harman tahmin v2 (>=5 dongu)")
