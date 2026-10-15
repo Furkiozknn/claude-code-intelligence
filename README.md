@@ -91,7 +91,7 @@ alıcı (3), SQLite olay deposu (4), normalizasyon + dedup/birleştirme (5), fiy
 tablosu + özetler (6), pace v1 + boru hattı + snapshot + CLI (7).
 
 ```
-uv sync && uv run pytest                    # 287 test
+uv sync && uv run pytest                    # 298 test
 uv run cci providers                        # ulaşılabilen adaptörler + yüklenemeyenin nedeni
 uv run cci scan                             # kayıtlı her adaptörden artımlı tara
 uv run cci today | daily | sessions         # özetler (--json, --strict → koruma yasası ihlalinde çıkış 3)
@@ -99,6 +99,7 @@ uv run cci session <id>                     # oturum teşhisi (döngü, araç p9
 uv run cci quota [--poll|--forecast|--backtest]
 uv run cci advise [--apply|--undo <id>]     # "şu anda ne yapmalıyım" + geri alınabilir eylem
 uv run cci alerts [--history]               # uyarı motoru (cooldown, sessiz saat, webhook)
+uv run cci budget [--check]                 # günlük / aylık ≈harcama, [budget] sınırına karşı (aşılınca çıkış 6)
 uv run cci doctor                           # "bu sayılara güvenebilir miyim"
 uv run cci setup otlp|statusline [--write]  # settings.json'a yedekli yazım
 uv run cci run [--once]                     # daemon: OTLP 4318 + API 4319 + tarama + kota + uyarı + snapshot
@@ -112,6 +113,31 @@ Stage 1–16 tamamlandı. Ölçülen performans ve tutmayan iki hedefin gerekçe
 `docs/IMPLEMENTATION_PLAN.md` §Stage 15 notu — dört adaptör planlanmıştı, ikisi
 var (Claude Code, Codex); geri kalanı için gereken şey kod değil, doğrulanmış
 fixture.
+
+### Bütçe: `cci budget` ve bütçe uyarıları
+
+Kota limitini Claude Code kendisi uyguluyor, para limitini ise kimse uygulamıyor. API faturasıyla çalışan ya da yalnızca ayın ne zaman pahalılaştığını görmek isteyen için `<veri dizini>/config.toml`:
+
+```toml
+[budget]
+daily_usd = 0.50
+monthly_usd = 5
+warn_pct = 80        # varsayılan; sınırın %80'inden itibaren uyarı
+```
+
+```
+$ cci budget --check
+bugun              $0.61≈ / $0.50   %122  EXCEEDED
+bu ay (2026-10)    $0.61≈ / $5.00    %12  ok  ay sonu ~$1.26 (proj)
+(maliyet liste fiyatindan turetilmis tahmindir; uyari esigi %80)
+```
+
+<sub>**Sentetik veri:** testlerdeki altı kayıtlık örnek. Gerçek `cci` çıktısı; son komut çıkış kodu 6 ile biter.</sub>
+
+- **Harcama** dönemin günlük özet maliyetlerinin toplamıdır, yani liste fiyatından türetilmiştir (`≈`). Bir günün maliyeti `[withheld]` ise (fiyatı bilinmeyen model) toplam da `[withheld]` olur ve durum `unknown` yazılır. "Güvende" görünen uydurma bir sayı basılmaz.
+- **Ay sonu tahmini**, ayın bugüne kadarki harcamasının doğrusal uzatmasıdır. Kanıt sınıfı *predicted*, `(proj)` ile işaretlenir. "Bu hızla" demektir, gözlem değildir.
+- **Uyarılar** `cci alerts` ve `cci run` içinde çalışır: `budget.threshold` (warning), `budget.exceeded` (critical) ve `budget.projected` (warning, *probable*, ay sonu tahmini sınırı geçince). Konu kimliği dönemi taşır (`day:2026-10-15`, `month:2026-10`); yeni gün yeni uyarıdır. Cooldown, sessiz saat ve webhook kuralları diğer uyarılarla aynıdır.
+- Takvim yereldir (`CCI_TZ` / `TZ`), yani `cci daily`'nin günleri. `--check`, bir bütçe aşıldıysa çıkış 6 verir; `--json` makine okunur çıktı verir. Bütçe tanımlı değilse komut nasıl tanımlanacağını yazar ve çıkış 4 verir.
 
 | Çıktı | Nerede |
 |---|---|

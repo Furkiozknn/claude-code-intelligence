@@ -7,6 +7,14 @@ etiketle surum uyusmazsa yayini durdurur.
 
 ## Yayimlanmamis
 
+### Eklendi
+- Butce: `config.toml` icinde `[budget] daily_usd / monthly_usd / warn_pct`. `cci budget` bugunun ve
+  bu ayin `≈` harcamasini sinira karsi gosterir, ay sonu dogrusal tahminiyle (predicted, `(proj)`);
+  `--check` asimda cikis 6 (yeni cikis kodu). Maliyeti withheld bir gun varsa durum `unknown`.
+  Uyari motoru `budget.threshold`, `budget.exceeded`, `budget.projected` (probable) kurallarini
+  `cci alerts` ve `cci run` icinde degerlendirir. `Subject.kind` artik `budget` alabilir
+  (`docs/schema/Subject.json`, `Alert.json` guncel).
+
 ### Arayuz ve gizlilik
 - README gorselleri gercek kullanim verisinden uretilmisti (gercek gunluk tutarlar,
   olay/transcript sayilari). Hepsi `scripts/ornek-veri.py`'nin yazdigi SENTETIK veriyle
