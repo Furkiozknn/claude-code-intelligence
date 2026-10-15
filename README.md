@@ -143,6 +143,20 @@ fixture.
 8. **Tek gerçek kaynak.** Aynı bilgi iki yerde elle tutulmaz; kopya varsa
    testi vardır.
 
+## Why not ccusage?
+
+[ccusage](https://github.com/ccusage/ccusage) reads local usage data from coding-agent CLIs and reports it daily, weekly, monthly, per session and per 5-hour block. It runs with `npx ccusage@latest`, has no install step, and covers many agent CLIs: 18 were listed in its README in October 2026, against cci's two adapters (Claude Code and Codex). It also offers a Claude Code statusline.
+
+If you only want to know "how much did I use", ccusage is the quicker, wider tool.
+
+What cci does differently:
+
+- **Evidence classes:** every number carries one (observed, derived, estimated, …).
+- **Conservation check:** each report satisfies `total = Σ parts`, and `--strict` exits 3 when it does not.
+- **Trust checks:** `cci doctor` tells you whether you can trust the numbers.
+- **No content:** no type has a content field, so prompts and responses cannot be stored.
+- **One local daemon:** `cci run` receives Claude Code's native OTLP export on `127.0.0.1`, and adds quota forecasting and alerts.
+
 ## Önceki çalışmayla ilişki
 
 [`claude-quota-monitor`](https://github.com/Furkiozknn/claude-quota-monitor)
