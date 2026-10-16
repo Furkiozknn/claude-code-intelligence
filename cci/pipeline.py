@@ -20,7 +20,8 @@ from cci.analytics.anomaly import Anomaly, Baseline, detect
 from cci.analytics.diagnostics import SessionDiagnostics, diagnose_session, worst_attention
 from cci.analytics.summaries import DailySummary, SessionSummary, price_records, summarize_daily, summarize_sessions
 from cci.collectors.transcript import TranscriptCollector
-from cci.config import AlertConfig
+from cci.analytics.budget import BudgetStatus, budget_status
+from cci.config import AlertConfig, BudgetConfig
 from cci.events.envelope import Envelope, SourceRef
 from cci.ingest.allowlist import IngestGate
 from cci.model.alert import Alert
@@ -165,14 +166,23 @@ class Pipeline:
         events = list(self.store.query(types=["usage.error", "provider.schema_change"], since=now - timedelta(days=1)))
         return detect(records, events, now, session_costs=costs)
 
+    def budgets(self, now: datetime, cfg: BudgetConfig) -> list[BudgetStatus]:
+        """Today's and this month's spend against `[budget]`, by the local calendar."""
+        if not cfg.configured:
+            return []
+        today = now.astimezone(self.tz).date()
+        since = datetime.combine(today.replace(day=1), datetime.min.time(), tzinfo=self.tz)
+        return budget_status(self.daily(since=since), today, daily_usd=cfg.daily_usd,
+                             monthly_usd=cfg.monthly_usd, warn_pct=cfg.warn_pct)
+
     def alert_engine(self, cfg: AlertConfig) -> AlertEngine:
         engine = AlertEngine(cfg)
         engine.load_state(self.store.query(types=["alert.raised", "alert.resolved"]))
         return engine
 
     def evaluate_alerts(self, now: datetime, cfg: AlertConfig, *, engine: AlertEngine | None = None,
-                        collector_health: dict | None = None, persist: bool = True, now_local: datetime | None = None
-                        ) -> tuple[list[Alert], AlertEngine]:
+                        collector_health: dict | None = None, persist: bool = True, now_local: datetime | None = None,
+                        budget: BudgetConfig | None = None) -> tuple[list[Alert], AlertEngine]:
         engine = engine or self.alert_engine(cfg)
         quota = None
         for q in self.quota_history():
@@ -180,7 +190,8 @@ class Pipeline:
         attention, diags = self.attention(now)
         anomalies, _ = self.anomalies(now)
         inputs = AlertInputs(quota=quota, forecasts=self.forecasts(now), diagnostics=diags, anomalies=anomalies,
-                             collector_health=collector_health or {})
+                             collector_health=collector_health or {},
+                             budgets=self.budgets(now, budget) if budget is not None else ())
         raised, envelopes = engine.run(inputs, now, now_local=now_local)
         if persist:
             for env in envelopes:

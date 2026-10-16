@@ -14,6 +14,7 @@ from decimal import Decimal
 from typing import Any, Iterable, Mapping, Sequence
 
 from cci.analytics.anomaly import Anomaly
+from cci.analytics.budget import BudgetStatus
 from cci.analytics.diagnostics import SessionDiagnostics
 from cci.config import AlertConfig
 from cci.events.envelope import Envelope, SourceRef, new_ulid
@@ -33,6 +34,7 @@ class AlertInputs:
     diagnostics: Sequence[SessionDiagnostics] = ()
     anomalies: Sequence[Anomaly] = ()
     collector_health: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)  # ad -> {status, down_since_s?}
+    budgets: Sequence[BudgetStatus] = ()  # [budget] in config.toml, see analytics/budget.py
 
 
 def _alert(rule: str, severity: str, subject: Subject, message: str, evidence: Iterable[Evidence], now: datetime,
@@ -89,6 +91,37 @@ def evaluate_rules(inp: AlertInputs, now: datetime, cfg: AlertConfig) -> list[Al
             out.append(_alert("collector.down", "warning", Subject(kind="collector", id=name),
                               f"toplayici {name} {int(float(h.get('down_since_s') or 0) // 60)} dk'dir kapali ({h.get('error_class') or '?'}) — cci doctor",
                               [Evidence(metric="down_since_s", value=Decimal(str(int(float(h.get("down_since_s") or 0)))), evidence_class="observed")], now, cooldown_s=cd))
+    out.extend(_budget_alerts(inp.budgets, now, cd))
+    return out
+
+
+def _budget_alerts(budgets: Sequence[BudgetStatus], now: datetime, cd: int) -> list[Alert]:
+    """Spend against `[budget]`. The subject id carries the period (day or
+    month), so a new day or month is a new alert, not a cooled-down old one.
+    A withheld spend raises nothing: an unknown number is not a breach."""
+    out: list[Alert] = []
+    for b in budgets:
+        label = "gunluk" if b.period == "day" else "aylik"
+        period_id = b.start.isoformat() if b.period == "day" else b.start.strftime("%Y-%m")
+        subj = Subject(kind="budget", id=f"{b.period}:{period_id}")
+        cooldown = cd if b.period == "day" else cd * 4
+        limit = f"${b.limit_usd.quantize(Decimal('0.01'))}"
+        spent = [Evidence(metric="spent_nano", value=b.spent.value, baseline=b.limit_nano,
+                          evidence_class=b.spent.evidence_class.value)] if b.spent.released else []
+        if b.state == "exceeded":
+            out.append(_alert("budget.exceeded", "critical", subj,
+                               f"{label} butce asildi: {b.spent.render()}≈ / {limit} (%{b.pct:.0f}) — ucuz modele gec ya da dur",
+                               spent, now, cooldown_s=cooldown))
+        elif b.state == "warning":
+            out.append(_alert("budget.threshold", "warning", subj,
+                               f"{label} butcenin %{b.pct:.0f}'i kullanildi: {b.spent.render()}≈ / {limit}",
+                               spent, now, cooldown_s=cooldown))
+        elif b.state == "projected_over" and b.projected is not None:
+            out.append(_alert("budget.projected", "warning", subj,
+                               f"{label} butce bu hizla asilacak: ay sonu ~{b.projected.render()} / {limit} (olasi) — hizi dusur",
+                               [*spent, Evidence(metric="projected_nano", value=b.projected.value, baseline=b.limit_nano,
+                                                 evidence_class="predicted")],
+                               now, basis="probable", cooldown_s=cooldown))
     return out
 
 
