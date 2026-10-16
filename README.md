@@ -110,11 +110,12 @@ alıcı (3), SQLite olay deposu (4), normalizasyon + dedup/birleştirme (5), fiy
 tablosu + özetler (6), pace v1 + boru hattı + snapshot + CLI (7).
 
 ```
-uv sync && uv run pytest                    # 287 test
+uv sync && uv run pytest                    # 295 test
 uv run cci providers                        # ulaşılabilen adaptörler + yüklenemeyenin nedeni
 uv run cci scan                             # kayıtlı her adaptörden artımlı tara
 uv run cci today | daily | sessions         # özetler (--json, --strict → koruma yasası ihlalinde çıkış 3)
 uv run cci session <id>                     # oturum teşhisi (döngü, araç p95, context, sağlık)
+uv run cci projects [--days N] [--here]     # proje başına istek, token, ≈maliyet ve pay (--strict)
 uv run cci quota [--poll|--forecast|--backtest]
 uv run cci advise [--apply|--undo <id>]     # "şu anda ne yapmalıyım" + geri alınabilir eylem
 uv run cci alerts [--history]               # uyarı motoru (cooldown, sessiz saat, webhook)
@@ -125,6 +126,24 @@ uv run cci serve | tui | widget | statusline
 uv run cci research proxy|unit-estimator|purge
 uv run python benchmarks/bench.py           # → benchmarks/RESULTS.md
 ```
+
+### Proje başına kırılım: `cci projects`
+
+`cci daily` "hangi gün" sorusunu cevaplıyor, `cci projects` ise "hangi proje" sorusunu. Her satır bir çalışma dizini. Satırlar en pahalıdan başlar ve istek, token, `≈` maliyet, toplam içindeki pay, oturum sayısı ve son kullanım zamanını gösterir. ccusage aynı soruyu `--instances` ile proje adına göre gruplayarak cevaplıyor. Buradaki fark gizlilik ve koruma yasası:
+
+- **Yol saklanmaz.** Proje anahtarı normalleştiricinin zaten yazdığı `sha256(cwd)[:16]`. `--name YOL` (tekrarlanabilir) ya da `--here`, verdiğiniz yolu o anda yerelde hash'leyip eşleşen satırı etiketler. Etiket yalnız ekrana basılır, hiçbir yere yazılmaz. Windows ve POSIX yazımları (`\` / `/`, sondaki ayraç) birlikte denenir.
+- **Satırlar toplamı verir.** İstek, token ve maliyet için `toplam = Σ proje` kontrol edilir. Tutmazsa satır `!koruma` ile işaretlenir; `--strict` ile çıkış 3.
+- **Pay maliyetten hesaplanır.** Maliyet açıklanamıyorsa (`[withheld]`) tokenden hesaplanır; hangisinin kullanıldığı başlıkta ve JSON'da (`share_basis`) yazar.
+- Çalışma dizini olmayan kayıtlar `unknown` satırına düşer, toplamdan kaybolmaz. `--days N` dönemi daraltır, `--limit` satır sayısını sınırlar, `--json` makine okunur çıktı verir.
+
+```
+$ cci projects --name D:/work/big
+tum kayitlar [UTC]  proje 2  istek 3  token 4,260  maliyet $0.02≈  pay: maliyet
+  c54c3457   93.3%  istek     2  token        3,100       $0.02≈  oturum   2  son 10-15 13:28  D:/work/big
+  10fbcf4a    6.7%  istek     1  token        1,160       $0.00≈  oturum   1  son 10-15 13:28
+```
+
+<sub>**Sentetik veri:** testlerdeki üç kayıtlık örnek (`tests/test_pipeline.py` yardımcıları), iki sahte dizin. Çıktı gerçek `cci` çıktısıdır.</sub>
 
 Stage 1–16 tamamlandı. Ölçülen performans ve tutmayan iki hedefin gerekçesi:
 `docs/ARCHITECTURE.md` §11. Stage 15'in kapsam dışı kalan kısmı:

@@ -7,6 +7,13 @@ etiketle surum uyusmazsa yayini durdurur.
 
 ## Yayimlanmamis
 
+### Eklendi
+- `cci projects`: proje (calisma dizini) basina istek, token, `≈` maliyet, pay, oturum sayisi
+  ve son kullanim; en pahalidan basa. Yol saklanmaz (anahtar `sha256(cwd)[:16]`); `--name YOL` /
+  `--here` verilen yolu o an yerelde hash'leyip satiri etiketler, etiket yazilmaz. Koruma yasasi
+  satirlar icin de (istek, token, maliyet) kontrol edilir; `--strict` cikis 3. `--days`, `--limit`,
+  `--json` (`share_basis`, `labels`). Kutuphane: `summarize_projects()`.
+
 ### Arayuz ve gizlilik
 - README gorselleri gercek kullanim verisinden uretilmisti (gercek gunluk tutarlar,
   olay/transcript sayilari). Hepsi `scripts/ornek-veri.py`'nin yazdigi SENTETIK veriyle
