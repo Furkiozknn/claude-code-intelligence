@@ -13,6 +13,11 @@
 - **Local-first.** The network inventory has two targets: the quota endpoint and an optional price refresh. The OTLP receiver listens on `127.0.0.1`. Nothing is exported without explicit consent.
 - **An evidence class on every number:** observed, derived, vendor-estimated, estimated, predicted or inferred. A cost derived from list prices is marked `≈`, and where a vendor does not report its own cost the figure is `[withheld]` rather than invented.
 - **Conservation law.** Every report satisfies `total = Σ parts`; `--strict` exits 3 when one does not.
+- **The quota poll uses your Claude Code login.** `cci quota --poll`, and `cci run` unless you pass `--no-quota`, read the OAuth access token from Claude Code's credentials file (`~/.claude/.credentials.json`, or under `CLAUDE_CONFIG_DIR`). They send it to `https://api.anthropic.com/api/oauth/usage`, an endpoint Anthropic does not document, so it can change or disappear without notice. Details: [The quota endpoint](#kota-ucu-ne-okunur-ne-gönderilir).
+  - **Sent:** one `GET` with no body. Headers: `Authorization: Bearer <token>`, `anthropic-beta: oauth-2025-04-20`, `Accept: application/json` and `User-Agent: cci/<version>`. No transcripts, prompts, project paths or usage records are sent.
+  - **Kept:** the token stays in memory and is never written to disk or logs. cci never refreshes or rotates it.
+  - **Stored:** the parsed quota windows, plus a SHA-256 of the raw response, in the local database.
+  - **No network:** plain `cci quota` (without `--poll`) only reads what is already stored.
 
 ```bash
 uv tool install git+https://github.com/Furkiozknn/claude-code-intelligence
@@ -75,6 +80,20 @@ Kaynaktan çalışmak isteyenler: `git clone` sonrası `uv sync`, komutların ba
 
 <sub>Panonun kendisi, yukarıdaki dört komut sentetik örnek veri üzerinde çalıştırıldıktan sonra.
 `kota` boş: kota ucu yalnız `cci quota --poll` ile (kimlik dosyanız varsa) sorgulanır.</sub>
+
+## Kota ucu: ne okunur, ne gönderilir
+
+Kota verisi, Claude Code'un kendi oturum bilginizle alınır. Bunu açıkça bilmeniz gerekir:
+
+- **Hangi komutlar:** `cci quota --poll` ve `cci run`. `cci run` kimlik dosyası varsa kotayı varsayılan olarak sorgular; kapatmak için `--no-quota` verin. `--poll` olmadan `cci quota` ağa çıkmaz, yalnız saklanmış son değeri okur.
+- **Ne okunur:** Claude Code'un kimlik dosyası `~/.claude/.credentials.json` (`CLAUDE_CONFIG_DIR` ayarlıysa onun altındaki). Dosyadan yalnız `claudeAiOauth` altındaki `accessToken`, `expiresAt`, `subscriptionType` ve `rateLimitTier` alınır.
+  - Dosya symlink ise, düzenli bir dosya değilse ya da 64 KB'tan büyükse okunmaz. POSIX'te grup ya da başkaları için izin bitleri açıksa da okunmaz.
+- **Nereye gider:** `GET https://api.anthropic.com/api/oauth/usage`. Bu uç Anthropic tarafından **belgelenmemiştir**: resmî bir API değildir, haber verilmeden değişebilir ya da kalkabilir.
+- **Ne gönderilir:** gövdesiz tek bir `GET`. Başlıklar: `Authorization: Bearer <accessToken>`, `anthropic-beta: oauth-2025-04-20`, `Accept: application/json` ve `User-Agent: cci/<sürüm> (+https://github.com/Furkiozknn)`.
+- **Ne gönderilmez:** transcript, prompt, yanıt, proje yolu, kullanım kaydı ya da başka bir yerel veri.
+- **Token ne olur:** yalnız bellekte tutulur. Diske ya da loga yazılmaz, hata metinlerinde redakte edilir. cci token'ı yenilemez, döndürmez, başka bir yere göndermez.
+- **Ne saklanır:** yanıttaki kota pencereleri (kullanım yüzdesi, sıfırlanma zamanı, varsa harcama) ve ham yanıtın SHA-256 özeti, yerel veritabanında. Hesap kimliği (OTel `user.account_uuid`) bilinmiyorsa snapshot saklanmaz, yalnız ekranda gösterilir. Ayrıntı: [`docs/PRIVACY.md`](docs/PRIVACY.md).
+- **Ne sıklıkla:** `cci quota --poll` her çalıştırmada tek istek atar. `cci run` en fazla 180 saniyede bir sorgular. `429` yanıtında `Retry-After` kadar bekler (en az 60 sn), hatalarda bekleme 900 sn'ye kadar uzar.
 
 ## Yöntem ve durum
 
