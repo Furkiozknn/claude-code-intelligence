@@ -1,7 +1,7 @@
 """`cci` komut satiri (docs/PRODUCT.md §4). Yuzey hesap yapmaz: boru hatti ve depo uzerinden calisir.
 
 Cikis kodlari: 0 ok · 2 kullanim · 3 koruma yasasi ihlali (--strict) · 4 daemon/veri yok ·
-5 kimlik/erisim yok.
+5 kimlik/erisim yok · 6 butce asildi (budget --check).
 """
 
 from __future__ import annotations
@@ -39,6 +39,7 @@ from cci.quota.pace import compute_pace
 from cci.store.sqlite import EventStore
 
 EXIT_OK, EXIT_USAGE, EXIT_CONSERVATION, EXIT_NO_DATA, EXIT_NO_CREDENTIALS = 0, 2, 3, 4, 5
+EXIT_BUDGET = 6  # `cci budget --check`: a configured budget is exceeded
 DEFAULT_OTLP_PORT = 4318
 DEFAULT_API_PORT = 4319
 
@@ -463,7 +464,8 @@ def cmd_alerts(ctx: Context, args: argparse.Namespace) -> int:
                 for e in ctx.store.query(types=["alert.raised", "alert.resolved"])]
         ctx.out({"history": rows}, lambda: "\n".join(f"{r['ts'][:19]}  {r['type']:<14} {r.get('severity') or '':<8} {r.get('rule_id') or ''}  {r.get('message') or ''}" for r in rows) or "gecmis yok")
         return EXIT_OK
-    raised, engine = ctx.pipe.evaluate_alerts(now, ctx.config.alerts, persist=not args.dry_run, now_local=datetime.now(ctx.tz))
+    raised, engine = ctx.pipe.evaluate_alerts(now, ctx.config.alerts, persist=not args.dry_run, now_local=datetime.now(ctx.tz),
+                                              budget=ctx.config.budget)
     if raised and ctx.config.alerts.webhook_url and not args.dry_run:
         send_webhook(ctx.config.alerts.webhook_url, raised)
     anomalies, base = ctx.pipe.anomalies(now)
@@ -475,6 +477,35 @@ def cmd_alerts(ctx: Context, args: argparse.Namespace) -> int:
         [f"  [{a['severity']}] {a['rule_id']} ({a['basis']}): {a['message']}" for a in active] +
         [f"  anomali [{a.severity}] {a.kind}: {a.message}" for a in anomalies] +
         [f"  taban: {n}" for n in base.notes]))
+    return EXIT_OK
+
+
+def cmd_budget(ctx: Context, args: argparse.Namespace) -> int:
+    """Today's and this month's estimated spend against `[budget]` in config.toml."""
+    cfg = ctx.config.budget
+    if not cfg.configured:
+        msg = (f"butce tanimli degil: {ctx.data_dir / 'config.toml'} icine ekleyin\n"
+               "  [budget]\n  daily_usd = 5\n  monthly_usd = 100\n  warn_pct = 80")
+        ctx.out({"budgets": [], "configured": False}, lambda: msg)
+        return EXIT_NO_DATA
+    statuses = ctx.pipe.budgets(datetime.now(UTC), cfg)
+
+    def text() -> str:
+        lines = []
+        for b in statuses:
+            label = "bugun" if b.period == "day" else f"bu ay ({b.start.strftime('%Y-%m')})"
+            pct = "--" if b.pct is None else f"%{b.pct:.0f}"
+            line = (f"{label:<18} {b.spent.render()}≈ / ${b.limit_usd.quantize(Decimal('0.01'))}  "
+                    f"{pct:>5}  {b.state.upper() if b.state != 'ok' else 'ok'}")
+            if b.projected is not None:
+                line += f"  ay sonu ~{b.projected.render()}"
+            lines.append(line)
+        lines.append(f"(maliyet liste fiyatindan turetilmis tahmindir; uyari esigi %{cfg.warn_pct:.0f})")
+        return "\n".join(lines)
+
+    ctx.out({"budgets": [b.as_dict() for b in statuses], "configured": True, "warn_pct": cfg.warn_pct}, text)
+    if args.check and any(b.state == "exceeded" for b in statuses):
+        return EXIT_BUDGET
     return EXIT_OK
 
 
@@ -795,7 +826,7 @@ def cmd_run(ctx: Context, args: argparse.Namespace) -> int:
             coll = {name: {"status": "down", "down_since_s": mono - since, "error_class": adapter_health.error_class}
                     for name, since in down_since.items()}
             raised, engine = ctx.pipe.evaluate_alerts(now, ctx.config.alerts, engine=engine, collector_health=coll,
-                                                      now_local=datetime.now(ctx.tz))
+                                                      now_local=datetime.now(ctx.tz), budget=ctx.config.budget)
             if raised and ctx.config.alerts.webhook_url:
                 send_webhook(ctx.config.alerts.webhook_url, raised)
             write_snapshot(ctx.snapshot_path(), build_snapshot(now=now, quota=latest_quota(ctx), today=today, health=health,
@@ -868,7 +899,8 @@ EPILOG = (
     "  cci scan      Claude Code kayitlarini oku (artimli)\n"
     "  cci daily     gun basina istek, token, tahmini maliyet\n"
     "  cci doctor    bu sayilara guvenebilir miyim\n\n"
-    "cikis kodlari: 0 ok, 2 kullanim hatasi, 3 koruma yasasi ihlali (--strict), 4 veri yok, 5 kimlik yok\n"
+    "cikis kodlari: 0 ok, 2 kullanim hatasi, 3 koruma yasasi ihlali (--strict), 4 veri yok, 5 kimlik yok,\n"
+    "  6 butce asildi (budget --check)\n"
     "kaynak: CLAUDE_CONFIG_DIR (yoksa ~/.claude); ayrintili yardim: cci <komut> --help"
 )
 
@@ -913,6 +945,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--history", action="store_true"); s.set_defaults(fn=cmd_advise)
     s = sub.add_parser("alerts", help="uyarilari degerlendir/goster"); s.add_argument("--history", action="store_true")
     s.add_argument("--dry-run", action="store_true", help="olay yazma, sadece goster"); s.set_defaults(fn=cmd_alerts)
+    s = sub.add_parser("budget", help="bugunun ve bu ayin tahmini harcamasi, config.toml [budget] sinirina karsi")
+    s.add_argument("--check", action="store_true", help="bir butce asildiysa cikis 6"); s.set_defaults(fn=cmd_budget)
     s = sub.add_parser("snapshot", help="pano icin anlik goruntu yaz"); s.add_argument("--out", default=None, help="cikti dosyasi"); s.set_defaults(fn=cmd_snapshot)
     sub.add_parser("statusline", help="Claude Code durum cubugu icin tek satir").set_defaults(fn=cmd_statusline)
     s = sub.add_parser("setup", help="settings.json icin OTLP / statusline ayari (yedekli)")
