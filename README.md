@@ -202,7 +202,8 @@ bu ay (2026-10)    $0.61≈ / $5.00    %12  ok  ay sonu ~$1.26 (proj)
 5. **Koruma yasası.** Her rapor `toplam = Σ parça`; `--strict` çıkış 3.
 6. **Aşamalı inşa.** Core → Advanced → Intelligence → Ecosystem; "do not
    overbuild".
-7. **Tekrarlanabilir analitik.** Türetimler saf fonksiyon; `cci replay`;
+7. **Tekrarlanabilir analitik.** Türetimler saf fonksiyon; özetler her
+   çağrıda olay deposundan yeniden türetilir (replay, `cci/pipeline.py`);
    sürümlü özet/estimator/fiyat.
 8. **Tek gerçek kaynak.** Aynı bilgi iki yerde elle tutulmaz; kopya varsa
    testi vardır.
