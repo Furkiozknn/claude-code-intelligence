@@ -75,7 +75,7 @@ cci alerts [--history] | cci advise   # öneri + kanıt; --apply (Intel, act gü
 cci doctor                   # sağlık, sayaçlar, "güvenebilir miyim"
 cci setup [--otlp --statusline --hooks]   # settings.json env/statusLine/hooks yazımı (yedekli, geri alınabilir)
 cci pricing refresh|show     # tek ağ çağrısı
-cci replay [--from]          # türetilmiş tabloları yeniden üret
+cci replay [--from]          # (planlanan, uygulanmadı) türetilmiş tabloları yeniden üret
 cci research …               # ayrı mod (RESEARCH_MODE.md)
 cci daemon start|stop|status
 ```

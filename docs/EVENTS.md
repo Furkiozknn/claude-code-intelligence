@@ -85,7 +85,7 @@ reddedilir.
   **kirli** işaretler (yeniden hesap kuyruğu).
 
 ## 5. Yeniden üretim (replay)
-`cci replay --from <ts>`: türetilmiş tablolar silinir, `events` baştan
+**Planlanan, uygulanmadı:** `cci replay` komutu henüz yok; bugün özetler her çağrıda olaylardan yeniden türetilir (`cci/pipeline.py`). Tasarım: `cci replay --from <ts>`: türetilmiş tablolar silinir, `events` baştan
 işlenir; `summary_version`/`estimator.version` değişimlerinde otomatik.
 Determinizm: türeticiler saf fonksiyon (events, config, now enjekte).
 **Sınır (R-12):** `events` 30 gün saklanır ve özet kararlılaştıktan sonra
