@@ -68,7 +68,7 @@ Tablolar: `events` (append-only) · `usage_records` · `quota_snapshots` ·
 `recommendations` · `collector_health` · `meta` (şema/summary/estimator
 sürümleri). İndeksler: `(ts)`, `(session_id, ts)`, `(project_key, day)`,
 `(dedup_key) UNIQUE`. Türetilmiş tablolar `events` + transcript'ten her zaman
-yeniden üretilebilir (`cci replay`).
+yeniden üretilebilir (ayrı bir `cci replay` komutu uygulanmadı; türetim her çağrıda `cci/pipeline.py` içinde olaylardan yapılır).
 
 ## 6. Dil ve dağıtım kararı (D10)
 **Stage 1–2: Python 3.12** (uv; kullanıcının ortamı ve prototip burada;
