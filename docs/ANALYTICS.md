@@ -114,12 +114,12 @@ Her öneri: kanıt listesi, beklenen etki (`Figure`, çoğu `estimated`),
 geri alınabilir eylem (Intel: act günlüğü), sonradan `realized`.
 
 ## 6. Yeniden üretilebilirlik (MP §30)
-- Tüm türetimler saf fonksiyon (events, config, now); `cci replay`.
+- Tüm türetimler saf fonksiyon (events, config, now). Not: ayrı bir `cci replay` komutu yoktur (uygulanmadı); özetler her çağrıda olaylardan yeniden türetilir (`cci/pipeline.py`).
 - `summary_version`, `estimator.version`, `pricing_version`,
   `pricing_effective_at` her çıktıda.
 - Aynı `events` + aynı sürümler → bit-eşit özet (golden test).
 - Fiyat yenileme yeni `pricing_version`; eski maliyetler yeniden hesaplanmaz,
-  istenirse `cci replay --pricing <v>`.
+  fiyat sürümüne göre yeniden hesap için `cci replay` komutu henüz uygulanmadı.
 
 ## 7. Raporlar (Core)
 `cci today|daily|weekly|monthly|session <id>|project <k>|model|quota|cache|
