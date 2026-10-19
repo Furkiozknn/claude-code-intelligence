@@ -7,6 +7,20 @@ etiketle surum uyusmazsa yayini durdurur.
 
 ## Yayimlanmamis
 
+### Eklendi
+- `cci projects`: proje (calisma dizini) basina istek, token, `≈` maliyet, pay, oturum sayisi
+  ve son kullanim; en pahalidan basa. Yol saklanmaz (anahtar `sha256(cwd)[:16]`); `--name YOL` /
+  `--here` verilen yolu o an yerelde hash'leyip satiri etiketler, etiket yazilmaz. Koruma yasasi
+  satirlar icin de (istek, token, maliyet) kontrol edilir; `--strict` cikis 3. `--days`, `--limit`,
+  `--json` (`share_basis`, `labels`). Kutuphane: `summarize_projects()`.
+
+- Butce: `config.toml` icinde `[budget] daily_usd / monthly_usd / warn_pct`. `cci budget` bugunun ve
+  bu ayin `≈` harcamasini sinira karsi gosterir, ay sonu dogrusal tahminiyle (predicted, `(proj)`);
+  `--check` asimda cikis 6 (yeni cikis kodu). Maliyeti withheld bir gun varsa durum `unknown`.
+  Uyari motoru `budget.threshold`, `budget.exceeded`, `budget.projected` (probable) kurallarini
+  `cci alerts` ve `cci run` icinde degerlendirir. `Subject.kind` artik `budget` alabilir
+  (`docs/schema/Subject.json`, `Alert.json` guncel).
+
 ### Arayuz ve gizlilik
 - README gorselleri gercek kullanim verisinden uretilmisti (gercek gunluk tutarlar,
   olay/transcript sayilari). Hepsi `scripts/ornek-veri.py`'nin yazdigi SENTETIK veriyle

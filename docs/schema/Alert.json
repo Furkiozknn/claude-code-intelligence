@@ -81,7 +81,8 @@
       "quota_window",
       "provider",
       "collector",
-      "model"
+      "model",
+      "budget"
      ],
      "privacy": "public",
      "title": "Kind",

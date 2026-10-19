@@ -184,6 +184,80 @@ def summarize_daily(records: Iterable[UsageRecord], tz: tzinfo, *, pricing_versi
     return out
 
 
+class ProjectSummary(CciModel):
+    """One project (one working directory) over a period.
+
+    ``project_key`` is the same hash the normaliser writes, sha256(cwd)[:16];
+    the path itself is never stored. ``cci projects --name PATH`` can label a
+    row by hashing a path the user supplies, locally, at display time.
+    """
+
+    project_key: str = F("sensitive", min_length=1)
+    totals: Totals = F("internal")
+    models: tuple[ModelBucket, ...] = F("internal")
+    sessions: int = F("public", ge=0)
+    first_at: datetime = F("internal")
+    last_at: datetime = F("internal")
+
+
+class ProjectsReport(CciModel):
+    """Every project in a period plus the period total, with the conservation
+    check: the projects add up to the total (tokens, requests, cost)."""
+
+    totals: Totals = F("internal")
+    projects: tuple[ProjectSummary, ...] = F("internal")
+    conservation: Conservation = F("public")
+    summary_version: int = F("public", ge=1)
+    pricing_version: str | None = F("public", default=None)
+
+
+def summarize_projects(records: Iterable[UsageRecord], *, pricing_version: str | None = None,
+                       strict: bool = False) -> ProjectsReport:
+    """Group records by project, most expensive first (then most tokens).
+
+    A record without a working directory lands in ``unknown``, as in the
+    daily summary's project buckets, so nothing falls out of the total.
+    """
+    recs = list(records)
+    groups: dict[str, list[UsageRecord]] = defaultdict(list)
+    for r in recs:
+        groups[r.workspace.project_key if r.workspace else "unknown"].append(r)
+    projects = []
+    for key, items in groups.items():
+        items.sort(key=lambda r: r.ts)
+        projects.append(ProjectSummary(
+            project_key=key, totals=_totals(items), models=_model_buckets(items),
+            sessions=len({(r.provider, r.session.session_id) for r in items}),
+            first_at=items[0].ts, last_at=items[-1].ts))
+
+    def rank(p: ProjectSummary) -> tuple:
+        cost = p.totals.cost.value if p.totals.cost.released and p.totals.cost.value is not None else Decimal(-1)
+        return (-cost, -p.totals.tokens.billable_total, p.project_key)
+
+    projects.sort(key=rank)
+    totals = _totals(recs)
+    # The model check needs model buckets of the whole period; the project
+    # buckets are exactly the rows printed, so the law is "rows add up".
+    buckets = tuple(ProjectBucket(project_key=p.project_key, totals=p.totals) for p in projects)
+    conservation = check_conservation(totals, _model_buckets(recs), buckets, strict=strict)
+    # check_conservation compares requests and cost against the model
+    # buckets only; the rows printed here are projects, so check those too.
+    problems = []
+    if totals.requests != sum(p.totals.requests for p in projects):
+        problems.append("proje_istek_tutmuyor")
+    if totals.cost.released:
+        project_cost = sum((p.totals.cost.value for p in projects if p.totals.cost.released), Decimal(0))
+        if project_cost != totals.cost.value:
+            problems.append("proje_maliyet_tutmuyor")
+    if problems:
+        detail = " ".join([conservation.detail, *problems]).strip()
+        if strict:
+            raise ConservationError(detail)
+        conservation = conservation.model_copy(update={"ok": False, "detail": detail})
+    return ProjectsReport(totals=totals, projects=tuple(projects), conservation=conservation,
+                          summary_version=SUMMARY_VERSION, pricing_version=pricing_version)
+
+
 def summarize_sessions(records: Iterable[UsageRecord], *, strict: bool = False) -> list[SessionSummary]:
     groups: dict[tuple[str, str], list[UsageRecord]] = defaultdict(list)
     for r in records:

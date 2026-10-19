@@ -27,7 +27,7 @@ class Evidence(CciModel):
 
 
 class Subject(CciModel):
-    kind: Literal["session", "project", "quota_window", "provider", "collector", "model"] = F("public")
+    kind: Literal["session", "project", "quota_window", "provider", "collector", "model", "budget"] = F("public")
     id: str = F("internal", min_length=1)
 
 
